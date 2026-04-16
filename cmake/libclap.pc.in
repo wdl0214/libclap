@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libclap
+Description: Command Line Argument Parser Library
+Version: @PROJECT_VERSION@
+URL: https://github.com/yourname/libclap
+Requires: 
+Libs: -L${libdir} -lclap
+Cflags: -I${includedir}

@@ -1,0 +1,62 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: ${{ matrix.os }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Debug, Release]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+    
+    - name: Build
+      run: cmake --build build --config ${{ matrix.build_type }}
+    
+    - name: Test
+      run: ctest --test-dir build --output-on-failure -C ${{ matrix.build_type }}
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.build_type }}
+        path: build/Testing/
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install lcov
+      run: sudo apt-get install -y lcov
+    
+    - name: Configure
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_ENABLE_COVERAGE=ON
+    
+    - name: Build
+      run: cmake --build build
+    
+    - name: Test
+      run: ctest --test-dir build
+    
+    - name: Generate coverage
+      run: cmake --build build --target coverage
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        directory: build/coverage
