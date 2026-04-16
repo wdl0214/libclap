@@ -265,6 +265,7 @@ void test_parse_flow_subcommand_basic(void) {
     
     clap_parser_t *commit = clap_subparser_add(subparsers, "commit", NULL);
     clap_argument_t *msg = clap_add_argument(commit, "-m");
+    clap_argument_dest(msg,"message");
     clap_argument_type(msg, "string");
     
     char *argv[] = {"git", "commit", "-m", "hello"};
@@ -296,6 +297,7 @@ void test_parse_flow_subcommand_with_global(void) {
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
     clap_parser_t *commit = clap_subparser_add(subparsers, "commit", NULL);
     clap_argument_t *msg = clap_add_argument(commit, "-m");
+    clap_argument_dest(msg,"message");
     clap_argument_type(msg, "string");
     
     char *argv[] = {"git", "--verbose", "commit", "-m", "hello"};

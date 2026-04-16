@@ -3,6 +3,8 @@
 # ============================================================================
 include(FetchContent)
 
+set(UNITY_INCLUDE_DOUBLE ON CACHE BOOL "Enable double precision support in Unity" FORCE)
+
 FetchContent_Declare(
     unity
     GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
@@ -16,7 +18,7 @@ FetchContent_MakeAvailable(unity)
 # ============================================================================
 function(add_clap_test test_name test_source)
     add_executable(${test_name} ${test_source} ${ARGN})
-    
+    target_compile_definitions(${test_name} PRIVATE -DUNITY_INCLUDE_DOUBLE)
     target_compile_definitions(${test_name} PRIVATE -DSTANDALONE_TEST)
     
     target_link_libraries(${test_name} PRIVATE clap_static unity)

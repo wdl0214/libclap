@@ -26,7 +26,8 @@ static token_t tokenize_arg(const char *arg) {
         const char *eq = strchr(arg, '=');
         if (eq) {
             token.type = TOKEN_LONG_OPTION_EQ;
-            token.option_name = arg + 2;  /* Points to start, caller must handle '=' */
+            size_t name_len = (size_t)(eq - arg - 2);
+            token.option_name = clap_strndup(arg + 2, name_len);
             token.value = eq + 1;
         } else {
             token.type = TOKEN_LONG_OPTION;
@@ -57,7 +58,7 @@ static char** expand_short_bundle(const char *bundle, size_t *count) {
     size_t len = strlen(bundle);
     *count = len;
 
-    char **expanded = clap_calloc(len, sizeof(char*));
+    char **expanded = clap_malloc(len * sizeof(char*) + sizeof(char*));
     if (!expanded) return NULL;
 
     for (size_t i = 0; i < len; i++) {
@@ -76,7 +77,6 @@ static char** expand_short_bundle(const char *bundle, size_t *count) {
 
     return expanded;
 }
-
 
 /* Check for mutually exclusive group conflicts */
 static bool check_mutex_conflict(clap_parser_t *parser,
@@ -131,40 +131,122 @@ static bool check_mutex_conflict(clap_parser_t *parser,
     return true;
 }
 
+/* Convert string value to target type and store in namespace  */
+static bool convert_and_store(clap_argument_t *arg,
+                              clap_namespace_t *ns,
+                              const char *value,
+                              clap_error_t *error) {
+    const char *type_name = clap_buffer_cstr(arg->type_name);
+
+    /* String type - no conversion needed */
+    if (strcmp(type_name, "string") == 0) {
+        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+    }
+
+    /* Integer type */
+    if (strcmp(type_name, "int") == 0) {
+        int int_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_int_handler;
+        }
+        if (!arg->type_handler(value, &int_val, sizeof(int), error)) {
+            return false;
+        }
+        return clap_namespace_set_int(ns, clap_buffer_cstr(arg->dest), int_val);
+    }
+
+    /* Float type */
+    if (strcmp(type_name, "float") == 0) {
+        double float_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_float_handler;
+        }
+        if (!arg->type_handler(value, &float_val, sizeof(double), error)) {
+            return false;
+        }
+        /* Store as string if float namespace support is not available */
+        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+    }
+
+    /* Boolean type */
+    if (strcmp(type_name, "bool") == 0) {
+        bool bool_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_bool_handler;
+        }
+        if (!arg->type_handler(value, &bool_val, sizeof(bool), error)) {
+            return false;
+        }
+        return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), bool_val);
+    }
+
+    /* Custom type - use registered handler */
+    if (arg->type_handler) {
+        /* For custom types, allocate buffer and convert */
+        void *buffer = clap_malloc(arg->type_size);
+        if (!buffer) {
+            clap_error_set(error, CLAP_ERR_MEMORY,
+                           "Failed to allocate memory for type conversion");
+            return false;
+        }
+
+        bool result = arg->type_handler(value, buffer, arg->type_size, error);
+        clap_free(buffer);
+
+        /* Custom types are stored as strings for now */
+        if (result) {
+            return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+        }
+        return false;
+    }
+
+    /* Fallback: store as string */
+    return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+}
+
 /* Helper function to execute an action */
 static bool execute_action(clap_parser_t *parser,
                            clap_argument_t *arg,
                            clap_namespace_t *ns,
                            const char *value,
                            clap_error_t *error) {
+    (void)parser;
+
+    /* Validate choices if present */
+    if (value && arg->choices && arg->choice_count > 0) {
+        if (!clap_validate_choice(arg, value, error)) {
+            return false;
+        }
+    }
+
     switch (arg->action) {
     case CLAP_ACTION_STORE:
         if (value) {
-            return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+            return convert_and_store(arg, ns, value, error);
         }
         return true;
-        
+
     case CLAP_ACTION_STORE_CONST:
         if (!arg->const_value) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
                            "STORE_CONST action requires const value");
             return false;
         }
-        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest),
-                                          clap_buffer_cstr(arg->const_value));
-                                          
+        return convert_and_store(arg, ns, clap_buffer_cstr(arg->const_value), error);
+
     case CLAP_ACTION_STORE_TRUE:
         return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), true);
-        
+
     case CLAP_ACTION_STORE_FALSE:
         return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), false);
-        
+
     case CLAP_ACTION_APPEND:
         if (value) {
+            /* Note: APPEND currently only supports strings */
             return clap_namespace_append_string(ns, clap_buffer_cstr(arg->dest), value);
         }
         return true;
-        
+
     case CLAP_ACTION_APPEND_CONST:
         if (!arg->const_value) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
@@ -173,13 +255,13 @@ static bool execute_action(clap_parser_t *parser,
         }
         return clap_namespace_append_string(ns, clap_buffer_cstr(arg->dest),
                                              clap_buffer_cstr(arg->const_value));
-                                             
+
     case CLAP_ACTION_COUNT: {
         int count = 0;
         clap_namespace_get_int(ns, clap_buffer_cstr(arg->dest), &count);
         return clap_namespace_set_int(ns, clap_buffer_cstr(arg->dest), count + 1);
     }
-    
+
     case CLAP_ACTION_CUSTOM:
         if (!arg->action_handler) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
@@ -192,7 +274,7 @@ static bool execute_action(clap_parser_t *parser,
             return arg->action_handler(parser, arg, ns, values, count,
                                         arg->action_data, error);
         }
-        
+
     default:
         return true;
     }
@@ -354,22 +436,10 @@ bool clap_parse_args(clap_parser_t *parser,
                                 token.type == TOKEN_SHORT_OPTION)) {
 
             bool is_long = (token.type != TOKEN_SHORT_OPTION);
-            const char *lookup_name = token.option_name;
-            
-            /* For long options with '=', extract just the name part */
+            clap_argument_t *arg = clap_find_option(parser, token.option_name, is_long);
+
             if (token.type == TOKEN_LONG_OPTION_EQ) {
-                const char *eq = strchr(token.option_name, '=');
-                if (eq) {
-                    size_t len = (size_t)(eq - token.option_name);
-                    lookup_name = clap_strndup(token.option_name, len);
-                }
-            }
-            
-            clap_argument_t *arg = clap_find_option(parser, lookup_name, is_long);
-            
-            /* Free temporary string if allocated */
-            if (token.type == TOKEN_LONG_OPTION_EQ && lookup_name != token.option_name) {
-                clap_free((void*)lookup_name);
+                clap_free((void*)token.option_name);
             }
 
             if (!arg) {
@@ -440,7 +510,6 @@ bool clap_parse_args(clap_parser_t *parser,
                         } else {
                             cmd_name = full_name;
                         }
-
                         if (strcmp(cmd_name, current) == 0) {
                             subparser = sub;
                             break;
@@ -487,15 +556,40 @@ bool clap_parse_args(clap_parser_t *parser,
             }
 
             clap_argument_t *pos_arg = parser->positional_args[positional_index];
-            
-            /* Execute action for positional argument */
-            if (!execute_action(parser, pos_arg, ns, current, error)) {
-                clap_free(mutex_group_used);
-                clap_namespace_free(ns);
-                return false;
+
+            /* Validate choices for positional argument */
+            if (pos_arg->choices && pos_arg->choice_count > 0) {
+                if (!clap_validate_choice(pos_arg, current, error)) {
+                    clap_free(mutex_group_used);
+                    clap_namespace_free(ns);
+                    return false;
+                }
+            }
+
+            /* Store positional argument value */
+            if (pos_arg->flags & CLAP_ARG_MULTIPLE) {
+                /* For nargs='*' or nargs='+', append to array */
+                if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), current)) {
+                    clap_free(mutex_group_used);
+                    clap_namespace_free(ns);
+                    return false;
+                }
+                /* Don't increment positional_index for '*' since it consumes all */
+                if (pos_arg->nargs == CLAP_NARGS_ONE_OR_MORE) {
+                    /* For '+', it's still multiple but required */
+                }
+            } else {
+                /* Single value */
+                if (!execute_action(parser, pos_arg, ns, current, error)) {
+                    clap_free(mutex_group_used);
+                    clap_namespace_free(ns);
+                    return false;
+                }
             }
 
             pos++;
+
+            /* Only move to next positional if this one doesn't accept multiple */
             if (!(pos_arg->flags & CLAP_ARG_MULTIPLE)) {
                 positional_index++;
             }
@@ -525,6 +619,42 @@ bool clap_parse_args(clap_parser_t *parser,
             clap_free(mutex_group_used);
             clap_namespace_free(ns);
             return false;
+        }
+    }
+
+    /* Check nargs constraints for positional arguments */
+    for (size_t i = 0; i < parser->positional_count; i++) {
+        clap_argument_t *arg = parser->positional_args[i];
+
+        /* nargs='+' - must have at least one value */
+        if (arg->nargs == CLAP_NARGS_ONE_OR_MORE) {
+            const char **values;
+            size_t count = 0;
+            if (!clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest), &values, &count) || count < 1) {
+                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                               "the following arguments are required: %s",
+                               clap_buffer_cstr(arg->display_name));
+                clap_free(mutex_group_used);
+                clap_namespace_free(ns);
+                return false;
+            }
+        }
+
+        /* Fixed nargs > 1 - must have exact count */
+        if (arg->nargs > 1) {
+            const char **values;
+            size_t count = 0;
+            if (!clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest), &values, &count)) {
+                count = 0;
+            }
+            if (count != (size_t)arg->nargs) {
+                clap_error_set(error,
+                    count < (size_t)arg->nargs ? CLAP_ERR_TOO_FEW_ARGS : CLAP_ERR_TOO_MANY_ARGS,
+                    "Expected %d argument(s), got %zu", arg->nargs, count);
+                clap_free(mutex_group_used);
+                clap_namespace_free(ns);
+                return false;
+            }
         }
     }
 

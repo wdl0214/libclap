@@ -21,6 +21,7 @@ for test in test_clap test_allocator test_arena test_buffer test_trie \
             test_validator test_convert test_actions test_mutex \
             test_dependency test_subparser test_find test_formatter \
             test_tokenizer; do
+    echo "$TEST_DIR/$test"
     if [ -f "$TEST_DIR/$test" ]; then
         echo -n "  $test ... "
         if $TEST_DIR/$test > /dev/null 2>&1; then

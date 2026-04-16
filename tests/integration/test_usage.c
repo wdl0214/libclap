@@ -74,28 +74,53 @@ static void capture_stop(void) {
 
 #else /* Linux/macOS */
 
+#include <unistd.h>
+
 static FILE *g_capture_file = NULL;
+static int g_saved_stdout = -1;
 
 static void capture_start(void) {
     g_captured_len = 0;
     g_captured_output[0] = '\0';
-}
 
-static ssize_t capture_write(void *cookie, const char *data, size_t size) {
-    (void)cookie;
-    if (g_captured_len + size < sizeof(g_captured_output) - 1) {
-        memcpy(g_captured_output + g_captured_len, data, size);
-        g_captured_len += size;
-        g_captured_output[g_captured_len] = '\0';
+    g_capture_file = tmpfile();
+    if (!g_capture_file) return;
+
+    g_saved_stdout = dup(STDOUT_FILENO);
+    if (g_saved_stdout < 0) {
+        fclose(g_capture_file);
+        g_capture_file = NULL;
+        return;
     }
-    return (ssize_t)size;
+
+    fflush(stdout);
+    dup2(fileno(g_capture_file), STDOUT_FILENO);
 }
 
 static void capture_stop(void) {
-    /* Nothing needed */
+    if (!g_capture_file) return;
+
+    fflush(stdout);
+
+    if (g_saved_stdout >= 0) {
+        dup2(g_saved_stdout, STDOUT_FILENO);
+        close(g_saved_stdout);
+        g_saved_stdout = -1;
+    }
+
+    rewind(g_capture_file);
+    g_captured_len = fread(g_captured_output, 1, sizeof(g_captured_output) - 1, g_capture_file);
+    g_captured_output[g_captured_len] = '\0';
+
+    fclose(g_capture_file);
+    g_capture_file = NULL;
 }
 
 #endif
+
+/* ============================================================================
+ * Helper Functions
+ * ============================================================================ */
 
 static const char* get_captured(void) {
     return g_captured_output;
@@ -670,14 +695,14 @@ void test_17_choices_basic_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--color COLOR]");
+    assert_usage_equals("usage: PROG [-h] [--color {red,green,blue}]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 18: Choices with positional argument
- * Expected: usage: PROG [-h] {start,stop,restart}
+ * Expected: usage: PROG [-h] action
  * ============================================================================ */
 void test_18_choices_positional_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test positional choices", NULL);

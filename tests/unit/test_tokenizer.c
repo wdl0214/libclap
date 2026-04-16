@@ -37,8 +37,8 @@ void test_tokenize_positional(void) {
 void test_tokenize_positional_starts_with_dash(void) {
     token_t token = tokenize_arg("-");
     /* Single dash is a short option */
-    TEST_ASSERT_EQUAL(TOKEN_SHORT_OPTION, token.type);
-    TEST_ASSERT_EQUAL_STRING("", token.option_name);
+    TEST_ASSERT_EQUAL(TOKEN_POSITIONAL, token.type);
+    TEST_ASSERT_EQUAL_STRING("-", token.value);
 }
 
 void test_tokenize_stop(void) {

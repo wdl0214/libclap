@@ -283,10 +283,11 @@ void test_print_subcommand_help_no_subparsers(void) {
 void test_subparser_parse_arguments(void) {
     clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
-    
+
     clap_parser_t *commit = clap_subparser_add(subparsers, "commit", NULL);
     clap_argument_t *msg = clap_add_argument(commit, "-m");
     clap_argument_type(msg, "string");
+    clap_argument_dest(msg, "message");
     clap_argument_required(msg, true);
     
     char *argv[] = {"git", "commit", "-m", "hello"};
@@ -317,6 +318,7 @@ void test_subparser_parse_with_global_options(void) {
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
     clap_parser_t *commit = clap_subparser_add(subparsers, "commit", NULL);
     clap_argument_t *msg = clap_add_argument(commit, "-m");
+    clap_argument_dest(msg, "message");
     clap_argument_type(msg, "string");
     
     char *argv[] = {"git", "--verbose", "commit", "-m", "hello"};

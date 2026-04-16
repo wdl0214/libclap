@@ -357,11 +357,15 @@ void test_buffer_truncate_null(void) {
  * ============================================================================ */
 
 void test_buffer_sanitize_control_chars(void) {
-    char data[] = "Hello\x01\x02World";
-    clap_buffer_t *buf = clap_buffer_new_len(data, 13);
-    
+    const unsigned char data[] = {'H','e','l','l','o',1,2,'W','o','r','l','d'};
+    clap_buffer_t *buf = clap_buffer_new_len(data, sizeof(data));
+
+    TEST_ASSERT_NOT_NULL(buf);
+    TEST_ASSERT_EQUAL(12, buf->len);
+
     clap_buffer_sanitize(buf);
-    
+
+    TEST_ASSERT_EQUAL(12, buf->len);
     TEST_ASSERT_EQUAL_STRING("Hello??World", buf->data);
     
     clap_buffer_free(buf);

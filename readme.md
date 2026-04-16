@@ -25,7 +25,7 @@ libclap is a modern, secure, and extensible command-line argument parsing librar
 ### From Source
 
 ```bash
-git clone https://github.com/yourname/libclap.git
+git clone https://github.com/wdl0214/libclap.git
 cd libclap
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
@@ -236,7 +236,7 @@ int main() {
 libclap includes a comprehensive test suite built with Unity.
 
 ```bash
-cd build
+mkdir build && cd build
 ctest                          # Run all tests
 ctest -R usage                 # Run only usage compliance tests
 ctest --output-on-failure      # Show output for failed tests
@@ -253,7 +253,7 @@ cmake .. -DCLAP_ENABLE_ASAN=ON && make && ctest
 Code coverage:
 
 ```bash
-cmake .. -DCLAP_ENABLE_COVERAGE=ON
+cmake .. -DCLAP_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
 make && ctest
 make coverage
 ```

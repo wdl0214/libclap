@@ -163,3 +163,6 @@ docs/_build/
 local.properties
 .env
 .env.local
+
+*.profraw
+*.profdata

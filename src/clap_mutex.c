@@ -64,5 +64,6 @@ bool clap_mutex_group_add_argument(clap_parser_t *parser, int group_id, clap_arg
     }
     
     group->arguments[group->arg_count++] = arg;
+    arg->group_id = group_id;
     return true;
 }

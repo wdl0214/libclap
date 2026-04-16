@@ -100,16 +100,56 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
     
     for (size_t i = 0; i < parser->arg_count; i++) {
         clap_argument_t *arg = parser->arguments[i];
-        
+        const char *dest = clap_buffer_cstr(arg->dest);
+
         if (arg->default_string) {
-            const char *dest = clap_buffer_cstr(arg->dest);
-            clap_namespace_set_string(ns, dest, clap_buffer_cstr(arg->default_string));
+            /* Use type conversion for default values */
+            const char *type_name = clap_buffer_cstr(arg->type_name);
+
+            if (strcmp(type_name, "string") == 0) {
+                clap_namespace_set_string(ns, dest,
+                    clap_buffer_cstr(arg->default_string));
+
+            } else if (strcmp(type_name, "int") == 0) {
+                int int_val;
+                clap_type_handler_t handler = arg->type_handler ?
+                    arg->type_handler : clap_type_int_handler;
+                if (handler(clap_buffer_cstr(arg->default_string),
+                            &int_val, sizeof(int), error)) {
+                    clap_namespace_set_int(ns, dest, int_val);
+                }
+
+            } else if (strcmp(type_name, "float") == 0) {
+                double float_val;
+                clap_type_handler_t handler = arg->type_handler ?
+                    arg->type_handler : clap_type_float_handler;
+                if (handler(clap_buffer_cstr(arg->default_string),
+                            &float_val, sizeof(double), error)) {
+                    clap_namespace_set_string(ns, dest,
+                        clap_buffer_cstr(arg->default_string));
+                }
+
+            } else if (strcmp(type_name, "bool") == 0) {
+                bool bool_val;
+                clap_type_handler_t handler = arg->type_handler ?
+                    arg->type_handler : clap_type_bool_handler;
+                if (handler(clap_buffer_cstr(arg->default_string),
+                            &bool_val, sizeof(bool), error)) {
+                    clap_namespace_set_bool(ns, dest, bool_val);
+                }
+
+            } else {
+                /* Custom or unknown type - store as string */
+                clap_namespace_set_string(ns, dest,
+                    clap_buffer_cstr(arg->default_string));
+            }
+
         } else if (arg->action == CLAP_ACTION_STORE_TRUE) {
-            clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), false);
+            clap_namespace_set_bool(ns, dest, false);
         } else if (arg->action == CLAP_ACTION_STORE_FALSE) {
-            clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), true);
+            clap_namespace_set_bool(ns, dest, true);
         } else if (arg->action == CLAP_ACTION_COUNT) {
-            clap_namespace_set_int(ns, clap_buffer_cstr(arg->dest), 0);
+            clap_namespace_set_int(ns, dest, 0);
         }
     }
     return true;
