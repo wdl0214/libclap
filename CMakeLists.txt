@@ -38,14 +38,24 @@ function(set_clap_coverage target)
         if(CMAKE_COMPILER_IS_GNUCC)
             target_compile_options(${target} PRIVATE --coverage)
             target_link_options(${target} PRIVATE --coverage)
-        elseif(CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
-            target_compile_options(${target} PRIVATE -fprofile-instr-generate -fcoverage-mapping)
-            target_link_options(${target} PRIVATE -fprofile-instr-generate)
-            if(APPLE)
-                target_link_libraries(${target} PRIVATE
-                        /Library/Developer/CommandLineTools/usr/lib/clang/21/lib/darwin/libclang_rt.profile_osx.a
-                )
+
+            if(MINGW)
+                target_link_libraries(${target} PRIVATE gcov)
             endif()
+        elseif(CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
+            target_compile_options(${target} PRIVATE
+                -fprofile-instr-generate
+                -fcoverage-mapping
+            )
+            target_link_options(${target} PRIVATE
+                -fprofile-instr-generate
+                -fcoverage-mapping
+            )
+            # if(APPLE)
+            #     target_link_libraries(${target} PRIVATE
+            #             /Library/Developer/CommandLineTools/usr/lib/clang/21/lib/darwin/libclang_rt.profile_osx.a
+            #     )
+            # endif()
         endif()
     endif()
 endfunction()
@@ -147,37 +157,18 @@ endif()
 # Coverage target
 # ============================================================================
 if(CLAP_ENABLE_COVERAGE)
-    if(CMAKE_COMPILER_IS_GNUCC)
-        # GCC coverage
+    find_program(GCOVR gcovr)
+    
+    if(GCOVR)
         add_custom_target(coverage
-                COMMAND lcov --capture --directory . --output-file coverage.info
-                COMMAND lcov --remove coverage.info '/usr/*' '*/tests/*' '*/_deps/*' --output-file coverage.info
-                COMMAND genhtml coverage.info --output-directory coverage
-                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                COMMENT "Generating code coverage report"
+            COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR} 
+                    --html --html-details -o coverage.html
+            COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMENT "Generating coverage report with gcovr"
         )
-    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
-        # Clang coverage - need llvm tools
-        find_program(LLVM_COV NAMES llvm-cov)
-        find_program(LLVM_PROFDATA NAMES llvm-profdata)
-
-        if(LLVM_COV AND LLVM_PROFDATA)
-            # Set compile options for Clang coverage
-            add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
-            add_link_options(-fprofile-instr-generate)
-
-            add_custom_target(coverage
-                    COMMAND ${LLVM_PROFDATA} merge -sparse default.profraw -o default.profdata
-                    COMMAND ${LLVM_COV} show -instr-profile=default.profdata
-                    -format=html -output-dir=coverage
-                    $<TARGET_FILE:clap_static>
-                    COMMAND ${LLVM_COV} report -instr-profile=default.profdata
-                    $<TARGET_FILE:clap_static>
-                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Generating Clang code coverage report"
-            )
-        else()
-            message(WARNING "llvm-cov and llvm-profdata not found. Coverage disabled.")
-        endif()
+        message(STATUS "Coverage enabled: using gcovr")
+    else()
+        message(WARNING "gcovr not found. Install with: pip install gcovr")
     endif()
 endif()

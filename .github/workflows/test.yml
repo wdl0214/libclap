@@ -36,27 +36,31 @@ jobs:
         path: build/Testing/
 
   coverage:
-    name: Coverage
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install lcov
-      run: sudo apt-get install -y lcov
-    
-    - name: Configure
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_ENABLE_COVERAGE=ON
-    
-    - name: Build
-      run: cmake --build build
-    
-    - name: Test
-      run: ctest --test-dir build
-    
-    - name: Generate coverage
-      run: cmake --build build --target coverage
-    
-    - name: Upload coverage
-      uses: codecov/codecov-action@v4
-      with:
-        directory: build/coverage
+      name: Coverage
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install gcovr
+        run: pip install gcovr
+
+      - name: Configure CMake
+        run: cmake -B build -DCLAP_ENABLE_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build
+
+      - name: Generate coverage
+        run: |
+          cd build
+          gcovr -r .. --html-details -o coverage.html
+          gcovr -r ..
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/coverage.html
