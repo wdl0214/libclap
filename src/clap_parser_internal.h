@@ -17,6 +17,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <stdint.h>
 
 /* Maximum values */
 #define CLAP_MAX_ARGUMENTS      256
