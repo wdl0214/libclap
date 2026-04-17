@@ -3,7 +3,7 @@
 **Command Line Argument Parser for C**
 
 [![CI](https://github.com/wdl0214/libclap/actions/workflows/test.yml/badge.svg)](https://github.com/wdl0214/libclap/actions/workflows/test.yml)
-[![Coverage](https://github.com/wdl0214/libclap/actions/workflows/coverage.yml/badge.svg)](https://github.com/wdl0214/libclap/actions/workflows/coverage.yml)
+[![codecov](https://codecov.io/gh/wdl0214/libclap/branch/master/graph/badge.svg)](https://codecov.io/gh/wdl0214/libclap)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Standard](https://img.shields.io/badge/C-99-standard.svg)](https://en.wikipedia.org/wiki/C99)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
