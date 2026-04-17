@@ -2,9 +2,11 @@
 
 **Command Line Argument Parser for C**
 
+[![CI](https://github.com/wdl0214/libclap/actions/workflows/test.yml/badge.svg)](https://github.com/wdl0214/libclap/actions/workflows/test.yml)
+[![Coverage](https://github.com/wdl0214/libclap/actions/workflows/coverage.yml/badge.svg)](https://github.com/wdl0214/libclap/actions/workflows/coverage.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![C Standard](https://img.shields.io/badge/C-99-standard.svg)](https://en.wikipedia.org/wiki/C99)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Standard](https://img.shields.io/badge/C-99-standard.svg)](https://en.wikipedia.org/wiki/C99)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
 
 libclap is a modern, secure, and extensible command-line argument parsing library for C, inspired by Python's `argparse`. It provides a familiar, feature-rich API while maintaining C99 compatibility, zero external dependencies, and a strong focus on memory safety.
 
