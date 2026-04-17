@@ -10,8 +10,15 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
     GIT_TAG v2.5.2
 )
+cmake_policy(SET CMP0169 OLD)
 
-FetchContent_MakeAvailable(unity)
+FetchContent_GetProperties(unity)
+if(NOT unity_POPULATED)
+    FetchContent_Populate(unity)
+    add_subdirectory(${unity_SOURCE_DIR} ${unity_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+cmake_policy(SET CMP0169 NEW)
 
 # ============================================================================
 # Common test configuration
@@ -77,40 +84,6 @@ endif()
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/integration/test_scenarios.c)
     add_clap_test(test_scenarios integration/test_scenarios.c)
 endif()
-
-# ============================================================================
-# Combined Test Runner
-# ============================================================================
-
-# set(COMBINED_TEST_SOURCES
-#     test_main.c
-#     unit/test_clap.c
-#     unit/test_allocator.c
-#     unit/test_arena.c
-#     unit/test_buffer.c
-#     unit/test_trie.c
-#     unit/test_error.c
-#     unit/test_parser.c
-#     unit/test_argument.c
-#     unit/test_namespace.c
-#     unit/test_validator.c
-#     unit/test_convert.c
-#     unit/test_actions.c
-#     unit/test_mutex.c
-#     unit/test_dependency.c
-#     unit/test_subparser.c
-#     unit/test_find.c
-#     unit/test_formatter.c
-#     unit/test_tokenizer.c
-# )
-
-# add_executable(test_all ${COMBINED_TEST_SOURCES})
-# target_link_libraries(test_all PRIVATE clap_static unity)
-# target_include_directories(test_all PRIVATE 
-#     ${unity_SOURCE_DIR}/src
-#     ${CMAKE_SOURCE_DIR}/src
-# )
-# add_test(NAME test_all COMMAND test_all)
 
 # ============================================================================
 # Platform-specific test adjustments
