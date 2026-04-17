@@ -38,10 +38,7 @@ function(set_clap_coverage target)
         if(CMAKE_COMPILER_IS_GNUCC)
             target_compile_options(${target} PRIVATE --coverage)
             target_link_options(${target} PRIVATE --coverage)
-
-            if(MINGW)
-                target_link_libraries(${target} PRIVATE gcov)
-            endif()
+            target_link_libraries(${target} PRIVATE gcov)
         elseif(CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang")
             target_compile_options(${target} PRIVATE
                 -fprofile-instr-generate

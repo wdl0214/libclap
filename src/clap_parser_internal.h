@@ -19,6 +19,10 @@
 #include <limits.h>
 #include <stdint.h>
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4200)  // nonstandard extension: zero-sized array
+#endif
+
 /* Maximum values */
 #define CLAP_MAX_ARGUMENTS      256
 #define CLAP_MAX_ARG_LENGTH     4096
