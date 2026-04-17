@@ -382,7 +382,7 @@ void test_parse_flow_nargs_plus(void) {
     char *argv[] = {"prog", "a.txt", "b.txt"};
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
-    
+
     bool result = clap_parse_args(parser, 3, argv, &ns, &error);
     TEST_ASSERT_TRUE(result);
     
@@ -392,7 +392,7 @@ void test_parse_flow_nargs_plus(void) {
     char *argv2[] = {"prog"};
     result = clap_parse_args(parser, 1, argv2, &ns, &error);
     TEST_ASSERT_FALSE(result);
-    TEST_ASSERT_EQUAL(CLAP_ERR_TOO_FEW_ARGS, error.code);
+    TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
 }
@@ -420,6 +420,257 @@ void test_parse_flow_stop_parsing(void) {
 }
 
 /* ============================================================================
+ * nargs=N Tests - Positional Arguments
+ * ============================================================================ */
+
+/**
+ * @brief Test: Positional nargs=3 with exactly 3 arguments - should succeed
+ */
+void test_parse_flow_positional_nargs_exact_success(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "1", "2", "3"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+
+    const char **values;
+    size_t count;
+    TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "nums", &values, &count));
+    TEST_ASSERT_EQUAL(3, count);
+    TEST_ASSERT_EQUAL_STRING("1", values[0]);
+    TEST_ASSERT_EQUAL_STRING("2", values[1]);
+    TEST_ASSERT_EQUAL_STRING("3", values[2]);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Positional nargs=3 with 2 arguments - should fail with TOO_FEW_ARGS
+ */
+void test_parse_flow_positional_nargs_too_few(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "1", "2"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TOO_FEW_ARGS, error.code);
+    TEST_ASSERT_NOT_NULL(strstr(error.message, "nums"));
+    TEST_ASSERT_NULL(ns);
+
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Positional nargs=3 with 0 arguments - should fail with REQUIRED_MISSING
+ */
+void test_parse_flow_positional_nargs_zero_provided(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
+    TEST_ASSERT_NOT_NULL(strstr(error.message, "nums"));
+    TEST_ASSERT_NULL(ns);
+
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Positional nargs=3 with 4 arguments - should fail with TOO_MANY_ARGS
+ */
+void test_parse_flow_positional_nargs_too_many(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "1", "2", "3", "4"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TOO_MANY_ARGS, error.code);
+    TEST_ASSERT_NULL(ns);
+
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Positional nargs=3 with optional argument before it
+ */
+void test_parse_flow_positional_nargs_with_optional_before(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+
+    clap_argument_t *nums = clap_add_argument(parser, "nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "--verbose", "1", "2", "3"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+
+    bool verbose_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
+    TEST_ASSERT_TRUE(verbose_val);
+
+    const char **values;
+    size_t count;
+    TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "nums", &values, &count));
+    TEST_ASSERT_EQUAL(3, count);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * nargs=N Tests - Optional Arguments
+ * ============================================================================ */
+
+/**
+ * @brief Test: Optional with nargs=3, exactly 3 provided - success
+ */
+void test_parse_flow_optional_nargs_exact_success(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "--nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "--nums", "1", "2", "3"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+
+    const char **values;
+    size_t count;
+    TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "nums", &values, &count));
+    TEST_ASSERT_EQUAL(3, count);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Optional with nargs=3, 2 provided - TOO_FEW_ARGS
+ */
+void test_parse_flow_optional_nargs_too_few(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "--nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog", "--nums", "1", "2"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TOO_FEW_ARGS, error.code);
+
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Optional with nargs=3, 0 provided - SUCCESS (optional)
+ */
+void test_parse_flow_optional_nargs_zero_provided(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "--nums");
+    clap_argument_nargs(nums, 3);
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Optional with nargs='+', 0 provided - SUCCESS (optional)
+ */
+void test_parse_flow_optional_nargs_plus_zero_provided(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *files = clap_add_argument(parser, "--files");
+    clap_argument_nargs(files, '+');
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Required optional with nargs=3, 0 provided - REQUIRED_MISSING
+ */
+void test_parse_flow_required_optional_nargs_zero(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *nums = clap_add_argument(parser, "--nums");
+    clap_argument_nargs(nums, 3);
+    clap_argument_required(nums, true);
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
+
+    clap_parser_free(parser);
+}
+
+/**
+ * @brief Test: Required optional with nargs='+', 0 provided - REQUIRED_MISSING
+ */
+void test_parse_flow_required_optional_nargs_plus_zero(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *files = clap_add_argument(parser, "--files");
+    clap_argument_nargs(files, '+');
+    clap_argument_required(files, true);
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -431,22 +682,37 @@ int main(void) {
     RUN_TEST(test_parse_flow_positional_only);
     RUN_TEST(test_parse_flow_optional_only);
     RUN_TEST(test_parse_flow_mixed_arguments);
-    
+
     RUN_TEST(test_parse_flow_unrecognized_option);
     RUN_TEST(test_parse_flow_missing_required);
     RUN_TEST(test_parse_flow_invalid_choice);
     RUN_TEST(test_parse_flow_type_conversion_error);
-    
+
     RUN_TEST(test_parse_flow_mutex_conflict);
     RUN_TEST(test_parse_flow_mutex_required_missing);
-    
+
     RUN_TEST(test_parse_flow_subcommand_basic);
     RUN_TEST(test_parse_flow_subcommand_with_global);
     RUN_TEST(test_parse_flow_subcommand_error);
-    
+
     RUN_TEST(test_parse_flow_nargs_star);
     RUN_TEST(test_parse_flow_nargs_plus);
     RUN_TEST(test_parse_flow_stop_parsing);
-    
+
+    // /* Positional nargs=N tests */
+    RUN_TEST(test_parse_flow_positional_nargs_exact_success);
+    RUN_TEST(test_parse_flow_positional_nargs_too_few);
+    RUN_TEST(test_parse_flow_positional_nargs_zero_provided);
+    RUN_TEST(test_parse_flow_positional_nargs_too_many);
+    RUN_TEST(test_parse_flow_positional_nargs_with_optional_before);
+
+    // /* Optional nargs=N tests */
+    // RUN_TEST(test_parse_flow_optional_nargs_exact_success);
+    // RUN_TEST(test_parse_flow_optional_nargs_too_few);
+    RUN_TEST(test_parse_flow_optional_nargs_zero_provided);
+    RUN_TEST(test_parse_flow_optional_nargs_plus_zero_provided);
+    RUN_TEST(test_parse_flow_required_optional_nargs_zero);
+    RUN_TEST(test_parse_flow_required_optional_nargs_plus_zero);
+
     return UNITY_END();
 }

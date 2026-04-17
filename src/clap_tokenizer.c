@@ -280,6 +280,44 @@ static bool execute_action(clap_parser_t *parser,
     }
 }
 
+static bool check_required_positional(clap_argument_t *arg,
+                                       clap_namespace_t *ns,
+                                       clap_error_t *error) {
+    /* Positional arguments are required unless nargs='?' or '*' or REMAINDER */
+    if (arg->nargs == CLAP_NARGS_ZERO_OR_ONE ||
+        arg->nargs == CLAP_NARGS_ZERO_OR_MORE ||
+        arg->nargs == CLAP_NARGS_REMAINDER) {
+        return true;
+    }
+
+    bool is_present = false;
+
+    if (arg->flags & CLAP_ARG_MULTIPLE) {
+        const char **values;
+        size_t count = 0;
+        is_present = clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest),
+                                                      &values, &count) && count > 0;
+    } else if (arg->nargs > 1) {
+        /* nargs=N (N>1) - check array */
+        const char **values;
+        size_t count = 0;
+        is_present = clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest),
+                                                      &values, &count) && count == (size_t)arg->nargs;
+    } else {
+        const char *value;
+        is_present = clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value);
+    }
+
+    if (!is_present) {
+        clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
+                       "the following arguments are required: %s",
+                       clap_buffer_cstr(arg->display_name));
+        return false;
+    }
+
+    return true;
+}
+
 /* Check required optional arguments */
 static bool check_required_option(clap_argument_t *arg,
                                    clap_namespace_t *ns,
@@ -289,18 +327,24 @@ static bool check_required_option(clap_argument_t *arg,
     }
 
     bool is_present = false;
-    
-    if (arg->action == CLAP_ACTION_STORE_TRUE || 
-        arg->action == CLAP_ACTION_STORE_FALSE) {
+
+    if (arg->flags & CLAP_ARG_MULTIPLE) {
+        /* nargs='+' or '*' - check array */
+        const char **values;
+        size_t count = 0;
+        is_present = clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest),
+                                                      &values, &count) && count > 0;
+    } else if (arg->action == CLAP_ACTION_STORE_TRUE ||
+               arg->action == CLAP_ACTION_STORE_FALSE) {
         bool value;
         is_present = clap_namespace_get_bool(ns, clap_buffer_cstr(arg->dest), &value);
-    } else if (arg->action == CLAP_ACTION_COUNT) {
-        int count;
-        is_present = clap_namespace_get_int(ns, clap_buffer_cstr(arg->dest), &count) && count > 0;
-    } else {
-        const char *value;
-        is_present = clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value);
-    }
+               } else if (arg->action == CLAP_ACTION_COUNT) {
+                   int count;
+                   is_present = clap_namespace_get_int(ns, clap_buffer_cstr(arg->dest), &count) && count > 0;
+               } else {
+                   const char *value;
+                   is_present = clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value);
+               }
 
     if (!is_present) {
         clap_buffer_t *opt_name = clap_buffer_empty();
@@ -308,15 +352,15 @@ static bool check_required_option(clap_argument_t *arg,
             if (j > 0) clap_buffer_cat(&opt_name, "/");
             clap_buffer_cat(&opt_name, arg->option_strings[j]);
         }
-        
+
         clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
                        "the following arguments are required: %s",
                        clap_buffer_cstr(opt_name));
-        
+
         clap_buffer_free(opt_name);
         return false;
     }
-    
+
     return true;
 }
 
@@ -473,7 +517,7 @@ bool clap_parse_args(clap_parser_t *parser,
             const char *value = NULL;
             if (token.type == TOKEN_LONG_OPTION_EQ) {
                 value = token.value;
-            } else if (arg->nargs != 0 && 
+            } else if (arg->nargs != 0 &&
                        arg->action != CLAP_ACTION_STORE_TRUE &&
                        arg->action != CLAP_ACTION_STORE_FALSE &&
                        arg->action != CLAP_ACTION_STORE_CONST &&
@@ -498,11 +542,11 @@ bool clap_parse_args(clap_parser_t *parser,
             /* First check if this is a subcommand */
             if (parser->has_subparsers && positional_index == 0) {
                 clap_parser_t *subparser = NULL;
-                
+
                 if (parser->subparsers_container) {
                     for (size_t i = 0; i < parser->subparsers_container->subparser_count; i++) {
                         clap_parser_t *sub = parser->subparsers_container->subparsers[i];
-                        
+
                         const char *full_name = clap_buffer_cstr(sub->prog_name);
                         const char *cmd_name = strrchr(full_name, ' ');
                         if (cmd_name) {
@@ -525,11 +569,11 @@ bool clap_parse_args(clap_parser_t *parser,
                         /* Subcommand parsing failed - return error to caller */
                         clap_free(mutex_group_used);
                         clap_namespace_free(ns);
-                        
+
                         /* Copy error to output */
                         *error = sub_error;
                         error->subcommand_name = current;
-                        
+
                         /* Store subparser in error context for caller to print help */
                         /* Caller can check error code and print subcommand help */
                         return false;
@@ -556,6 +600,7 @@ bool clap_parse_args(clap_parser_t *parser,
             }
 
             clap_argument_t *pos_arg = parser->positional_args[positional_index];
+            int nargs_needed = pos_arg->nargs;
 
             /* Validate choices for positional argument */
             if (pos_arg->choices && pos_arg->choice_count > 0) {
@@ -566,31 +611,68 @@ bool clap_parse_args(clap_parser_t *parser,
                 }
             }
 
-            /* Store positional argument value */
-            if (pos_arg->flags & CLAP_ARG_MULTIPLE) {
+            /* Check if this is a fixed nargs > 1 (not a special constant) */
+            if (nargs_needed > 1 &&
+                nargs_needed != CLAP_NARGS_ZERO_OR_MORE &&
+                nargs_needed != CLAP_NARGS_ONE_OR_MORE &&
+                nargs_needed != CLAP_NARGS_ZERO_OR_ONE &&
+                nargs_needed != CLAP_NARGS_REMAINDER) {
+
+                /* Need exactly N arguments - consume them all at once */
+                if (pos + nargs_needed > argc) {
+                    clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                    "argument %s: expected %d argument(s), got %d",
+                            clap_buffer_cstr(pos_arg->display_name),
+                            nargs_needed, argc - pos);
+                    clap_free(mutex_group_used);
+                    clap_namespace_free(ns);
+                    return false;
+                }
+
+                /* Collect all N values */
+                for (int j = 0; j < nargs_needed; j++) {
+                    const char *val = argv[pos + j];
+
+                    /* Validate choices for each value */
+                    if (pos_arg->choices && pos_arg->choice_count > 0) {
+                        if (!clap_validate_choice(pos_arg, val, error)) {
+                            clap_free(mutex_group_used);
+                            clap_namespace_free(ns);
+                            return false;
+                        }
+                    }
+
+                    /* Append to array */
+                    if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), val)) {
+                        clap_free(mutex_group_used);
+                        clap_namespace_free(ns);
+                        return false;
+                    }
+                }
+
+                pos += nargs_needed;
+                positional_index++;  /* Only increment after consuming all N */
+
+            } else if (pos_arg->flags & CLAP_ARG_MULTIPLE) {
                 /* For nargs='*' or nargs='+', append to array */
                 if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), current)) {
                     clap_free(mutex_group_used);
                     clap_namespace_free(ns);
                     return false;
                 }
-                /* Don't increment positional_index for '*' since it consumes all */
+                pos++;
+                /* Don't increment positional_index for '*' and '+' */
                 if (pos_arg->nargs == CLAP_NARGS_ONE_OR_MORE) {
-                    /* For '+', it's still multiple but required */
+                    /* For '+', keep consuming but it's still the same argument */
                 }
             } else {
-                /* Single value */
+                /* Single value (nargs=1, nargs='?', etc.) */
                 if (!execute_action(parser, pos_arg, ns, current, error)) {
                     clap_free(mutex_group_used);
                     clap_namespace_free(ns);
                     return false;
                 }
-            }
-
-            pos++;
-
-            /* Only move to next positional if this one doesn't accept multiple */
-            if (!(pos_arg->flags & CLAP_ARG_MULTIPLE)) {
+                pos++;
                 positional_index++;
             }
         }
@@ -598,17 +680,10 @@ bool clap_parse_args(clap_parser_t *parser,
 
     /* Check required positional arguments */
     for (size_t i = 0; i < parser->positional_count; i++) {
-        clap_argument_t *arg = parser->positional_args[i];
-        if ((arg->flags & CLAP_ARG_REQUIRED)) {
-            const char *value;
-            if (!clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value)) {
-                clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
-                               "the following arguments are required: %s",
-                               clap_buffer_cstr(arg->display_name));
-                clap_free(mutex_group_used);
-                clap_namespace_free(ns);
-                return false;
-            }
+        if (!check_required_positional(parser->positional_args[i], ns, error)) {
+            clap_free(mutex_group_used);
+            clap_namespace_free(ns);
+            return false;
         }
     }
 
@@ -631,7 +706,7 @@ bool clap_parse_args(clap_parser_t *parser,
             const char **values;
             size_t count = 0;
             if (!clap_namespace_get_string_array(ns, clap_buffer_cstr(arg->dest), &values, &count) || count < 1) {
-                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
                                "the following arguments are required: %s",
                                clap_buffer_cstr(arg->display_name));
                 clap_free(mutex_group_used);

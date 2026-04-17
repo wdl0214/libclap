@@ -14,6 +14,7 @@ static bool parse_name_or_flags(clap_argument_t *arg, const char *spec, clap_err
     /* Positional argument (no leading dash) */
     if (spec[0] != '-') {
         arg->flags |= CLAP_ARG_POSITIONAL;
+        arg->flags |= CLAP_ARG_REQUIRED;
         arg->option_strings = clap_calloc(1, sizeof(char*));
         if (!arg->option_strings) {
             clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate memory");
@@ -186,6 +187,11 @@ clap_argument_t* clap_argument_default(clap_argument_t *arg, const char *default
 
 clap_argument_t* clap_argument_required(clap_argument_t *arg, bool required) {
     if (arg) {
+        if (arg->flags & CLAP_ARG_POSITIONAL) {
+            /* Positional arguments cannot have required explicitly set */
+            return arg;
+        }
+
         if (required) {
             arg->flags |= CLAP_ARG_REQUIRED;
         } else {
@@ -233,12 +239,26 @@ clap_argument_t* clap_argument_nargs(clap_argument_t *arg, int nargs) {
         } else {
             arg->nargs = nargs;
         }
-        
-        if (arg->nargs == CLAP_NARGS_ZERO_OR_MORE || 
+
+        /* Update CLAP_ARG_MULTIPLE flag */
+        if (arg->nargs == CLAP_NARGS_ZERO_OR_MORE ||
             arg->nargs == CLAP_NARGS_ONE_OR_MORE) {
             arg->flags |= CLAP_ARG_MULTIPLE;
-        } else {
-            arg->flags &= ~((unsigned int)CLAP_ARG_MULTIPLE);
+            } else {
+                arg->flags &= ~((unsigned int)CLAP_ARG_MULTIPLE);
+            }
+
+        /* Update CLAP_ARG_REQUIRED flag for positional arguments */
+        if (arg->flags & CLAP_ARG_POSITIONAL) {
+            if (arg->nargs == CLAP_NARGS_ZERO_OR_ONE ||
+                arg->nargs == CLAP_NARGS_ZERO_OR_MORE ||
+                arg->nargs == CLAP_NARGS_REMAINDER) {
+                /* Optional positionals: '?', '*', REMAINDER */
+                arg->flags &= ~((unsigned int)CLAP_ARG_REQUIRED);
+                } else {
+                    /* Required positionals: default (1), N, '+' */
+                    arg->flags |= CLAP_ARG_REQUIRED;
+                }
         }
     }
     return arg;

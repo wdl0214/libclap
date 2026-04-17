@@ -55,6 +55,91 @@ void test_add_argument_positional_multiple(void) {
     TEST_ASSERT_EQUAL(2, g_parser->positional_count);
 }
 
+void test_add_argument_positional_default_required_flag_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "input");
+
+    /* Default nargs=1 should set CLAP_ARG_REQUIRED */
+    TEST_ASSERT_EQUAL(1, arg->nargs);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_plus_required_flag_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "files");
+    clap_argument_nargs(arg, '+');
+
+    TEST_ASSERT_EQUAL(CLAP_NARGS_ONE_OR_MORE, arg->nargs);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_number_required_flag_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "numbers");
+    clap_argument_nargs(arg, 3);
+
+    TEST_ASSERT_EQUAL(3, arg->nargs);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_question_required_flag_not_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "dest");
+    clap_argument_nargs(arg, '?');
+
+    TEST_ASSERT_EQUAL(CLAP_NARGS_ZERO_OR_ONE, arg->nargs);
+    TEST_ASSERT_FALSE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_star_required_flag_not_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "files");
+    clap_argument_nargs(arg, '*');
+
+    TEST_ASSERT_EQUAL(CLAP_NARGS_ZERO_OR_MORE, arg->nargs);
+    TEST_ASSERT_FALSE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_remainder_required_flag_not_set(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "args");
+    clap_argument_nargs(arg, CLAP_NARGS_REMAINDER);
+
+    TEST_ASSERT_EQUAL(CLAP_NARGS_REMAINDER, arg->nargs);
+    TEST_ASSERT_FALSE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_required_api_ignored(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "input");
+
+    /* Trying to set required=false should be ignored (or could assert in debug) */
+    clap_argument_required(arg, false);
+
+    /* Positional should still be required */
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_REQUIRED);
+}
+
+void test_add_argument_positional_nargs_required_flag_matrix(void) {
+    struct {
+        int nargs;
+        bool expected_required;
+    } test_cases[] = {
+        {1, true},
+        {2, true},
+        {3, true},
+        {5, true},
+        {'?', false},
+        {'*', false},
+        {'+', true},
+        {CLAP_NARGS_REMAINDER, false},
+    };
+
+    for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); i++) {
+        clap_argument_t *arg = clap_add_argument(g_parser, "arg");
+        clap_argument_nargs(arg, test_cases[i].nargs);
+
+        TEST_ASSERT_EQUAL(test_cases[i].expected_required,
+                          (bool)(arg->flags & CLAP_ARG_REQUIRED));
+
+        clap_parser_free(g_parser);
+        g_parser = clap_parser_new("prog", NULL, NULL);
+    }
+}
+
 /* ============================================================================
  * clap_add_argument Tests - Optional (Short)
  * ============================================================================ */
@@ -439,71 +524,79 @@ void run_test_argument(void) {
     /* Positional Tests */
     RUN_TEST(test_add_argument_positional_basic);
     RUN_TEST(test_add_argument_positional_multiple);
-    
+    RUN_TEST(test_add_argument_positional_default_required_flag_set);
+    RUN_TEST(test_add_argument_positional_nargs_plus_required_flag_set);
+    RUN_TEST(test_add_argument_positional_nargs_number_required_flag_set);
+    RUN_TEST(test_add_argument_positional_nargs_question_required_flag_not_set);
+    RUN_TEST(test_add_argument_positional_nargs_star_required_flag_not_set);
+    RUN_TEST(test_add_argument_positional_nargs_remainder_required_flag_not_set);
+    RUN_TEST(test_add_argument_positional_required_api_ignored);
+    RUN_TEST(test_add_argument_positional_nargs_required_flag_matrix);
+
     /* Short Option Tests */
     RUN_TEST(test_add_argument_short_option);
     RUN_TEST(test_add_argument_short_option_uppercase);
-    
+
     /* Long Option Tests */
     RUN_TEST(test_add_argument_long_option);
     RUN_TEST(test_add_argument_long_option_with_dashes);
-    
+
     /* Combined Tests */
     RUN_TEST(test_add_argument_combined);
     RUN_TEST(test_add_argument_combined_three);
     RUN_TEST(test_add_argument_combined_longest_as_display);
-    
+
     /* Edge Cases */
     RUN_TEST(test_add_argument_null_parser);
     RUN_TEST(test_add_argument_null_name);
     RUN_TEST(test_add_argument_empty_name);
     RUN_TEST(test_add_argument_expands_array);
-    
+
     /* Help Tests */
     RUN_TEST(test_argument_help_basic);
     RUN_TEST(test_argument_help_overwrite);
     RUN_TEST(test_argument_help_null_arg);
     RUN_TEST(test_argument_help_null_text);
-    
+
     /* Type Tests */
     RUN_TEST(test_argument_type_basic);
     RUN_TEST(test_argument_type_overwrite);
-    
+
     /* Default Tests */
     RUN_TEST(test_argument_default_basic);
     RUN_TEST(test_argument_default_overwrite);
-    
+
     /* Required Tests */
     RUN_TEST(test_argument_required_true);
     RUN_TEST(test_argument_required_false);
-    
+
     /* Choices Tests */
     RUN_TEST(test_argument_choices_basic);
     RUN_TEST(test_argument_choices_overwrite);
     RUN_TEST(test_argument_choices_null_arg);
-    
+
     /* Const Tests */
     RUN_TEST(test_argument_const_basic);
-    
+
     /* Nargs Tests */
     RUN_TEST(test_argument_nargs_star);
     RUN_TEST(test_argument_nargs_plus);
     RUN_TEST(test_argument_nargs_question);
     RUN_TEST(test_argument_nargs_number);
     RUN_TEST(test_argument_nargs_clear_multiple);
-    
+
     /* Action Tests */
     RUN_TEST(test_argument_action_basic);
-    
+
     /* Metavar Tests */
     RUN_TEST(test_argument_metavar_basic);
-    
+
     /* Group Tests */
     RUN_TEST(test_argument_group_basic);
-    
+
     /* Dest Tests */
     RUN_TEST(test_argument_dest_basic);
-    
+
     /* Handler Tests */
     RUN_TEST(test_argument_handler_basic);
 }
