@@ -86,7 +86,7 @@ void test_error_set_with_numbers(void) {
     clap_error_init(&error);
     
     clap_error_set(&error, CLAP_ERR_TOO_MANY_ARGS,
-                   "Expected %d arguments, got %zu", 3, 5);
+               "Expected %d arguments, got %d", 3, 5);
     
     TEST_ASSERT_EQUAL(CLAP_ERR_TOO_MANY_ARGS, error.code);
     TEST_ASSERT_EQUAL_STRING("Expected 3 arguments, got 5", error.message);
