@@ -32,7 +32,7 @@ extern "C" {
 #define CLAP_NARGS_OPTIONAL      CLAP_NARGS_ZERO_OR_ONE
 #define CLAP_NARGS_REMAINDER     (-1)  /**< Consume all remaining arguments */
 #define CLAP_NARGS_PARSER        (-2)  /**< Consume for subparser */
-
+#define CLAP_NARGS_DEFAULT       (1)
 /* ============================================================================
  * Parser API
  * ============================================================================ */

@@ -58,6 +58,7 @@ set(UNIT_TESTS
     test_validator
     test_convert
     test_actions
+    test_action_executor
     test_mutex
     test_dependency
     test_subparser

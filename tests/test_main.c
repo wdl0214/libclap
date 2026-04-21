@@ -22,6 +22,7 @@ extern void run_test_namespace(void);
 extern void run_test_validator(void);
 extern void run_test_convert(void);
 extern void run_test_actions(void);
+extern void run_test_action_executor(void);
 extern void run_test_mutex(void);
 extern void run_test_dependency(void);
 extern void run_test_subparser(void);
@@ -63,6 +64,7 @@ int main(void) {
     run_test_validator();
     run_test_convert();
     run_test_actions();
+    run_test_action_executor();
     
     /* Advanced */
     run_test_mutex();

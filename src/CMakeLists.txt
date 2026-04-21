@@ -8,8 +8,11 @@ set(CLAP_SOURCES
     clap_namespace.c
     clap_error.c
     clap_tokenizer.c
+    clap_pattern.c
+    clap_parser_stage.c
     clap_validator.c
     clap_actions.c
+    clap_action_executor.c
     clap_mutex.c
     clap_dependency.c
     clap_convert.c

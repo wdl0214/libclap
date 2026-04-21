@@ -5,6 +5,69 @@
 
 #include "clap_parser_internal.h"
 
+static bool convert_and_store(clap_argument_t *arg,
+                              clap_namespace_t *ns,
+                              const char *value,
+                              clap_error_t *error) {
+    const char *type_name = clap_buffer_cstr(arg->type_name);
+
+    if (strcmp(type_name, "string") == 0) {
+        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+    }
+
+    if (strcmp(type_name, "int") == 0) {
+        int int_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_int_handler;
+        }
+        if (!arg->type_handler(value, &int_val, sizeof(int), error)) {
+            return false;
+        }
+        return clap_namespace_set_int(ns, clap_buffer_cstr(arg->dest), int_val);
+    }
+
+    if (strcmp(type_name, "float") == 0) {
+        double float_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_float_handler;
+        }
+        if (!arg->type_handler(value, &float_val, sizeof(double), error)) {
+            return false;
+        }
+        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+    }
+
+    if (strcmp(type_name, "bool") == 0) {
+        bool bool_val;
+        if (!arg->type_handler) {
+            arg->type_handler = clap_type_bool_handler;
+        }
+        if (!arg->type_handler(value, &bool_val, sizeof(bool), error)) {
+            return false;
+        }
+        return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), bool_val);
+    }
+
+    if (arg->type_handler) {
+        void *buffer = clap_malloc(arg->type_size);
+        if (!buffer) {
+            clap_error_set(error, CLAP_ERR_MEMORY,
+                           "Failed to allocate memory for type conversion");
+            return false;
+        }
+
+        bool result = arg->type_handler(value, buffer, arg->type_size, error);
+        clap_free(buffer);
+
+        if (result) {
+            return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+        }
+        return false;
+    }
+
+    return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+}
+
 /* STORE action */
 bool clap_action_store(clap_parser_t *parser,
                        clap_argument_t *arg,
@@ -15,10 +78,9 @@ bool clap_action_store(clap_parser_t *parser,
                        clap_error_t *error) {
     (void)parser;
     (void)user_data;
-    (void)error;
     
     if (count == 0) return true;
-    return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), values[0]);
+    return convert_and_store(arg, ns, values[0], error);
 }
 
 /* STORE_CONST action */
@@ -33,7 +95,6 @@ bool clap_action_store_const(clap_parser_t *parser,
     (void)values;
     (void)count;
     (void)user_data;
-    (void)error;
     
     if (!arg->const_value) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
@@ -41,8 +102,7 @@ bool clap_action_store_const(clap_parser_t *parser,
         return false;
     }
     
-    return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest),
-                                      clap_buffer_cstr(arg->const_value));
+    return convert_and_store(arg, ns, clap_buffer_cstr(arg->const_value), error);
 }
 
 /* STORE_TRUE action */

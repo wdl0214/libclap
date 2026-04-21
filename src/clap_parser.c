@@ -27,6 +27,7 @@ clap_parser_t* clap_parser_new(const char *prog_name,
 
     parser->help_width = 100;
     parser->add_help_option = true;
+    parser->allow_abbrev = false;
     parser->next_group_id = 0;
     parser->subparsers_container = NULL;
 
@@ -114,6 +115,11 @@ void clap_parser_set_help_width(clap_parser_t *parser, int width) {
     }
 }
 
+void clap_parser_set_allow_abbrev(clap_parser_t *parser, bool allow) {
+    if (parser) {
+        parser->allow_abbrev = allow;
+    }
+}
 
 void clap_parser_set_version(clap_parser_t *parser, const char *version) {
     if (parser) {

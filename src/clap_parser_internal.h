@@ -209,10 +209,96 @@ struct clap_parser_s {
     /* Options */
     int help_width;
     bool add_help_option;
+    bool allow_abbrev;
 
     /* Error */
     clap_error_t last_error;
 };
+
+/* ============================================================================
+ * Tokenizer Types
+ * ============================================================================ */
+
+typedef enum {
+    TOKEN_END,
+    TOKEN_POSITIONAL,
+    TOKEN_LONG_OPTION,
+    TOKEN_LONG_OPTION_EQ,
+    TOKEN_SHORT_OPTION,
+    TOKEN_SHORT_OPTION_BUNDLE,
+    TOKEN_STOP,
+} token_type_t;
+
+typedef struct {
+    token_type_t type;
+    const char *raw;
+    const char *option_name;
+    const char *value;
+    bool name_allocated;
+} token_t;
+
+typedef token_t clap_token_t;
+
+/* ============================================================================
+ * Pattern Types
+ * ============================================================================ */
+
+typedef enum {
+    PATTERN_OPTION = 'O',
+    PATTERN_ARGUMENT = 'A',
+    PATTERN_STOP = '-'
+} clap_pattern_char_t;
+
+typedef struct {
+    char *pattern;
+    size_t pattern_len;
+    size_t *option_indices;
+    clap_argument_t ***option_matches;
+    size_t *option_match_counts;
+    size_t option_count;
+} clap_pattern_t;
+
+typedef enum {
+    PARSE_STATE_START,
+    PARSE_STATE_OPTIONS,
+    PARSE_STATE_POSITIONALS,
+    PARSE_STATE_REMAINDER,
+    PARSE_STATE_DONE
+} clap_parse_state_t;
+
+/* ============================================================================
+ * Internal Function Declarations
+ * ============================================================================ */
+
+clap_token_t tokenize_arg(const char *arg);
+clap_token_t* clap_tokenize(int argc, char *argv[], size_t *count, clap_error_t *error);
+void clap_tokenize_free(clap_token_t *tokens, size_t count);
+char** clap_expand_short_bundle(const char *bundle, size_t *count);
+bool check_required_positional(clap_argument_t *arg, clap_namespace_t *ns, clap_error_t *error);
+bool check_required_option(clap_argument_t *arg, clap_namespace_t *ns, clap_error_t *error);
+bool check_positional_nargs_constraint(clap_argument_t *arg, clap_namespace_t *ns, clap_error_t *error);
+
+clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
+                                     clap_token_t *tokens,
+                                     size_t token_count,
+                                     clap_error_t *error);
+void clap_pattern_free(clap_pattern_t *pattern);
+
+
+size_t clap_match_nargs(clap_argument_t *arg,
+                        const char *pattern,
+                        size_t start_idx,
+                        size_t pattern_len);
+bool clap_validate_nargs_count(clap_argument_t *arg,
+                                size_t consumed,
+                                clap_error_t *error);
+
+bool clap_parse_with_pattern(clap_parser_t *parser,
+                             clap_token_t *tokens,
+                             clap_pattern_t *pattern,
+                             clap_namespace_t *ns,
+                             bool *mutex_group_used,
+                             clap_error_t *error);
 
 /* ============================================================================
  * Namespace Value Types
@@ -285,6 +371,11 @@ bool clap_action_custom(clap_parser_t *parser, clap_argument_t *arg,
                          size_t count, void *user_data, clap_error_t *error);
 clap_action_handler_t get_action_handler(clap_action_t action);
 
+bool clap_apply_argument_action(clap_parser_t *parser,
+                                clap_argument_t *arg,
+                                clap_namespace_t *ns,
+                                const char *value,
+                                clap_error_t *error);
 /* ============================================================================
  * Buffer Structure (Internal)
  * ============================================================================ */
@@ -374,26 +465,17 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
 /* Option lookup */
 clap_argument_t* clap_find_option(clap_parser_t *parser, const char *name, bool is_long);
 clap_argument_t* clap_find_option_fast(clap_parser_t *parser, const char *name, bool is_long);
+clap_argument_t* clap_find_option_best_match(clap_parser_t *parser, const char *name, bool is_long, bool *ambiguous);
 
 /* Namespace internal */
 clap_namespace_t* clap_namespace_new(void);
 bool clap_namespace_merge(clap_namespace_t *dst, clap_namespace_t *src);
 
-/* Tokenizer internal */
-typedef enum {
-    TOKEN_END,
-    TOKEN_POSITIONAL,
-    TOKEN_LONG_OPTION,
-    TOKEN_LONG_OPTION_EQ,
-    TOKEN_SHORT_OPTION,
-    TOKEN_SHORT_OPTION_BUNDLE,
-    TOKEN_STOP,
-} token_type_t;
-
-typedef struct {
-    token_type_t type;
-    const char *option_name;
-    const char *value;
-} token_t;
+/* Mutually Exclusive internal */
+bool clap_mutex_check_conflict(clap_parser_t *parser,
+                          clap_argument_t *arg,
+                          bool *mutex_group_used,
+                          const char *option_str,
+                          clap_error_t *error);
 
 #endif /* CLAP_PARSER_INTERNAL_H */
