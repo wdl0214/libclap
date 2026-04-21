@@ -152,7 +152,19 @@ static bool parse_single_option(clap_parser_t *parser,
 
     if (token->type == TOKEN_LONG_OPTION_EQ) {
         value = token->value;
-    } else if (is_action_value_required(arg) && remaining > 1 && next_token && next_token->type == TOKEN_POSITIONAL) {
+    } else if (is_action_value_required(arg) && remaining > 1) {
+        if (next_token == NULL) {
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
+                           "Missing required argument for option '%s'",
+                           token->raw ? token->raw : token->option_name);
+            return false;
+        }
+
+        if (next_token->type == TOKEN_POSITIONAL) {
+            value = next_token->raw;
+            *consumed = 2;
+        }
+
         value = next_token->raw;
         *consumed = 2;
     }
@@ -162,6 +174,11 @@ static bool parse_single_option(clap_parser_t *parser,
     }
 
     if (arg->nargs == CLAP_NARGS_REMAINDER && remaining > *consumed) {
+        if (next_token == NULL) {
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
+                           "Cannot process remainder arguments: next_token is NULL");
+            return false;
+        }
         for (size_t i = *consumed; i < remaining; i++) {
             token_t *remaining_token = &next_token[i - 1];
             if (remaining_token->type == TOKEN_STOP) {
