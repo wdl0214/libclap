@@ -270,7 +270,7 @@ typedef enum {
  * Internal Function Declarations
  * ============================================================================ */
 
-clap_token_t tokenize_arg(const char *arg);
+clap_token_t clap_tokenize_arg(const char *arg);
 clap_token_t* clap_tokenize(int argc, char *argv[], size_t *count, clap_error_t *error);
 void clap_tokenize_free(clap_token_t *tokens, size_t count);
 char** clap_expand_short_bundle(const char *bundle, size_t *count);

@@ -5,7 +5,7 @@
 
 /* Include source directly to access static functions */
 #include "unity.h"
-#include "../../src/clap_tokenizer.c"
+#include "clap_parser_internal.h"
 
 /* ============================================================================
  * Test Setup and Teardown
@@ -24,25 +24,25 @@ void tearDown(void) {
  * ============================================================================ */
 
 void test_tokenize_null(void) {
-    token_t token = tokenize_arg(NULL);
+    token_t token = clap_tokenize_arg(NULL);
     TEST_ASSERT_EQUAL(TOKEN_END, token.type);
 }
 
 void test_tokenize_positional(void) {
-    token_t token = tokenize_arg("input.txt");
+    token_t token = clap_tokenize_arg("input.txt");
     TEST_ASSERT_EQUAL(TOKEN_POSITIONAL, token.type);
     TEST_ASSERT_EQUAL_STRING("input.txt", token.value);
 }
 
 void test_tokenize_positional_starts_with_dash(void) {
-    token_t token = tokenize_arg("-");
+    token_t token = clap_tokenize_arg("-");
     /* Single dash is a short option */
     TEST_ASSERT_EQUAL(TOKEN_POSITIONAL, token.type);
     TEST_ASSERT_EQUAL_STRING("-", token.value);
 }
 
 void test_tokenize_stop(void) {
-    token_t token = tokenize_arg("--");
+    token_t token = clap_tokenize_arg("--");
     TEST_ASSERT_EQUAL(TOKEN_STOP, token.type);
 }
 
@@ -51,20 +51,20 @@ void test_tokenize_stop(void) {
  * ============================================================================ */
 
 void test_tokenize_long_option(void) {
-    token_t token = tokenize_arg("--help");
+    token_t token = clap_tokenize_arg("--help");
     TEST_ASSERT_EQUAL(TOKEN_LONG_OPTION, token.type);
     TEST_ASSERT_EQUAL_STRING("help", token.option_name);
 }
 
 void test_tokenize_long_option_with_equals(void) {
-    token_t token = tokenize_arg("--output=file.txt");
+    token_t token = clap_tokenize_arg("--output=file.txt");
     TEST_ASSERT_EQUAL(TOKEN_LONG_OPTION_EQ, token.type);
     TEST_ASSERT_EQUAL_STRING("output", token.option_name);
     TEST_ASSERT_EQUAL_STRING("file.txt", token.value);
 }
 
 void test_tokenize_long_option_with_multiple_equals(void) {
-    token_t token = tokenize_arg("--config=a=b=c");
+    token_t token = clap_tokenize_arg("--config=a=b=c");
     TEST_ASSERT_EQUAL(TOKEN_LONG_OPTION_EQ, token.type);
     /* option_name points to "config=a=b=c", caller handles '=' */
     TEST_ASSERT_EQUAL_STRING("a=b=c", token.value);
@@ -75,19 +75,19 @@ void test_tokenize_long_option_with_multiple_equals(void) {
  * ============================================================================ */
 
 void test_tokenize_short_option(void) {
-    token_t token = tokenize_arg("-h");
+    token_t token = clap_tokenize_arg("-h");
     TEST_ASSERT_EQUAL(TOKEN_SHORT_OPTION, token.type);
     TEST_ASSERT_EQUAL_STRING("h", token.option_name);
 }
 
 void test_tokenize_short_option_bundle(void) {
-    token_t token = tokenize_arg("-abc");
+    token_t token = clap_tokenize_arg("-abc");
     TEST_ASSERT_EQUAL(TOKEN_SHORT_OPTION_BUNDLE, token.type);
     TEST_ASSERT_EQUAL_STRING("abc", token.option_name);
 }
 
 void test_tokenize_short_option_bundle_two(void) {
-    token_t token = tokenize_arg("-xv");
+    token_t token = clap_tokenize_arg("-xv");
     TEST_ASSERT_EQUAL(TOKEN_SHORT_OPTION_BUNDLE, token.type);
     TEST_ASSERT_EQUAL_STRING("xv", token.option_name);
 }

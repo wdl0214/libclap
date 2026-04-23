@@ -48,11 +48,6 @@ function(set_clap_coverage target)
                 -fprofile-instr-generate
                 -fcoverage-mapping
             )
-            # if(APPLE)
-            #     target_link_libraries(${target} PRIVATE
-            #             /Library/Developer/CommandLineTools/usr/lib/clang/21/lib/darwin/libclang_rt.profile_osx.a
-            #     )
-            # endif()
         endif()
     endif()
 endfunction()

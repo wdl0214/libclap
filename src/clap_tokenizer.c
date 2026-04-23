@@ -6,7 +6,7 @@
 #include "clap_parser_internal.h"
 
 
-clap_token_t tokenize_arg(const char *arg) {
+clap_token_t clap_tokenize_arg(const char *arg) {
     clap_token_t token = {0};
     token.raw = arg;
     token.name_allocated = false;
@@ -81,7 +81,7 @@ clap_token_t* clap_tokenize(int argc, char *argv[], size_t *count, clap_error_t 
     }
 
     for (int i = 1; i < argc; i++) {
-        tokens[i - 1] = tokenize_arg(argv[i]);
+        tokens[i - 1] = clap_tokenize_arg(argv[i]);
     }
 
     return tokens;

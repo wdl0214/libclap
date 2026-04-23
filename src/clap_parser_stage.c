@@ -213,7 +213,7 @@ static bool parse_short_bundle(clap_parser_t *parser,
 
     size_t total_consumed = 1;
     for (size_t i = 0; i < bundle_count; i++) {
-        token_t sub_token = tokenize_arg(expanded[i]);
+        token_t sub_token = clap_tokenize_arg(expanded[i]);
         size_t sub_consumed = 0;
         token_t *next_token = (pos + total_consumed < token_count) ? &tokens[pos + total_consumed] : NULL;
         size_t remaining = token_count - pos;
