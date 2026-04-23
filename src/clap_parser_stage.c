@@ -173,6 +173,58 @@ static bool parse_single_option(clap_parser_t *parser,
         return false;
     }
 
+    /* Handle fixed nargs > 1 for optional arguments */
+    if (arg->nargs > 1 && arg->nargs != CLAP_NARGS_ZERO_OR_MORE &&
+        arg->nargs != CLAP_NARGS_ONE_OR_MORE && arg->nargs != CLAP_NARGS_REMAINDER) {
+        size_t nargs_needed = (size_t)arg->nargs;
+        size_t values_collected = 1;  /* We already collected 1 value */
+
+        /* If value came from next_token, we've already consumed it */
+        if (*consumed > 1) {
+            values_collected = 1;
+        } else if (value != NULL) {
+            /* Value came from token->value (e.g., --nums=1), not from next_token */
+            /* next_token still points to the first unconsumed argument */
+            values_collected = 1;
+        }
+
+        /* Collect remaining values */
+        for (size_t i = 1; i < nargs_needed; i++) {
+            /* Check if we have enough tokens */
+            if (*consumed + 1 > remaining) {
+                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                               "argument '%s': expected %d argument(s), got %zu",
+                               token->raw ? token->raw : token->option_name, 
+                               arg->nargs, values_collected);
+                return false;
+            }
+
+            if (next_token == NULL) {
+                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                               "argument '%s': expected %d argument(s), got %zu",
+                               token->raw ? token->raw : token->option_name,
+                               arg->nargs, values_collected);
+                return false;
+            }
+
+            token_t *val_token = &next_token[i];
+            if (val_token->type == TOKEN_STOP) {
+                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
+                               "argument '%s': expected %d argument(s), got %zu",
+                               token->raw ? token->raw : token->option_name,
+                               arg->nargs, values_collected);
+                return false;
+            }
+
+            if (!clap_apply_argument_action(parser, arg, ns, val_token->raw, error)) {
+                return false;
+            }
+
+            (*consumed)++;
+            values_collected++;
+        }
+    }
+
     if (arg->nargs == CLAP_NARGS_REMAINDER && remaining > *consumed) {
         if (next_token == NULL) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,

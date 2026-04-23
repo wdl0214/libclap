@@ -240,13 +240,19 @@ clap_argument_t* clap_argument_nargs(clap_argument_t *arg, int nargs) {
             arg->nargs = nargs;
         }
 
-        /* Update CLAP_ARG_MULTIPLE flag */
+        /* Update CLAP_ARG_MULTIPLE flag and convert STORE to APPEND for nargs > 1 */
         if (arg->nargs == CLAP_NARGS_ZERO_OR_MORE ||
-            arg->nargs == CLAP_NARGS_ONE_OR_MORE) {
+            arg->nargs == CLAP_NARGS_ONE_OR_MORE ||
+            (arg->nargs > 1)) {
             arg->flags |= CLAP_ARG_MULTIPLE;
-            } else {
-                arg->flags &= ~((unsigned int)CLAP_ARG_MULTIPLE);
+
+            /* For fixed nargs > 1, automatically use APPEND action if STORE is set */
+            if (arg->nargs > 1 && arg->action == CLAP_ACTION_STORE) {
+                arg->action = CLAP_ACTION_APPEND;
             }
+        } else {
+            arg->flags &= ~((unsigned int)CLAP_ARG_MULTIPLE);
+        }
 
         /* Update CLAP_ARG_REQUIRED flag for positional arguments */
         if (arg->flags & CLAP_ARG_POSITIONAL) {

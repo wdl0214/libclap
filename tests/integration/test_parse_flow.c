@@ -707,8 +707,8 @@ int main(void) {
     RUN_TEST(test_parse_flow_positional_nargs_with_optional_before);
 
     // /* Optional nargs=N tests */
-    // RUN_TEST(test_parse_flow_optional_nargs_exact_success);
-    // RUN_TEST(test_parse_flow_optional_nargs_too_few);
+    RUN_TEST(test_parse_flow_optional_nargs_exact_success);
+    RUN_TEST(test_parse_flow_optional_nargs_too_few);
     RUN_TEST(test_parse_flow_optional_nargs_zero_provided);
     RUN_TEST(test_parse_flow_optional_nargs_plus_zero_provided);
     RUN_TEST(test_parse_flow_required_optional_nargs_zero);
