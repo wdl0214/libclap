@@ -31,6 +31,7 @@ clap_token_t clap_tokenize_arg(const char *arg) {
             token.type = TOKEN_LONG_OPTION_EQ;
             size_t name_len = (size_t)(eq - arg - 2);
             token.option_name = clap_strndup(arg + 2, name_len);
+            token.name_allocated = (token.option_name != NULL);
             token.value = eq + 1;
         } else {
             token.type = TOKEN_LONG_OPTION;
