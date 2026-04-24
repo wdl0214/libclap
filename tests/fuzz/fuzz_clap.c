@@ -72,6 +72,37 @@ static clap_parser_t* create_fuzz_parser(void) {
     clap_argument_action(append_opt, CLAP_ACTION_APPEND);
     clap_argument_type(append_opt, "string");
     
+    /* Store false action */
+    clap_argument_t *no_feature = clap_add_argument(parser, "--no-feature");
+    clap_argument_action(no_feature, CLAP_ACTION_STORE_FALSE);
+    clap_argument_dest(no_feature, "feature_enabled");
+    
+    /* Store const action */
+    clap_argument_t *const_opt = clap_add_argument(parser, "--const-opt");
+    clap_argument_action(const_opt, CLAP_ACTION_STORE_CONST);
+    clap_argument_const(const_opt, "constant_value");
+    clap_argument_dest(const_opt, "const_val");
+    
+    /* Append const action */
+    clap_argument_t *append_const = clap_add_argument(parser, "--append-const");
+    clap_argument_action(append_const, CLAP_ACTION_APPEND_CONST);
+    clap_argument_const(append_const, "const_item");
+    clap_argument_dest(append_const, "const_list");
+    
+    /* Positional with nargs=2 (exact) */
+    clap_argument_t *pair = clap_add_argument(parser, "pair");
+    clap_argument_nargs(pair, 2);
+    clap_argument_type(pair, "string");
+    clap_argument_required(pair, false);
+    
+    /* Dependency testing */
+    clap_argument_t *main_opt = clap_add_argument(parser, "--main");
+    clap_argument_type(main_opt, "string");
+    
+    clap_argument_t *dependent_opt = clap_add_argument(parser, "--dependent");
+    clap_argument_type(dependent_opt, "string");
+    clap_argument_depends_on(dependent_opt, main_opt);
+    
     /* Mutex group */
     int group = clap_add_mutually_exclusive_group(parser, false);
     
@@ -106,6 +137,16 @@ static clap_parser_t* create_fuzz_parser(void) {
     clap_parser_t *cmd2 = clap_subparser_add(subparsers, "cmd2", "Second command");
     clap_argument_t *cmd2_flag = clap_add_argument(cmd2, "--flag");
     clap_argument_action(cmd2_flag, CLAP_ACTION_STORE_TRUE);
+    
+    /* Nested subcommands under cmd1 */
+    clap_parser_t *cmd1_subparsers = clap_add_subparsers(cmd1, "subcommand", "Subcommands for cmd1");
+    clap_parser_t *subcmd1 = clap_subparser_add(cmd1_subparsers, "sub1", "First subcommand");
+    clap_argument_t *sub1_arg = clap_add_argument(subcmd1, "arg");
+    clap_argument_type(sub1_arg, "string");
+    
+    clap_parser_t *subcmd2 = clap_subparser_add(cmd1_subparsers, "sub2", "Second subcommand");
+    clap_argument_t *sub2_opt = clap_add_argument(subcmd2, "--subopt");
+    clap_argument_action(sub2_opt, CLAP_ACTION_STORE_TRUE);
     
     return parser;
 }
@@ -171,9 +212,27 @@ static int build_argv(char *argv[], char arg_buffers[][MAX_ARG_LEN],
                 char temp[MAX_ARG_LEN];
                 snprintf(temp, sizeof(temp), "--opt=%s", arg_buffers[argc]);
                 strcpy(arg_buffers[argc], temp);
+            } else if (type_byte & 0x08) {
+                /* Create short option bundle like -abc */
+                if (strlen(arg_buffers[argc]) >= 1 && strlen(arg_buffers[argc]) <= 4) {
+                    char bundle[MAX_ARG_LEN] = "-";
+                    strncat(bundle, arg_buffers[argc], 4);
+                    strcpy(arg_buffers[argc], bundle);
+                }
+            } else if (type_byte & 0x10) {
+                /* Create invalid option for error testing */
+                char invalid[MAX_ARG_LEN];
+                snprintf(invalid, sizeof(invalid), "--invalid-%s", arg_buffers[argc]);
+                strcpy(arg_buffers[argc], invalid);
+            } else if (type_byte & 0x20) {
+                /* Create type-mismatch for int/float fields */
+                if (strlen(arg_buffers[argc]) < MAX_ARG_LEN - 10) {
+                    strcat(arg_buffers[argc], "not-a-number");
+                }
             }
             
-            argv[argc++] = arg_buffers[argc];
+            argv[argc] = arg_buffers[argc];
+            argc++;
             offset += arg_len;
         }
     }
@@ -186,6 +245,25 @@ static int build_argv(char *argv[], char arg_buffers[][MAX_ARG_LEN],
  * ============================================================================ */
 
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+    /* Test boundary cases */
+    if (size == 0) {
+        /* Empty input */
+        clap_parser_t *parser = create_fuzz_parser();
+        if (parser) {
+            clap_namespace_t *ns = NULL;
+            clap_error_t error = {0};
+            clap_parse_args(parser, 1, (char*[]){"fuzz_prog"}, &ns, &error);
+            if (ns) clap_namespace_free(ns);
+            clap_parser_free(parser);
+        }
+        return 0;
+    }
+    
+    if (size > 10000) {
+        /* Very large input - truncate */
+        size = 10000;
+    }
+    
     if (size < 4) return 0;  /* Need at least some data */
     
     /* Create parser */
@@ -222,7 +300,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         
         /* Options */
         clap_namespace_get_int(ns, "int_opt", &int_val);
-        clap_namespace_get_float(ns, "float_opt", &int_val);
+        double float_val;
+        clap_namespace_get_float(ns, "float_opt", &float_val);
         clap_namespace_get_bool(ns, "bool_flag", &bool_val);
         clap_namespace_get_string(ns, "choice_opt", &str_val);
         clap_namespace_get_string_array(ns, "multi_opt", &array_val, &array_count);
@@ -231,11 +310,30 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         clap_namespace_get_bool(ns, "mutex1", &bool_val);
         clap_namespace_get_bool(ns, "mutex2", &bool_val);
         
+        /* Store false and const actions */
+        clap_namespace_get_bool(ns, "feature_enabled", &bool_val);
+        clap_namespace_get_string(ns, "const_val", &str_val);
+        clap_namespace_get_string_array(ns, "const_list", &array_val, &array_count);
+        
+        /* Positional pair */
+        clap_namespace_get_string_array(ns, "pair", &array_val, &array_count);
+        
+        /* Dependency and main option */
+        clap_namespace_get_string(ns, "main", &str_val);
+        clap_namespace_get_string(ns, "dependent", &str_val);
+        
         /* Subcommand */
         clap_namespace_get_string(ns, "command", &str_val);
         if (str_val) {
             clap_namespace_get_string(ns, "opt", &str_val);
             clap_namespace_get_bool(ns, "flag", &bool_val);
+            
+            /* Check for nested subcommands */
+            clap_namespace_get_string(ns, "subcommand", &str_val);
+            if (str_val) {
+                clap_namespace_get_string(ns, "arg", &str_val);
+                clap_namespace_get_bool(ns, "subopt", &bool_val);
+            }
         }
         
         clap_namespace_free(ns);
@@ -243,6 +341,12 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     
     /* Test version printing */
     clap_print_version(parser, stdout);
+    
+    /* Test error handling and validation */
+    if (error.code != CLAP_ERR_NONE) {
+        /* Error was properly detected */
+        (void)error.code;  /* Verify error handling paths */
+    }
     
     clap_parser_free(parser);
     
