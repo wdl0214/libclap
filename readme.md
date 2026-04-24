@@ -56,8 +56,10 @@ sudo make install
 find_package(clap REQUIRED)
 
 add_executable(myapp myapp.c)
-target_link_libraries(myapp PRIVATE clap::clap)
+target_link_libraries(myapp PRIVATE clap::clap_static)
 ```
+
+Use `clap::clap_shared` instead if you prefer linking against the shared library.
 
 #### pkg-config
 
@@ -78,26 +80,28 @@ gcc myapp.c -o myapp -I/usr/local/include -L/usr/local/lib -lclap
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
+    clap_error_t error = {0};
+    clap_namespace_t *ns = NULL;
     clap_argument_t *arg;
     clap_parser_t *parser = clap_parser_new("my_program", "A simple example", NULL);
     
     arg = clap_add_argument(parser, "input");
     clap_argument_help(arg, "Input file");
+    clap_argument_type(arg, "string");
     clap_argument_required(arg, true);
     
     arg = clap_add_argument(parser, "--output/-o");
     clap_argument_help(arg, "Output file");
+    clap_argument_type(arg, "string");
     clap_argument_default(arg, "-");
     
     arg = clap_add_argument(parser, "--verbose/-v");
     clap_argument_help(arg, "Increase verbosity");
     clap_argument_action(arg, CLAP_ACTION_COUNT);
-
-    clap_namespace_t *ns;
-    clap_error_t error = {0};
     
     if (!clap_parse_args(parser, argc, argv, &ns, &error)) {
         fprintf(stderr, "Error: %s\n", error.message);
+        clap_parser_free(parser);
         return 1;
     }
 
@@ -142,9 +146,13 @@ clap_parser_t *parser = clap_parser_new("prog", "Description", "Epilog");
 clap_parser_set_help_width(parser, 100);
 clap_parser_set_version(parser, "1.0.0");
 
-clap_namespace_t *ns;
-clap_error_t error;
-bool ok = clap_parse_args(parser, argc, argv, &ns, &error);
+clap_namespace_t *ns = NULL;
+clap_error_t error = {0};
+if (!clap_parse_args(parser, argc, argv, &ns, &error)) {
+    fprintf(stderr, "Error: %s\n", error.message);
+    clap_parser_free(parser);
+    return 1;
+}
 
 clap_namespace_free(ns);
 clap_parser_free(parser);
@@ -193,8 +201,9 @@ clap_argument_metavar(arg, "FILE");
 clap_parser_t *subparsers = clap_add_subparsers(parser, "command", "Available commands");
 
 clap_parser_t *commit = clap_subparser_add(subparsers, "commit", "Record changes");
-clap_add_argument(commit, "-m")
-clap_argument_required(commit, true);
+clap_argument_t *msg_arg = clap_add_argument(commit, "-m");
+clap_argument_dest(msg_arg, "message");
+clap_argument_required(msg_arg, true);
 
 // Parse as usual
 const char *cmd;
@@ -212,12 +221,10 @@ int group = clap_add_mutually_exclusive_group(parser, false);
 
 clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
 clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-clap_argument_group(verbose, group);
 clap_mutex_group_add_argument(parser, group, verbose);
 
 clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
 clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-clap_argument_group(quiet, group);
 clap_mutex_group_add_argument(parser, group, quiet);
 ```
 
@@ -239,26 +246,44 @@ libclap includes a comprehensive test suite built with Unity.
 
 ```bash
 mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+make
 ctest                          # Run all tests
 ctest -R usage                 # Run only usage compliance tests
 ctest --output-on-failure      # Show output for failed tests
 ./tests/test_parser            # Run a specific test
 ```
 
-Memory safety is verified with Valgrind and AddressSanitizer:
+Memory safety is verified with deterministic runtime checks and sanitizers:
 
 ```bash
 valgrind --leak-check=full ./tests/test_usage
 cmake .. -DCLAP_ENABLE_ASAN=ON && make && ctest
 ```
 
-Code coverage:
+The Valgrind command above runs the `test_usage` executable under a leak checker.
+It is most useful on Linux; for regular development and CI, ASan is usually faster and easier to integrate.
+
+Code coverage requires `gcovr` to be installed:
 
 ```bash
+pip install gcovr
 cmake .. -DCLAP_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
 make && ctest
 make coverage
 ```
+
+Fuzz testing is available with Clang builds:
+
+```bash
+mkdir build && cd build
+cmake .. -DCLAP_BUILD_FUZZ=ON -DCMAKE_C_COMPILER=clang
+make fuzz_clap
+./tests/fuzz_clap -max_len=4096 -runs=100000 corpus/
+```
+
+Unlike the fixed test suite, fuzzing continuously generates and mutates inputs to find crashes,
+unexpected exits, leaks, and other parser edge cases.
 
 ## 📖 Examples
 
@@ -281,7 +306,7 @@ libclap/
 │   ├── integration/          # End-to-end tests
 │   └── fuzz/                 # Fuzz testing
 ├── examples/                 # Example programs
-└── docs/                     # Documentation
+└── scripts/                  # Test and utility scripts
 ```
 
 ## 🤝 Contributing
@@ -292,6 +317,7 @@ Contributions are welcome! Please open an issue or pull request on GitHub. Ensur
 - All tests pass (`ctest`)
 - No new compiler warnings are introduced
 - Valgrind/ASan reports no leaks
+- Parser and tokenizer changes are validated with fuzzing when possible
 
 ## 📄 License
 
