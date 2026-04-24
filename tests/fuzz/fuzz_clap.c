@@ -11,6 +11,7 @@
  */
 
 #include <clap/clap.h>
+#include "clap_parser_internal.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,11 @@ static clap_parser_t* create_fuzz_parser(void) {
     );
     
     if (!parser) return NULL;
+
+    /* Fuzzing should not treat built-in help as a crash-inducing exit path. */
+    if (parser->arg_count > 0 && parser->arguments[0]->action == CLAP_ACTION_HELP) {
+        clap_argument_action(parser->arguments[0], CLAP_ACTION_STORE_TRUE);
+    }
     
     clap_parser_set_help_width(parser, 80);
     clap_parser_set_version(parser, "1.0.0");

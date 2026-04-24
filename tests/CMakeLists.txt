@@ -103,6 +103,9 @@ if(CLAP_BUILD_FUZZ AND CMAKE_C_COMPILER_ID MATCHES "Clang")
     target_compile_options(fuzz_clap PRIVATE -fsanitize=fuzzer,address)
     target_link_options(fuzz_clap PRIVATE -fsanitize=fuzzer,address)
     target_link_libraries(fuzz_clap PRIVATE clap_static)
+    target_include_directories(fuzz_clap PRIVATE
+        ${CMAKE_SOURCE_DIR}/src
+    )
     
     # Create corpus directory
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/corpus)
