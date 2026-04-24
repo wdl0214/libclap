@@ -95,14 +95,6 @@ static clap_parser_t* create_fuzz_parser(void) {
     clap_argument_type(pair, "string");
     clap_argument_required(pair, false);
     
-    /* Dependency testing */
-    clap_argument_t *main_opt = clap_add_argument(parser, "--main");
-    clap_argument_type(main_opt, "string");
-    
-    clap_argument_t *dependent_opt = clap_add_argument(parser, "--dependent");
-    clap_argument_type(dependent_opt, "string");
-    clap_argument_depends_on(dependent_opt, main_opt);
-    
     /* Mutex group */
     int group = clap_add_mutually_exclusive_group(parser, false);
     
@@ -317,10 +309,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
         
         /* Positional pair */
         clap_namespace_get_string_array(ns, "pair", &array_val, &array_count);
-        
-        /* Dependency and main option */
-        clap_namespace_get_string(ns, "main", &str_val);
-        clap_namespace_get_string(ns, "dependent", &str_val);
         
         /* Subcommand */
         clap_namespace_get_string(ns, "command", &str_val);
