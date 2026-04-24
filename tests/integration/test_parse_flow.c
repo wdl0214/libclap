@@ -671,6 +671,243 @@ void test_parse_flow_required_optional_nargs_plus_zero(void) {
 }
 
 /* ============================================================================
+ * Short Option Bundle Flow Tests
+ * ============================================================================ */
+
+void test_parse_flow_short_option_bundle(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *a_opt = clap_add_argument(parser, "-a");
+    clap_argument_action(a_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *b_opt = clap_add_argument(parser, "-b");
+    clap_argument_action(b_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *c_opt = clap_add_argument(parser, "-c");
+    clap_argument_action(c_opt, CLAP_ACTION_STORE_TRUE);
+    
+    char *argv[] = {"prog", "-abc"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    bool a_val, b_val, c_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &a_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "b", &b_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "c", &c_val));
+    TEST_ASSERT_TRUE(a_val);
+    TEST_ASSERT_TRUE(b_val);
+    TEST_ASSERT_TRUE(c_val);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_short_option_bundle_mixed_with_positional(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *a_opt = clap_add_argument(parser, "-a");
+    clap_argument_action(a_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *b_opt = clap_add_argument(parser, "-b");
+    clap_argument_action(b_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_add_argument(parser, "input");
+    clap_add_argument(parser, "output");
+    
+    char *argv[] = {"prog", "-ab", "in.txt", "out.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    bool a_val, b_val;
+    const char *input, *output;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &a_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "b", &b_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &input));
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output));
+    TEST_ASSERT_TRUE(a_val);
+    TEST_ASSERT_TRUE(b_val);
+    TEST_ASSERT_EQUAL_STRING("in.txt", input);
+    TEST_ASSERT_EQUAL_STRING("out.txt", output);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_short_option_bundle_unrecognized(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *a_opt = clap_add_argument(parser, "-a");
+    clap_argument_action(a_opt, CLAP_ACTION_STORE_TRUE);
+    
+    char *argv[] = {"prog", "-ab"};  // -b not defined
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_UNRECOGNIZED, error.code);
+    TEST_ASSERT_NULL(ns);
+    
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_short_option_bundle_multiple(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *a_opt = clap_add_argument(parser, "-a");
+    clap_argument_action(a_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *b_opt = clap_add_argument(parser, "-b");
+    clap_argument_action(b_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *c_opt = clap_add_argument(parser, "-c");
+    clap_argument_action(c_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *d_opt = clap_add_argument(parser, "-d");
+    clap_argument_action(d_opt, CLAP_ACTION_STORE_TRUE);
+    
+    char *argv[] = {"prog", "-ab", "-cd"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    bool a_val, b_val, c_val, d_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &a_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "b", &b_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "c", &c_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "d", &d_val));
+    TEST_ASSERT_TRUE(a_val);
+    TEST_ASSERT_TRUE(b_val);
+    TEST_ASSERT_TRUE(c_val);
+    TEST_ASSERT_TRUE(d_val);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_short_option_bundle_with_long_option(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *a_opt = clap_add_argument(parser, "-a");
+    clap_argument_action(a_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *b_opt = clap_add_argument(parser, "-b");
+    clap_argument_action(b_opt, CLAP_ACTION_STORE_TRUE);
+    
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+    
+    char *argv[] = {"prog", "-ab", "--verbose"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    bool a_val, b_val, verbose_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &a_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "b", &b_val));
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
+    TEST_ASSERT_TRUE(a_val);
+    TEST_ASSERT_TRUE(b_val);
+    TEST_ASSERT_TRUE(verbose_val);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_short_option_with_value(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *file_opt = clap_add_argument(parser, "-f");
+    clap_argument_dest(file_opt, "file");
+    clap_argument_type(file_opt, "string");
+    
+    char *argv[] = {"prog", "-f", "input.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    const char *file_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "file", &file_val));
+    TEST_ASSERT_EQUAL_STRING("input.txt", file_val);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_long_option_with_value(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *file_opt = clap_add_argument(parser, "--file");
+    clap_argument_type(file_opt, "string");
+    
+    char *argv[] = {"prog", "--file", "output.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    const char *file_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "file", &file_val));
+    TEST_ASSERT_EQUAL_STRING("output.txt", file_val);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_option_append(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    
+    clap_argument_t *include_opt = clap_add_argument(parser, "--include");
+    clap_argument_action(include_opt, CLAP_ACTION_APPEND);
+    clap_argument_type(include_opt, "string");
+    
+    char *argv[] = {"prog", "--include", "file1.h", "--include", "file2.h"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    
+    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+    
+    const char **includes;
+    size_t count;
+    TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "include", &includes, &count));
+    TEST_ASSERT_EQUAL(2, count);
+    TEST_ASSERT_EQUAL_STRING("file1.h", includes[0]);
+    TEST_ASSERT_EQUAL_STRING("file2.h", includes[1]);
+    
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -713,6 +950,15 @@ int main(void) {
     RUN_TEST(test_parse_flow_optional_nargs_plus_zero_provided);
     RUN_TEST(test_parse_flow_required_optional_nargs_zero);
     RUN_TEST(test_parse_flow_required_optional_nargs_plus_zero);
+
+    RUN_TEST(test_parse_flow_short_option_bundle);
+    RUN_TEST(test_parse_flow_short_option_bundle_mixed_with_positional);
+    RUN_TEST(test_parse_flow_short_option_bundle_unrecognized);
+    RUN_TEST(test_parse_flow_short_option_bundle_multiple);
+    RUN_TEST(test_parse_flow_short_option_bundle_with_long_option);
+    RUN_TEST(test_parse_flow_short_option_with_value);
+    RUN_TEST(test_parse_flow_long_option_with_value);
+    RUN_TEST(test_parse_flow_option_append);
 
     return UNITY_END();
 }

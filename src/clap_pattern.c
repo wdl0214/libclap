@@ -64,7 +64,7 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
     size_t option_index = 0;
 
     for (size_t i = 0; i < token_count; i++) {
-        token_t *token = &tokens[i];
+        clap_token_t *token = &tokens[i];
 
         if (saw_stop) {
             pattern->pattern[i] = PATTERN_ARGUMENT;
