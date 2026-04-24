@@ -131,11 +131,14 @@ jobs:
         run: cmake --build build --target fuzz_clap
 
       - name: Create corpus directory
-        run: mkdir -p fuzz_corpus
+        run: |
+          mkdir -p fuzz_corpus
+          mkdir -p fuzz_artifacts
 
       - name: Run Fuzz Test
         run: |
-          set +e  # Don't exit on error
+          set +e
+          set -o pipefail
           timeout 240 ./build/tests/fuzz_clap \
             -max_len=4096 \
             -runs=50000 \
