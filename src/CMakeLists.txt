@@ -34,6 +34,9 @@ if(CLAP_BUILD_STATIC)
         OUTPUT_NAME clap
         POSITION_INDEPENDENT_CODE ON
     )
+    if(WIN32 AND NOT CYGWIN)
+        set_target_properties(clap_static PROPERTIES OUTPUT_NAME clap_static)
+    endif()
     target_include_directories(clap_static
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>

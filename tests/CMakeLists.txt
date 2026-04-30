@@ -27,6 +27,7 @@ function(add_clap_test test_name test_source)
     add_executable(${test_name} ${test_source} ${ARGN})
     target_compile_definitions(${test_name} PRIVATE -DUNITY_INCLUDE_DOUBLE)
     target_compile_definitions(${test_name} PRIVATE -DSTANDALONE_TEST)
+    target_compile_definitions(${test_name} PRIVATE CLAP_STATIC)
 
     set_clap_platform_definitions(${test_name})
 
@@ -105,6 +106,7 @@ if(CLAP_BUILD_FUZZ AND CMAKE_C_COMPILER_ID MATCHES "Clang")
     target_compile_options(fuzz_clap PRIVATE -fsanitize=fuzzer,address)
     target_link_options(fuzz_clap PRIVATE -fsanitize=fuzzer,address)
     target_link_libraries(fuzz_clap PRIVATE clap_static)
+    target_compile_definitions(fuzz_clap PRIVATE CLAP_STATIC)
     target_include_directories(fuzz_clap PRIVATE
         ${CMAKE_SOURCE_DIR}/src
     )

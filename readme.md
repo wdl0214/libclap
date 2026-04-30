@@ -50,6 +50,14 @@ sudo make install
 
 ### Using in Your Project
 
+> **⚠️ Static linking:** If you link libclap **statically**, you **must** define
+> `CLAP_STATIC` at compile time (e.g. `-DCLAP_STATIC` or `#define CLAP_STATIC`).
+> This is required on all platforms, but most important on Windows where the
+> absence of `CLAP_STATIC` causes the compiler to emit `__declspec(dllimport)`
+> decorations that are incompatible with a static library.
+>
+> When linking against the shared library, no additional defines are needed.
+
 #### CMake `find_package`
 
 ```cmake
@@ -57,20 +65,30 @@ find_package(clap REQUIRED)
 
 add_executable(myapp myapp.c)
 target_link_libraries(myapp PRIVATE clap::clap_static)
+target_compile_definitions(myapp PRIVATE CLAP_STATIC)
 ```
 
-Use `clap::clap_shared` instead if you prefer linking against the shared library.
+Use `clap::clap_shared` instead if you prefer linking against the shared library
+(no `CLAP_STATIC` needed).
 
 #### pkg-config
 
 ```bash
+# Dynamic linking (default)
 gcc myapp.c -o myapp $(pkg-config --cflags --libs libclap)
+
+# Static linking — requires -DCLAP_STATIC
+gcc myapp.c -o myapp $(pkg-config --cflags --static --libs libclap) -DCLAP_STATIC
 ```
 
 #### Manual Linking
 
 ```bash
+# Dynamic linking
 gcc myapp.c -o myapp -I/usr/local/include -L/usr/local/lib -lclap
+
+# Static linking — requires -DCLAP_STATIC
+gcc myapp.c -o myapp -I/usr/local/include /usr/local/lib/libclap.a -DCLAP_STATIC
 ```
 
 ## 🚀 Quick Start
