@@ -27,7 +27,9 @@ function(add_clap_test test_name test_source)
     add_executable(${test_name} ${test_source} ${ARGN})
     target_compile_definitions(${test_name} PRIVATE -DUNITY_INCLUDE_DOUBLE)
     target_compile_definitions(${test_name} PRIVATE -DSTANDALONE_TEST)
-    
+
+    set_clap_platform_definitions(${test_name})
+
     target_link_libraries(${test_name} PRIVATE clap_static unity)
     target_include_directories(${test_name} PRIVATE 
         ${unity_SOURCE_DIR}/src
