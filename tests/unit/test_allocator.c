@@ -5,6 +5,7 @@
 
 #include "unity.h"
 #include <clap/clap_allocator.h>
+#include "clap_parser_internal.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>

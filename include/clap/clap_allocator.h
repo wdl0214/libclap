@@ -4,6 +4,7 @@
 #define CLAP_ALLOCATOR_H
 
 #include <stddef.h>
+#include <clap/clap_export.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -12,41 +13,14 @@ extern "C" {
 /**
  * @brief Set custom memory allocator functions
  */
-void clap_set_allocator(
+CLAP_EXPORT void clap_set_allocator(
     void *(*malloc_fn)(size_t),
     void (*free_fn)(void*),
     void *(*realloc_fn)(void*, size_t)
 );
 
-/**
- * @brief Allocate zero-initialized memory
- */
-void* clap_malloc(size_t size);
-
-/**
- * @brief Allocate zero-initialized array
- */
-void* clap_calloc(size_t nmemb, size_t size);
-
-/**
- * @brief Free allocated memory
- */
-void clap_free(void *ptr);
-
-/**
- * @brief Reallocate memory
- */
-void* clap_realloc(void *ptr, size_t size);
-
-/**
- * @brief Duplicate a string
- */
-char* clap_strdup(const char *str);
-
-/**
- * @brief Duplicate at most n characters of a string
- */
-char* clap_strndup(const char *str, size_t n);
+/* clap_malloc, clap_calloc, clap_free, clap_realloc, clap_strdup, clap_strndup
+ * are internal utilities declared in clap_parser_internal.h */
 
 #ifdef __cplusplus
 }

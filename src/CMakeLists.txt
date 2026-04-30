@@ -41,6 +41,7 @@ if(CLAP_BUILD_STATIC)
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
+    target_compile_definitions(clap_static PRIVATE BUILDING_CLAP)
     set_clap_compiler_warnings(clap_static)
     set_clap_sanitizers(clap_static)
     set_clap_coverage(clap_static)
@@ -71,6 +72,10 @@ if(CLAP_BUILD_SHARED)
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    target_compile_definitions(clap_shared PRIVATE
+        BUILDING_CLAP
+        CLAP_HIDDEN_SYMBOLS
     )
     set_clap_compiler_warnings(clap_shared)
     set_clap_sanitizers(clap_shared)

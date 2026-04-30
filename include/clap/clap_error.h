@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
+#include <clap/clap_export.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,22 +44,22 @@ typedef struct clap_error_s {
 /**
  * @brief Initialize error structure
  */
-void clap_error_init(clap_error_t *error);
+CLAP_EXPORT void clap_error_init(clap_error_t *error);
 
 /**
  * @brief Set error with formatted message
  */
-void clap_error_set(clap_error_t *error, int code, const char *format, ...);
+CLAP_EXPORT void clap_error_set(clap_error_t *error, int code, const char *format, ...);
 
 /**
  * @brief Set error with va_list
  */
-void clap_error_vset(clap_error_t *error, int code, const char *format, va_list ap);
+CLAP_EXPORT void clap_error_vset(clap_error_t *error, int code, const char *format, va_list ap);
 
 /**
  * @brief Get string description of error code
  */
-const char* clap_strerror(int code);
+CLAP_EXPORT const char* clap_strerror(int code);
 
 #ifdef __cplusplus
 }

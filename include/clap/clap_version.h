@@ -6,6 +6,8 @@
 #ifndef CLAP_VERSION_H
 #define CLAP_VERSION_H
 
+#include <clap/clap_export.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,15 +22,9 @@ extern "C" {
  * @brief Get libclap version string
  * @return Version string in format "major.minor.patch"
  */
-const char* clap_version(void);
+CLAP_EXPORT const char* clap_version(void);
 
-/**
- * @brief Get libclap version as components
- * @param major Output for major version
- * @param minor Output for minor version
- * @param patch Output for patch version
- */
-void clap_version_components(int *major, int *minor, int *patch);
+/* clap_version_components was removed (declared but never implemented) */
 
 #ifdef __cplusplus
 }

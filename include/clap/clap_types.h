@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <clap/clap_error.h>
+#include <clap/clap_export.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,13 +44,13 @@ typedef bool (*clap_action_handler_t)(
 );
 
 /* Built-in type handlers */
-bool clap_type_string_handler(const char *input, void *output, 
+CLAP_EXPORT bool clap_type_string_handler(const char *input, void *output,
                                size_t output_size, clap_error_t *error);
-bool clap_type_int_handler(const char *input, void *output,
+CLAP_EXPORT bool clap_type_int_handler(const char *input, void *output,
                             size_t output_size, clap_error_t *error);
-bool clap_type_float_handler(const char *input, void *output,
+CLAP_EXPORT bool clap_type_float_handler(const char *input, void *output,
                               size_t output_size, clap_error_t *error);
-bool clap_type_bool_handler(const char *input, void *output,
+CLAP_EXPORT bool clap_type_bool_handler(const char *input, void *output,
                              size_t output_size, clap_error_t *error);
 
 #ifdef __cplusplus

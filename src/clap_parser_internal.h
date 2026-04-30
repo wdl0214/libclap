@@ -267,6 +267,20 @@ typedef enum {
 } clap_parse_state_t;
 
 /* ============================================================================
+ * Internal Allocator API
+ *
+ * These wrap the configurable allocator set via clap_set_allocator().
+ * All internal allocations must use these, never raw malloc/free.
+ * ============================================================================ */
+
+void* clap_malloc(size_t size);
+void* clap_calloc(size_t nmemb, size_t size);
+void clap_free(void *ptr);
+void* clap_realloc(void *ptr, size_t size);
+char* clap_strdup(const char *str);
+char* clap_strndup(const char *str, size_t n);
+
+/* ============================================================================
  * Internal Function Declarations
  * ============================================================================ */
 
