@@ -367,6 +367,7 @@ static void print_display_groups_sections(clap_parser_t *parser, clap_buffer_t *
         clap_buffer_cat_printf(buf, "\n%s:\n", group->title);
 
         if (group->description) {
+            clap_buffer_cat(buf, "  ");
             wrap_text(buf, group->description, 2, width, true);
             clap_buffer_cat(buf, "\n");
         }
