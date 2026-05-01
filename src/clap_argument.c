@@ -121,8 +121,8 @@ clap_argument_t* clap_add_argument(clap_parser_t *parser, const char *name_or_fl
     if (!arg) return NULL;
 
     arg->nargs = 1;
-    arg->mutex_group_id = -1;
-    arg->display_group_id = -1;
+    arg->mutex_group_id = CLAP_MUTEX_GROUP_NONE;
+    arg->display_group_id = CLAP_DISPLAY_GROUP_NONE;
     arg->action = CLAP_ACTION_STORE;
     arg->type_name = clap_buffer_new("string");
 

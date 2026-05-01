@@ -337,12 +337,10 @@ void test_5a_mutex_optional(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(verbose, group);
     clap_mutex_group_add_argument(parser, group, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(quiet, group);
     clap_mutex_group_add_argument(parser, group, quiet);
     
     clap_print_help(parser, stdout);
@@ -363,11 +361,9 @@ void test_5b_mutex_required(void) {
     int group = clap_add_mutually_exclusive_group(parser, true);
     
     clap_argument_t *start = clap_add_argument(parser, "--start");
-    clap_argument_mutex_group(start, group);
     clap_mutex_group_add_argument(parser, group, start);
     
     clap_argument_t *stop = clap_add_argument(parser, "--stop");
-    clap_argument_mutex_group(stop, group);
     clap_mutex_group_add_argument(parser, group, stop);
     
     clap_print_help(parser, stdout);
@@ -388,12 +384,10 @@ void test_5c_mutex_mixed(void) {
     int group = clap_add_mutually_exclusive_group(parser, false);
     
     clap_argument_t *output = clap_add_argument(parser, "--output");
-    clap_argument_mutex_group(output, group);
     clap_mutex_group_add_argument(parser, group, output);
     
     clap_argument_t *stdout_arg = clap_add_argument(parser, "--stdout");
     clap_argument_action(stdout_arg, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(stdout_arg, group);
     clap_mutex_group_add_argument(parser, group, stdout_arg);
     
     clap_print_help(parser, stdout);

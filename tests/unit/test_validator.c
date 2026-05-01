@@ -15,7 +15,7 @@
 static clap_argument_t *create_test_arg(void) {
     clap_argument_t *arg = clap_calloc(1, sizeof(clap_argument_t));
     arg->nargs = 1;
-    arg->mutex_group_id = -1;
+    arg->mutex_group_id = CLAP_MUTEX_GROUP_NONE;
     arg->action = CLAP_ACTION_STORE;
     arg->type_name = clap_buffer_new("string");
     arg->dest = clap_buffer_new("test");

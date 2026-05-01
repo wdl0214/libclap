@@ -40,7 +40,7 @@ void test_add_argument_positional_basic(void) {
     TEST_ASSERT_EQUAL_STRING("input", clap_buffer_cstr(arg->display_name));
     TEST_ASSERT_EQUAL_STRING("input", clap_buffer_cstr(arg->dest));
     TEST_ASSERT_EQUAL(1, arg->nargs);
-    TEST_ASSERT_EQUAL(-1, arg->mutex_group_id);
+    TEST_ASSERT_EQUAL(CLAP_MUTEX_GROUP_NONE, arg->mutex_group_id);
     TEST_ASSERT_EQUAL(CLAP_ACTION_STORE, arg->action);
 }
 

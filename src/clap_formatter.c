@@ -198,7 +198,7 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
     for (size_t i = 0; i < parser->optional_count; i++) {
         clap_argument_t *arg = parser->optional_args[i];
         if (arg->action == CLAP_ACTION_HELP) continue;
-        if (arg->mutex_group_id >= 0) continue;
+        if (arg->mutex_group_id != CLAP_MUTEX_GROUP_NONE) continue;
 
         if (arg->action == CLAP_ACTION_VERSION) {
             clap_buffer_cat(buf, " [--version]");
@@ -323,7 +323,7 @@ static void print_positionals_section(clap_parser_t *parser, clap_buffer_t **buf
     clap_buffer_cat(buf, "\nPositional arguments:\n");
     for (size_t i = 0; i < parser->positional_count; i++) {
         clap_argument_t *arg = parser->positional_args[i];
-        if (arg->display_group_id >= 0) continue;
+        if (arg->display_group_id != CLAP_DISPLAY_GROUP_NONE) continue;
         const char *name = clap_buffer_cstr(arg->display_name);
         clap_buffer_t *full_help = build_arg_help(arg);
         append_help_row(buf, name, strlen(name),
@@ -336,7 +336,7 @@ static void print_optionals_section(clap_parser_t *parser, clap_buffer_t **buf,
                                     size_t max_name_len, int width) {
     bool has_content = false;
     for (size_t i = 0; i < parser->optional_count; i++) {
-        if (parser->optional_args[i]->display_group_id < 0) {
+        if (parser->optional_args[i]->display_group_id == CLAP_DISPLAY_GROUP_NONE) {
             has_content = true;
             break;
         }
@@ -346,7 +346,7 @@ static void print_optionals_section(clap_parser_t *parser, clap_buffer_t **buf,
     clap_buffer_cat(buf, "\nOptional arguments:\n");
     for (size_t i = 0; i < parser->optional_count; i++) {
         clap_argument_t *arg = parser->optional_args[i];
-        if (arg->display_group_id >= 0) continue;
+        if (arg->display_group_id != CLAP_DISPLAY_GROUP_NONE) continue;
         clap_buffer_t *opt_str = build_opt_str(arg);
         clap_buffer_t *full_help = build_arg_help(arg);
         append_help_row(buf, clap_buffer_cstr(opt_str), clap_buffer_len(opt_str),

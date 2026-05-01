@@ -246,6 +246,40 @@ clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
 clap_mutex_group_add_argument(parser, group, quiet);
 ```
 
+### Argument Groups
+
+Organize related arguments into named sections in the help output:
+
+```c
+int net_group = clap_add_argument_group(parser, "Network", "Connection options");
+
+clap_argument_t *host = clap_add_argument(parser, "--host");
+clap_argument_help(host, "Hostname to connect to");
+clap_argument_group_add_argument(parser, net_group, host);
+
+clap_argument_t *port = clap_add_argument(parser, "--port");
+clap_argument_type(port, "int");
+clap_argument_help(port, "Port number");
+clap_argument_group_add_argument(parser, net_group, port);
+```
+
+Help output:
+
+```
+usage: prog [-h] [--host HOST] [--port PORT]
+
+Optional arguments:
+  -h, --help  Show this help message and exit
+
+Network:
+  Connection options
+
+  --host HOST  Hostname to connect to
+  --port PORT  Port number
+```
+
+Arguments in a display group are excluded from the default "Optional arguments" and "Positional arguments" sections, appearing only in their group section.
+
 ### Custom Memory Allocator
 
 ```c

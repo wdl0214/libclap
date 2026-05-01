@@ -132,7 +132,6 @@ void test_parser_free_with_mutex_groups(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(verbose, group);
     clap_mutex_group_add_argument(parser, group, verbose);
     
     TEST_ASSERT_EQUAL(1, parser->mutex_group_count);

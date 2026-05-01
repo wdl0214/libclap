@@ -75,7 +75,7 @@ bool clap_mutex_check_conflict(clap_parser_t *parser,
                           const char *option_str,
                           clap_error_t *error) {
     (void)option_str;    
-    if (arg->mutex_group_id < 0 || !mutex_group_used) {
+    if (arg->mutex_group_id == CLAP_MUTEX_GROUP_NONE || !mutex_group_used) {
         return true;
     }
 

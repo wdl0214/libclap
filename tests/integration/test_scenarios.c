@@ -240,24 +240,20 @@ void test_scenario_multiple_mutex_groups(void) {
     int group1 = clap_add_mutually_exclusive_group(parser, false);
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(verbose, group1);
     clap_mutex_group_add_argument(parser, group1, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(quiet, group1);
     clap_mutex_group_add_argument(parser, group1, quiet);
     
     /* Group 2: format */
     int group2 = clap_add_mutually_exclusive_group(parser, false);
     clap_argument_t *json = clap_add_argument(parser, "--json");
     clap_argument_action(json, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(json, group2);
     clap_mutex_group_add_argument(parser, group2, json);
     
     clap_argument_t *xml = clap_add_argument(parser, "--xml");
     clap_argument_action(xml, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(xml, group2);
     clap_mutex_group_add_argument(parser, group2, xml);
     
     /* Valid: one from each group */

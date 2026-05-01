@@ -211,12 +211,10 @@ void test_parse_flow_mutex_conflict(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(verbose, group);
     clap_mutex_group_add_argument(parser, group, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(quiet, group);
     clap_mutex_group_add_argument(parser, group, quiet);
     
     char *argv[] = {"prog", "--verbose", "--quiet"};
@@ -236,11 +234,9 @@ void test_parse_flow_mutex_required_missing(void) {
     int group = clap_add_mutually_exclusive_group(parser, true);
     
     clap_argument_t *start = clap_add_argument(parser, "--start");
-    clap_argument_mutex_group(start, group);
     clap_mutex_group_add_argument(parser, group, start);
     
     clap_argument_t *stop = clap_add_argument(parser, "--stop");
-    clap_argument_mutex_group(stop, group);
     clap_mutex_group_add_argument(parser, group, stop);
     
     char *argv[] = {"prog"};

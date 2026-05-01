@@ -29,6 +29,10 @@
 #define CLAP_MAX_CHOICES        1000
 #define CLAP_MAX_DEPENDENCIES   16
 
+/* Group identifier constants */
+#define CLAP_MUTEX_GROUP_NONE    (-1)
+#define CLAP_DISPLAY_GROUP_NONE  (-1)
+
 #ifdef _WIN32
 #include <float.h>
 #define clap_isfinite(x) _finite(x)
