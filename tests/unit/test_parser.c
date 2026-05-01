@@ -32,7 +32,7 @@ void test_parser_new_basic(void) {
     TEST_ASSERT_EQUAL_STRING("Test epilog", clap_buffer_cstr(parser->epilog));
     TEST_ASSERT_EQUAL(100, parser->help_width);
     TEST_ASSERT_TRUE(parser->add_help_option);
-    TEST_ASSERT_EQUAL(0, parser->next_group_id);
+    TEST_ASSERT_EQUAL(0, parser->next_mutex_group_id);
     TEST_ASSERT_NULL(parser->subparsers_container);
     TEST_ASSERT_NOT_NULL(parser->arguments);
     TEST_ASSERT_EQUAL(8, parser->arg_capacity);
@@ -132,7 +132,7 @@ void test_parser_free_with_mutex_groups(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(verbose, group);
+    clap_argument_mutex_group(verbose, group);
     clap_mutex_group_add_argument(parser, group, verbose);
     
     TEST_ASSERT_EQUAL(1, parser->mutex_group_count);

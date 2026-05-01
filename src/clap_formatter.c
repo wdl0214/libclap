@@ -198,7 +198,7 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
     for (size_t i = 0; i < parser->optional_count; i++) {
         clap_argument_t *arg = parser->optional_args[i];
         if (arg->action == CLAP_ACTION_HELP) continue;
-        if (arg->group_id >= 0) continue;
+        if (arg->mutex_group_id >= 0) continue;
 
         if (arg->action == CLAP_ACTION_VERSION) {
             clap_buffer_cat(buf, " [--version]");
@@ -323,6 +323,7 @@ static void print_positionals_section(clap_parser_t *parser, clap_buffer_t **buf
     clap_buffer_cat(buf, "\nPositional arguments:\n");
     for (size_t i = 0; i < parser->positional_count; i++) {
         clap_argument_t *arg = parser->positional_args[i];
+        if (arg->display_group_id >= 0) continue;
         const char *name = clap_buffer_cstr(arg->display_name);
         clap_buffer_t *full_help = build_arg_help(arg);
         append_help_row(buf, name, strlen(name),
@@ -333,16 +334,60 @@ static void print_positionals_section(clap_parser_t *parser, clap_buffer_t **buf
 
 static void print_optionals_section(clap_parser_t *parser, clap_buffer_t **buf,
                                     size_t max_name_len, int width) {
-    if (parser->optional_count == 0) return;
+    bool has_content = false;
+    for (size_t i = 0; i < parser->optional_count; i++) {
+        if (parser->optional_args[i]->display_group_id < 0) {
+            has_content = true;
+            break;
+        }
+    }
+    if (!has_content) return;
+
     clap_buffer_cat(buf, "\nOptional arguments:\n");
     for (size_t i = 0; i < parser->optional_count; i++) {
         clap_argument_t *arg = parser->optional_args[i];
+        if (arg->display_group_id >= 0) continue;
         clap_buffer_t *opt_str = build_opt_str(arg);
         clap_buffer_t *full_help = build_arg_help(arg);
         append_help_row(buf, clap_buffer_cstr(opt_str), clap_buffer_len(opt_str),
                         clap_buffer_cstr(full_help), max_name_len, width);
         clap_buffer_free(opt_str);
         clap_buffer_free(full_help);
+    }
+}
+
+static void print_display_groups_sections(clap_parser_t *parser, clap_buffer_t **buf,
+                                           size_t max_name_len, int width) {
+    if (parser->display_group_count == 0) return;
+
+    for (size_t g = 0; g < parser->display_group_count; g++) {
+        clap_display_group_t *group = parser->display_groups[g];
+        if (group->arg_count == 0) continue;
+
+        clap_buffer_cat_printf(buf, "\n%s:\n", group->title);
+
+        if (group->description) {
+            wrap_text(buf, group->description, 2, width, true);
+            clap_buffer_cat(buf, "\n");
+        }
+
+        for (size_t i = 0; i < group->arg_count; i++) {
+            clap_argument_t *arg = group->arguments[i];
+            if (arg->flags & CLAP_ARG_POSITIONAL) {
+                const char *name = clap_buffer_cstr(arg->display_name);
+                clap_buffer_t *full_help = build_arg_help(arg);
+                append_help_row(buf, name, strlen(name),
+                                clap_buffer_cstr(full_help), max_name_len, width);
+                clap_buffer_free(full_help);
+            } else {
+                clap_buffer_t *opt_str = build_opt_str(arg);
+                clap_buffer_t *full_help = build_arg_help(arg);
+                append_help_row(buf, clap_buffer_cstr(opt_str), clap_buffer_len(opt_str),
+                                clap_buffer_cstr(full_help), max_name_len, width);
+                clap_buffer_free(opt_str);
+                clap_buffer_free(full_help);
+            }
+        }
     }
 }
 
@@ -372,6 +417,7 @@ void clap_print_help(clap_parser_t *parser, FILE *stream) {
     size_t max_name_len = calc_max_name_len(parser, width);
     print_positionals_section(parser, &buf, max_name_len, width);
     print_optionals_section(parser, &buf, max_name_len, width);
+    print_display_groups_sections(parser, &buf, max_name_len, width);
     print_commands_section(parser, &buf, max_name_len, width);
     print_paragraph(&buf, parser->epilog, width);
 

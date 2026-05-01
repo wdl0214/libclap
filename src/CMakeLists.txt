@@ -14,6 +14,7 @@ set(CLAP_SOURCES
     clap_actions.c
     clap_action_executor.c
     clap_mutex.c
+    clap_display_group.c
     clap_dependency.c
     clap_convert.c
     clap_formatter.c

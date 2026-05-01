@@ -101,7 +101,7 @@ void test_mutex_group_add_argument_basic(void) {
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL(1, parser->mutex_groups[0]->arg_count);
     TEST_ASSERT_EQUAL_PTR(arg1, parser->mutex_groups[0]->arguments[0]);
-    TEST_ASSERT_EQUAL(group_id, arg1->group_id);
+    TEST_ASSERT_EQUAL(group_id, arg1->mutex_group_id);
     
     clap_parser_free(parser);
 }
@@ -193,7 +193,7 @@ void test_mutex_group_add_argument_sets_group_id(void) {
     
     clap_mutex_group_add_argument(parser, group_id, arg);
     
-    TEST_ASSERT_EQUAL(group_id, arg->group_id);
+    TEST_ASSERT_EQUAL(group_id, arg->mutex_group_id);
     
     clap_parser_free(parser);
 }
@@ -208,12 +208,12 @@ void test_mutex_group_conflict_detection(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(verbose, group_id);
+    clap_argument_mutex_group(verbose, group_id);
     clap_mutex_group_add_argument(parser, group_id, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(quiet, group_id);
+    clap_argument_mutex_group(quiet, group_id);
     clap_mutex_group_add_argument(parser, group_id, quiet);
     
     char *argv[] = {"prog", "--verbose", "--quiet"};
@@ -234,12 +234,12 @@ void test_mutex_group_no_conflict_single_option(void) {
     
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(verbose, group_id);
+    clap_argument_mutex_group(verbose, group_id);
     clap_mutex_group_add_argument(parser, group_id, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(quiet, group_id);
+    clap_argument_mutex_group(quiet, group_id);
     clap_mutex_group_add_argument(parser, group_id, quiet);
     
     char *argv[] = {"prog", "--verbose"};
@@ -265,11 +265,11 @@ void test_mutex_group_required_missing(void) {
     int group_id = clap_add_mutually_exclusive_group(parser, true);
     
     clap_argument_t *start = clap_add_argument(parser, "--start");
-    clap_argument_group(start, group_id);
+    clap_argument_mutex_group(start, group_id);
     clap_mutex_group_add_argument(parser, group_id, start);
     
     clap_argument_t *stop = clap_add_argument(parser, "--stop");
-    clap_argument_group(stop, group_id);
+    clap_argument_mutex_group(stop, group_id);
     clap_mutex_group_add_argument(parser, group_id, stop);
     
     char *argv[] = {"prog"};  /* Neither --start nor --stop */
@@ -289,11 +289,11 @@ void test_mutex_group_required_satisfied(void) {
     int group_id = clap_add_mutually_exclusive_group(parser, true);
     
     clap_argument_t *start = clap_add_argument(parser, "--start");
-    clap_argument_group(start, group_id);
+    clap_argument_mutex_group(start, group_id);
     clap_mutex_group_add_argument(parser, group_id, start);
     
     clap_argument_t *stop = clap_add_argument(parser, "--stop");
-    clap_argument_group(stop, group_id);
+    clap_argument_mutex_group(stop, group_id);
     clap_mutex_group_add_argument(parser, group_id, stop);
     
     char *argv[] = {"prog", "--start"};
@@ -314,12 +314,12 @@ void test_mutex_group_with_values(void) {
     
     clap_argument_t *output = clap_add_argument(parser, "--output");
     clap_argument_type(output, "string");
-    clap_argument_group(output, group_id);
+    clap_argument_mutex_group(output, group_id);
     clap_mutex_group_add_argument(parser, group_id, output);
     
     clap_argument_t *stdout_arg = clap_add_argument(parser, "--stdout");
     clap_argument_action(stdout_arg, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(stdout_arg, group_id);
+    clap_argument_mutex_group(stdout_arg, group_id);
     clap_mutex_group_add_argument(parser, group_id, stdout_arg);
     
     /* Test with --output */
@@ -360,24 +360,24 @@ void test_mutex_group_multiple_groups(void) {
     int group1 = clap_add_mutually_exclusive_group(parser, false);
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(verbose, group1);
+    clap_argument_mutex_group(verbose, group1);
     clap_mutex_group_add_argument(parser, group1, verbose);
     
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(quiet, group1);
+    clap_argument_mutex_group(quiet, group1);
     clap_mutex_group_add_argument(parser, group1, quiet);
     
     /* Group 2: format */
     int group2 = clap_add_mutually_exclusive_group(parser, false);
     clap_argument_t *json = clap_add_argument(parser, "--json");
     clap_argument_action(json, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(json, group2);
+    clap_argument_mutex_group(json, group2);
     clap_mutex_group_add_argument(parser, group2, json);
     
     clap_argument_t *xml = clap_add_argument(parser, "--xml");
     clap_argument_action(xml, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(xml, group2);
+    clap_argument_mutex_group(xml, group2);
     clap_mutex_group_add_argument(parser, group2, xml);
     
     /* Valid: one from each group */

@@ -395,12 +395,12 @@ void test_print_help_usage_with_mutex_group(void) {
 
     clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
     clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(verbose, group);
+    clap_argument_mutex_group(verbose, group);
     clap_mutex_group_add_argument(parser, group, verbose);
 
     clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
     clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(quiet, group);
+    clap_argument_mutex_group(quiet, group);
     clap_mutex_group_add_argument(parser, group, quiet);
 
     clap_print_help(parser, stdout);

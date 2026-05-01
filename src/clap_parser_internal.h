@@ -70,6 +70,7 @@ typedef struct clap_buffer_s clap_buffer_t;
 typedef struct clap_arena_s clap_arena_t;
 typedef struct clap_trie_s clap_trie_t;
 typedef struct clap_mutex_group_s clap_mutex_group_t;
+typedef struct clap_display_group_s clap_display_group_t;
 typedef struct clap_dependency_s clap_dependency_t;
 
 /* ============================================================================
@@ -107,7 +108,8 @@ struct clap_argument_s {
 
     /* State */
     clap_arg_flags_t flags;
-    int group_id;
+    int mutex_group_id;
+    int display_group_id;
     int position;
 
     /* Dependencies */
@@ -135,6 +137,19 @@ struct clap_mutex_group_s {
         int parse_count;
         const char *first_occurrence;
     } state;
+};
+
+/* ============================================================================
+ * Display Group Structure
+ * ============================================================================ */
+
+struct clap_display_group_s {
+    int id;
+    char *title;
+    char *description;
+    clap_argument_t **arguments;
+    size_t arg_count;
+    size_t arg_capacity;
 };
 
 /* ============================================================================
@@ -191,7 +206,11 @@ struct clap_parser_s {
     /* Groups */
     clap_mutex_group_t **mutex_groups;
     size_t mutex_group_count;
-    int next_group_id;
+    int next_mutex_group_id;
+
+    clap_display_group_t **display_groups;
+    size_t display_group_count;
+    int next_display_group_id;
 
     /* Subparsers */
     clap_parser_t **subparsers;

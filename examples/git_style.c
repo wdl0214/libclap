@@ -111,13 +111,13 @@ int main(int argc, char *argv[]) {
     int commit_verbosity_group = clap_add_mutually_exclusive_group(commit_parser, false);
     
     arg = clap_add_argument(commit_parser, "--quiet/-q");
-    clap_argument_group(arg, commit_verbosity_group);
+    clap_argument_mutex_group(arg, commit_verbosity_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Suppress commit summary");
     clap_mutex_group_add_argument(commit_parser, commit_verbosity_group, arg);
     
     arg = clap_add_argument(commit_parser, "--verbose/-v");
-    clap_argument_group(arg, commit_verbosity_group);
+    clap_argument_mutex_group(arg, commit_verbosity_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Show unified diff in commit template");
     clap_mutex_group_add_argument(commit_parser, commit_verbosity_group, arg);
@@ -154,13 +154,13 @@ int main(int argc, char *argv[]) {
     int add_verbosity_group = clap_add_mutually_exclusive_group(add_parser, false);
     
     arg = clap_add_argument(add_parser, "--quiet/-q");
-    clap_argument_group(arg, add_verbosity_group);
+    clap_argument_mutex_group(arg, add_verbosity_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Be quiet");
     clap_mutex_group_add_argument(add_parser, add_verbosity_group, arg);
     
     arg = clap_add_argument(add_parser, "--verbose/-v");
-    clap_argument_group(arg, add_verbosity_group);
+    clap_argument_mutex_group(arg, add_verbosity_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Be verbose");
     clap_mutex_group_add_argument(add_parser, add_verbosity_group, arg);
@@ -211,13 +211,13 @@ int main(int argc, char *argv[]) {
     int status_format_group = clap_add_mutually_exclusive_group(status_parser, false);
     
     arg = clap_add_argument(status_parser, "--json");
-    clap_argument_group(arg, status_format_group);
+    clap_argument_mutex_group(arg, status_format_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Output in JSON format");
     clap_mutex_group_add_argument(status_parser, status_format_group, arg);
     
     arg = clap_add_argument(status_parser, "--xml");
-    clap_argument_group(arg, status_format_group);
+    clap_argument_mutex_group(arg, status_format_group);
     clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
     clap_argument_help(arg, "Output in XML format");
     clap_mutex_group_add_argument(status_parser, status_format_group, arg);

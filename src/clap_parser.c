@@ -28,7 +28,7 @@ clap_parser_t* clap_parser_new(const char *prog_name,
     parser->help_width = 100;
     parser->add_help_option = true;
     parser->allow_abbrev = false;
-    parser->next_group_id = 0;
+    parser->next_mutex_group_id = 0;
     parser->subparsers_container = NULL;
 
     register_builtin_types(parser);
@@ -89,6 +89,15 @@ void clap_parser_free(clap_parser_t *parser) {
         clap_free(parser->mutex_groups[i]);
     }
     clap_free(parser->mutex_groups);
+
+    /* Free display groups */
+    for (size_t i = 0; i < parser->display_group_count; i++) {
+        clap_free(parser->display_groups[i]->arguments);
+        clap_free(parser->display_groups[i]->title);
+        clap_free(parser->display_groups[i]->description);
+        clap_free(parser->display_groups[i]);
+    }
+    clap_free(parser->display_groups);
 
     /* Free subparsers */
     for (size_t i = 0; i < parser->subparser_count; i++) {

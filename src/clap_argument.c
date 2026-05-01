@@ -121,7 +121,8 @@ clap_argument_t* clap_add_argument(clap_parser_t *parser, const char *name_or_fl
     if (!arg) return NULL;
 
     arg->nargs = 1;
-    arg->group_id = -1;
+    arg->mutex_group_id = -1;
+    arg->display_group_id = -1;
     arg->action = CLAP_ACTION_STORE;
     arg->type_name = clap_buffer_new("string");
 
@@ -285,9 +286,9 @@ clap_argument_t* clap_argument_metavar(clap_argument_t *arg, const char *metavar
     return arg;
 }
 
-clap_argument_t* clap_argument_group(clap_argument_t *arg, int group_id) {
+clap_argument_t* clap_argument_mutex_group(clap_argument_t *arg, int mutex_group_id) {
     if (arg) {
-        arg->group_id = group_id;
+        arg->mutex_group_id = mutex_group_id;
     }
     return arg;
 }

@@ -24,6 +24,7 @@ extern void run_test_convert(void);
 extern void run_test_actions(void);
 extern void run_test_action_executor(void);
 extern void run_test_mutex(void);
+extern void run_test_display_group(void);
 extern void run_test_dependency(void);
 extern void run_test_subparser(void);
 extern void run_test_find(void);
@@ -68,6 +69,7 @@ int main(void) {
     
     /* Advanced */
     run_test_mutex();
+    run_test_display_group();
     run_test_dependency();
     run_test_subparser();
     run_test_find();

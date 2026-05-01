@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     clap_argument_action(quiet, CLAP_ACTION_STORE_FALSE);
     clap_argument_dest(quiet, "quiet");
     clap_argument_help(quiet, "Disable verbose output (STORE_FALSE action)");
-    clap_argument_group(quiet, verbosity_group);
+    clap_argument_mutex_group(quiet, verbosity_group);
     clap_mutex_group_add_argument(parser, verbosity_group, quiet);
     
     /* ========================================================================
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     clap_argument_const(mode_fast, "fast");
     clap_argument_dest(mode_fast, "mode");
     clap_argument_help(mode_fast, "Set mode to 'fast' (STORE_CONST action)");
-    clap_argument_group(mode_fast, mode_group);
+    clap_argument_mutex_group(mode_fast, mode_group);
     clap_mutex_group_add_argument(parser, mode_group, mode_fast);
     
     clap_argument_t *mode_slow = clap_add_argument(parser, "--mode-slow");
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
     clap_argument_const(mode_slow, "slow");
     clap_argument_dest(mode_slow, "mode");
     clap_argument_help(mode_slow, "Set mode to 'slow' (STORE_CONST action)");
-    clap_argument_group(mode_slow, mode_group);
+    clap_argument_mutex_group(mode_slow, mode_group);
     clap_mutex_group_add_argument(parser, mode_group, mode_slow);
     
     clap_argument_t *mode_normal = clap_add_argument(parser, "--mode-normal");
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
     clap_argument_dest(mode_normal, "mode");
     clap_argument_default(mode_normal, "normal");
     clap_argument_help(mode_normal, "Set mode to 'normal' (default) (STORE_CONST action)");
-    clap_argument_group(mode_normal, mode_group);
+    clap_argument_mutex_group(mode_normal, mode_group);
     clap_mutex_group_add_argument(parser, mode_group, mode_normal);
     
     /* ========================================================================

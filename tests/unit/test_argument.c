@@ -40,7 +40,7 @@ void test_add_argument_positional_basic(void) {
     TEST_ASSERT_EQUAL_STRING("input", clap_buffer_cstr(arg->display_name));
     TEST_ASSERT_EQUAL_STRING("input", clap_buffer_cstr(arg->dest));
     TEST_ASSERT_EQUAL(1, arg->nargs);
-    TEST_ASSERT_EQUAL(-1, arg->group_id);
+    TEST_ASSERT_EQUAL(-1, arg->mutex_group_id);
     TEST_ASSERT_EQUAL(CLAP_ACTION_STORE, arg->action);
 }
 
@@ -472,16 +472,16 @@ void test_argument_metavar_basic(void) {
 }
 
 /* ============================================================================
- * clap_argument_group Tests
+ * clap_argument_mutex_group Tests
  * ============================================================================ */
 
-void test_argument_group_basic(void) {
+void test_argument_mutex_group_basic(void) {
     clap_argument_t *arg = clap_add_argument(g_parser, "--verbose");
     
-    clap_argument_t *result = clap_argument_group(arg, 5);
+    clap_argument_t *result = clap_argument_mutex_group(arg, 5);
     
     TEST_ASSERT_EQUAL_PTR(arg, result);
-    TEST_ASSERT_EQUAL(5, arg->group_id);
+    TEST_ASSERT_EQUAL(5, arg->mutex_group_id);
 }
 
 /* ============================================================================
@@ -591,8 +591,8 @@ void run_test_argument(void) {
     /* Metavar Tests */
     RUN_TEST(test_argument_metavar_basic);
 
-    /* Group Tests */
-    RUN_TEST(test_argument_group_basic);
+    /* Mutex Group Tests */
+    RUN_TEST(test_argument_mutex_group_basic);
 
     /* Dest Tests */
     RUN_TEST(test_argument_dest_basic);

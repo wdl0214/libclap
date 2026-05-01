@@ -106,23 +106,23 @@ static clap_parser_t* create_fuzz_parser(void) {
     
     clap_argument_t *mutex1 = clap_add_argument(parser, "--mutex1");
     clap_argument_action(mutex1, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(mutex1, group);
+    clap_argument_mutex_group(mutex1, group);
     clap_mutex_group_add_argument(parser, group, mutex1);
     
     clap_argument_t *mutex2 = clap_add_argument(parser, "--mutex2");
     clap_argument_action(mutex2, CLAP_ACTION_STORE_TRUE);
-    clap_argument_group(mutex2, group);
+    clap_argument_mutex_group(mutex2, group);
     clap_mutex_group_add_argument(parser, group, mutex2);
     
     /* Required mutex group */
     int req_group = clap_add_mutually_exclusive_group(parser, true);
     
     clap_argument_t *req1 = clap_add_argument(parser, "--req1");
-    clap_argument_group(req1, req_group);
+    clap_argument_mutex_group(req1, req_group);
     clap_mutex_group_add_argument(parser, req_group, req1);
     
     clap_argument_t *req2 = clap_add_argument(parser, "--req2");
-    clap_argument_group(req2, req_group);
+    clap_argument_mutex_group(req2, req_group);
     clap_mutex_group_add_argument(parser, req_group, req2);
     
     /* Subcommands */

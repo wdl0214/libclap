@@ -63,6 +63,7 @@ set(UNIT_TESTS
     test_actions
     test_action_executor
     test_mutex
+    test_display_group
     test_dependency
     test_subparser
     test_find

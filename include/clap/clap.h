@@ -70,14 +70,21 @@ CLAP_EXPORT clap_argument_t* clap_argument_metavar(clap_argument_t *arg, const c
 CLAP_EXPORT clap_argument_t* clap_argument_dest(clap_argument_t *arg, const char *dest);
 CLAP_EXPORT clap_argument_t* clap_argument_const(clap_argument_t *arg, const char *const_value);
 CLAP_EXPORT clap_argument_t* clap_argument_handler(clap_argument_t *arg, clap_action_handler_t handler);
-CLAP_EXPORT clap_argument_t* clap_argument_group(clap_argument_t *arg, int group_id);
+CLAP_EXPORT clap_argument_t* clap_argument_mutex_group(clap_argument_t *arg, int mutex_group_id);
 
 /* ============================================================================
  * Mutually Exclusive Groups
  * ============================================================================ */
 
 CLAP_EXPORT int clap_add_mutually_exclusive_group(clap_parser_t *parser, bool required);
-CLAP_EXPORT bool clap_mutex_group_add_argument(clap_parser_t *parser, int group_id, clap_argument_t *arg);
+CLAP_EXPORT bool clap_mutex_group_add_argument(clap_parser_t *parser, int mutex_group_id, clap_argument_t *arg);
+
+/* ============================================================================
+ * Argument Groups
+ * ============================================================================ */
+
+CLAP_EXPORT int clap_add_argument_group(clap_parser_t *parser, const char *title, const char *description);
+CLAP_EXPORT bool clap_argument_group_add_argument(clap_parser_t *parser, int display_group_id, clap_argument_t *arg);
 
 /* ============================================================================
  * Subparsers

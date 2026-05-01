@@ -11,7 +11,7 @@ int clap_add_mutually_exclusive_group(clap_parser_t *parser, bool required) {
     clap_mutex_group_t *group = clap_calloc(1, sizeof(clap_mutex_group_t));
     if (!group) return -1;
 
-    group->id = parser->next_group_id++;
+    group->id = parser->next_mutex_group_id++;
     group->required = required;
     group->arg_capacity = 4;
     group->arguments = clap_calloc(group->arg_capacity, sizeof(clap_argument_t*));
@@ -38,19 +38,19 @@ int clap_add_mutually_exclusive_group(clap_parser_t *parser, bool required) {
     return group->id;
 }
 
-bool clap_mutex_group_add_argument(clap_parser_t *parser, int group_id, clap_argument_t *arg) {
-    if (!parser || group_id < 0 || !arg) return false;
-    
+bool clap_mutex_group_add_argument(clap_parser_t *parser, int mutex_group_id, clap_argument_t *arg) {
+    if (!parser || mutex_group_id < 0 || !arg) return false;
+
     clap_mutex_group_t *group = NULL;
     for (size_t i = 0; i < parser->mutex_group_count; i++) {
-        if (parser->mutex_groups[i]->id == group_id) {
+        if (parser->mutex_groups[i]->id == mutex_group_id) {
             group = parser->mutex_groups[i];
             break;
         }
     }
-    
+
     if (!group) return false;
-    
+
     /* Expand if needed */
     if (group->arg_count >= group->arg_capacity) {
         size_t new_cap = group->arg_capacity * 2;
@@ -62,9 +62,9 @@ bool clap_mutex_group_add_argument(clap_parser_t *parser, int group_id, clap_arg
         group->arguments = new_args;
         group->arg_capacity = new_cap;
     }
-    
+
     group->arguments[group->arg_count++] = arg;
-    arg->group_id = group_id;
+    arg->mutex_group_id = mutex_group_id;
     return true;
 }
 
@@ -75,13 +75,13 @@ bool clap_mutex_check_conflict(clap_parser_t *parser,
                           const char *option_str,
                           clap_error_t *error) {
     (void)option_str;    
-    if (arg->group_id < 0 || !mutex_group_used) {
+    if (arg->mutex_group_id < 0 || !mutex_group_used) {
         return true;
     }
 
-    if (mutex_group_used[arg->group_id]) {
+    if (mutex_group_used[arg->mutex_group_id]) {
         const char *conflicting_opt = NULL;
-        clap_mutex_group_t *group = parser->mutex_groups[arg->group_id];
+        clap_mutex_group_t *group = parser->mutex_groups[arg->mutex_group_id];
 
         /* Find the conflicting option */
         for (size_t k = 0; k < group->arg_count; k++) {
@@ -117,6 +117,6 @@ bool clap_mutex_check_conflict(clap_parser_t *parser,
         return false;
     }
 
-    mutex_group_used[arg->group_id] = true;
+    mutex_group_used[arg->mutex_group_id] = true;
     return true;
 }
