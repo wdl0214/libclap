@@ -114,6 +114,15 @@ bool clap_namespace_set_int(clap_namespace_t *ns, const char *name, int value) {
     return true;
 }
 
+bool clap_namespace_set_float(clap_namespace_t *ns, const char *name, double value) {
+    clap_value_t *val = ensure_value(ns, name);
+    if (!val) return false;
+
+    val->type = CLAP_VAL_FLOAT;
+    val->data.float_val = value;
+    return true;
+}
+
 bool clap_namespace_set_bool(clap_namespace_t *ns, const char *name, bool value) {
     clap_value_t *val = ensure_value(ns, name);
     if (!val) return false;

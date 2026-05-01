@@ -132,6 +132,7 @@ CLAP_EXPORT bool clap_namespace_get_string_array(clap_namespace_t *ns, const cha
 
 CLAP_EXPORT bool clap_namespace_set_string(clap_namespace_t *ns, const char *name, const char *value);
 CLAP_EXPORT bool clap_namespace_set_int(clap_namespace_t *ns, const char *name, int value);
+CLAP_EXPORT bool clap_namespace_set_float(clap_namespace_t *ns, const char *name, double value);
 CLAP_EXPORT bool clap_namespace_set_bool(clap_namespace_t *ns, const char *name, bool value);
 CLAP_EXPORT bool clap_namespace_append_string(clap_namespace_t *ns, const char *name, const char *value);
 

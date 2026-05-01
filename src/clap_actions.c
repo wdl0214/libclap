@@ -34,7 +34,7 @@ static bool convert_and_store(clap_argument_t *arg,
         if (!arg->type_handler(value, &float_val, sizeof(double), error)) {
             return false;
         }
-        return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+        return clap_namespace_set_float(ns, clap_buffer_cstr(arg->dest), float_val);
     }
 
     if (strcmp(type_name, "bool") == 0) {

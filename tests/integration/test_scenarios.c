@@ -308,12 +308,123 @@ void test_scenario_subcommand_with_nargs(void) {
 }
 
 /* ============================================================================
+ * Scenario 9: Option should not consume next option as value
+ * ============================================================================ */
+
+void test_scenario_option_not_consuming_next_option(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *output = clap_add_argument(parser, "--output");
+    clap_argument_type(output, "string");
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+
+    char *argv[] = {"prog", "--output", "--verbose"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+
+    /* Parse must fail: --output needs a value but next token is another option */
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_MISSING_VALUE, error.code);
+
+    /* ns must be NULL on parse failure */
+    TEST_ASSERT_NULL(ns);
+
+    if (ns) clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 11: Option with nargs='?' followed by another option
+ *
+ * Unlike nargs=1, nargs='?' does NOT require a value. When followed by
+ * another option, the next token should NOT be consumed and no error
+ * should be raised.
+ * ============================================================================ */
+
+void test_scenario_optional_nargs_followed_by_option(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *output = clap_add_argument(parser, "--output/-o");
+    clap_argument_type(output, "string");
+    clap_argument_nargs(output, '?');
+    clap_argument_default(output, "default.txt");
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose/-v");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+
+    /* --output? followed by --verbose: --verbose should NOT be consumed */
+    char *argv[] = {"prog", "--output", "--verbose"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+
+    /* Should succeed: nargs='?' allows zero values */
+    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
+
+    /* --output should use its default value */
+    const char *output_val = NULL;
+    bool has_output = clap_namespace_get_string(ns, "output", &output_val);
+    TEST_ASSERT_TRUE(has_output);
+    TEST_ASSERT_EQUAL_STRING("default.txt", output_val);
+
+    /* --verbose must still be parsed as its own flag */
+    bool verbose_val = false;
+    bool has_verbose = clap_namespace_get_bool(ns, "verbose", &verbose_val);
+    TEST_ASSERT_TRUE_MESSAGE(has_verbose,
+        "--verbose was incorrectly consumed as --output's value despite nargs='?'");
+    TEST_ASSERT_TRUE(verbose_val);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 10: Float type values should be retrievable via get_float
+ * ============================================================================ */
+
+void test_scenario_float_type_storage(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *pi = clap_add_argument(parser, "--pi");
+    clap_argument_type(pi, "float");
+    clap_argument_help(pi, "Pi value");
+
+    clap_argument_t *ratio = clap_add_argument(parser, "--ratio");
+    clap_argument_type(ratio, "float");
+
+    char *argv[] = {"prog", "--pi", "3.14", "--ratio", "0.618"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_TRUE(result);
+
+    double pi_val = -1.0;
+    bool got_float = clap_namespace_get_float(ns, "pi", &pi_val);
+
+    TEST_ASSERT_TRUE(pi_val > 3.13 && pi_val < 3.15);
+
+    double ratio_val = -1.0;
+    bool got_ratio = clap_namespace_get_float(ns, "ratio", &ratio_val);
+    TEST_ASSERT_TRUE(ratio_val > 0.617 && ratio_val < 0.619);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
 int main(void) {
     UNITY_BEGIN();
-    
+
     RUN_TEST(test_scenario_git_commit);
     RUN_TEST(test_scenario_verbosity_count);
     RUN_TEST(test_scenario_append_multiple);
@@ -322,6 +433,9 @@ int main(void) {
     RUN_TEST(test_scenario_long_option_equals);
     RUN_TEST(test_scenario_multiple_mutex_groups);
     RUN_TEST(test_scenario_subcommand_with_nargs);
-    
+    RUN_TEST(test_scenario_option_not_consuming_next_option);
+    RUN_TEST(test_scenario_optional_nargs_followed_by_option);
+    RUN_TEST(test_scenario_float_type_storage);
+
     return UNITY_END();
 }

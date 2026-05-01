@@ -163,10 +163,14 @@ static bool parse_single_option(clap_parser_t *parser,
         if (next_token->type == TOKEN_POSITIONAL) {
             value = next_token->raw;
             *consumed = 2;
+        } else if (arg->nargs != CLAP_NARGS_ZERO_OR_ONE) {
+            clap_error_set(error, CLAP_ERR_MISSING_VALUE,
+                           "argument %s: expected a value, got '%s'",
+                           token->raw ? token->raw : token->option_name,
+                           next_token->raw ? next_token->raw : "");
+            return false;
         }
-
-        value = next_token->raw;
-        *consumed = 2;
+        /* nargs='?': next token is an option, leave value as NULL */
     }
 
     if (!clap_apply_argument_action(parser, arg, ns, value, error)) {
