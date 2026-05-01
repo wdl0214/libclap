@@ -38,9 +38,9 @@ void test_scenario_git_commit(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 7, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 7, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *cmd, *message, *author_val;
     bool amend_val;
@@ -77,9 +77,9 @@ void test_scenario_verbosity_count(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     int verbose_level;
     TEST_ASSERT_TRUE(clap_namespace_get_int(ns, "verbose", &verbose_level));
@@ -104,9 +104,9 @@ void test_scenario_append_multiple(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 7, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 7, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char **dirs;
     size_t count;
@@ -137,8 +137,8 @@ void test_scenario_choices_with_default(void) {
     clap_namespace_t *ns1 = NULL;
     clap_error_t error1 = {0};
     
-    bool result1 = clap_parse_args(parser, 1, argv1, &ns1, &error1);
-    TEST_ASSERT_TRUE(result1);
+    clap_parse_result_t result1 = clap_parse_args(parser, 1, argv1, &ns1, &error1);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result1);
     
     const char *level_val;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns1, "level", &level_val));
@@ -151,8 +151,8 @@ void test_scenario_choices_with_default(void) {
     clap_namespace_t *ns2 = NULL;
     clap_error_t error2 = {0};
     
-    bool result2 = clap_parse_args(parser, 3, argv2, &ns2, &error2);
-    TEST_ASSERT_TRUE(result2);
+    clap_parse_result_t result2 = clap_parse_args(parser, 3, argv2, &ns2, &error2);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result2);
     
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns2, "level", &level_val));
     TEST_ASSERT_EQUAL_STRING("debug", level_val);
@@ -181,9 +181,9 @@ void test_scenario_combined_short_options(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool a_val, f_val, v_val;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &a_val));
@@ -215,9 +215,9 @@ void test_scenario_long_option_equals(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *output_val, *config_val;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output_val));
@@ -261,14 +261,14 @@ void test_scenario_multiple_mutex_groups(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     clap_namespace_free(ns);
     
     /* Invalid: conflict in group 1 */
     char *argv2[] = {"prog", "--verbose", "--quiet", "--json"};
     result = clap_parse_args(parser, 4, argv2, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_MUTUALLY_EXCLUSIVE, error.code);
     
     clap_parser_free(parser);
@@ -290,9 +290,9 @@ void test_scenario_subcommand_with_nargs(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *cmd;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "cmd", &cmd));
@@ -324,10 +324,10 @@ void test_scenario_option_not_consuming_next_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
 
     /* Parse must fail: --output needs a value but next token is another option */
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_MISSING_VALUE, error.code);
 
     /* ns must be NULL on parse failure */
@@ -361,10 +361,10 @@ void test_scenario_optional_nargs_followed_by_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
 
     /* Should succeed: nargs='?' allows zero values */
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
 
     /* --output should use its default value */
@@ -402,8 +402,8 @@ void test_scenario_float_type_storage(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     double pi_val = -1.0;
     bool got_float = clap_namespace_get_float(ns, "pi", &pi_val);

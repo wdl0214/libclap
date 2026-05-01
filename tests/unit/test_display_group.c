@@ -469,8 +469,8 @@ void test_display_group_args_parsed_correctly(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 6, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 6, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     const char *host_val;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "host", &host_val));

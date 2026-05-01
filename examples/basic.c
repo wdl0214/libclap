@@ -35,12 +35,17 @@ int main(int argc, char *argv[]) {
     clap_argument_help(arg, "Verbose output");
     clap_argument_action(arg, CLAP_ACTION_COUNT);
 
-    if (!clap_parse_args(parser, argc, argv, &ns, &error)) {
+    clap_parse_result_t parse_result = clap_parse_args(parser, argc, argv, &ns, &error);
+    if (parse_result == CLAP_PARSE_ERROR) {
         fprintf(stderr, "Error: %s\n", error.message);
         clap_print_help(parser, stderr);
 
         clap_parser_free(parser);
         return EXIT_FAILURE;
+    }
+    if (parse_result == CLAP_PARSE_HELP || parse_result == CLAP_PARSE_VERSION) {
+        clap_parser_free(parser);
+        return EXIT_SUCCESS;
     }
 
     const char *input, *output;

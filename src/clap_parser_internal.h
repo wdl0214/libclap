@@ -330,7 +330,7 @@ bool clap_validate_nargs_count(clap_argument_t *arg,
                                 size_t consumed,
                                 clap_error_t *error);
 
-bool clap_parse_with_pattern(clap_parser_t *parser,
+clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                              clap_token_t *tokens,
                              clap_pattern_t *pattern,
                              clap_namespace_t *ns,

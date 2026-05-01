@@ -97,7 +97,7 @@ void test_mutex_group_add_argument_basic(void) {
     clap_argument_action(arg1, CLAP_ACTION_STORE_TRUE);
     
     bool result = clap_mutex_group_add_argument(parser, group_id, arg1);
-    
+
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL(1, parser->mutex_groups[0]->arg_count);
     TEST_ASSERT_EQUAL_PTR(arg1, parser->mutex_groups[0]->arguments[0]);
@@ -143,7 +143,7 @@ void test_mutex_group_add_argument_expands_array(void) {
         bool result = clap_mutex_group_add_argument(parser, group_id, arg);
         TEST_ASSERT_TRUE(result);
     }
-    
+
     TEST_ASSERT_EQUAL(10, parser->mutex_groups[0]->arg_count);
     TEST_ASSERT_TRUE(parser->mutex_groups[0]->arg_capacity >= 10);
     
@@ -157,7 +157,7 @@ void test_mutex_group_add_argument_null_parser(void) {
     
     bool result = clap_mutex_group_add_argument(NULL, group_id, arg);
     TEST_ASSERT_FALSE(result);
-    
+
     clap_parser_free(parser);
 }
 
@@ -167,7 +167,7 @@ void test_mutex_group_add_argument_invalid_group_id(void) {
     
     bool result = clap_mutex_group_add_argument(parser, -1, arg);
     TEST_ASSERT_FALSE(result);
-    
+
     result = clap_mutex_group_add_argument(parser, 999, arg);
     TEST_ASSERT_FALSE(result);
     
@@ -218,9 +218,9 @@ void test_mutex_group_conflict_detection(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_MUTUALLY_EXCLUSIVE, error.code);
     
     clap_parser_free(parser);
@@ -242,9 +242,9 @@ void test_mutex_group_no_conflict_single_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool value;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &value));
@@ -270,9 +270,9 @@ void test_mutex_group_required_missing(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
@@ -292,9 +292,9 @@ void test_mutex_group_required_satisfied(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     clap_namespace_free(ns);
     clap_parser_free(parser);
@@ -317,8 +317,8 @@ void test_mutex_group_with_values(void) {
     clap_namespace_t *ns1 = NULL;
     clap_error_t error1 = {0};
     
-    bool result1 = clap_parse_args(parser, 3, argv1, &ns1, &error1);
-    TEST_ASSERT_TRUE(result1);
+    clap_parse_result_t result1 = clap_parse_args(parser, 3, argv1, &ns1, &error1);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result1);
     
     const char *out_val;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns1, "output", &out_val));
@@ -331,8 +331,8 @@ void test_mutex_group_with_values(void) {
     clap_namespace_t *ns2 = NULL;
     clap_error_t error2 = {0};
     
-    bool result2 = clap_parse_args(parser, 2, argv2, &ns2, &error2);
-    TEST_ASSERT_TRUE(result2);
+    clap_parse_result_t result2 = clap_parse_args(parser, 2, argv2, &ns2, &error2);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result2);
     
     bool stdout_val;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns2, "stdout", &stdout_val));
@@ -371,9 +371,9 @@ void test_mutex_group_multiple_groups(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool v, q, j, x;
     clap_namespace_get_bool(ns, "verbose", &v);

@@ -286,9 +286,9 @@ void test_error_flow_parse_failure(void) {
     clap_error_t error;
     clap_error_init(&error);
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     TEST_ASSERT_NOT_EQUAL(0, strlen(error.message));
     
@@ -306,9 +306,9 @@ void test_error_flow_invalid_choice(void) {
     clap_error_t error;
     clap_error_init(&error);
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_INVALID_CHOICE, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "yellow"));
     TEST_ASSERT_NOT_NULL(strstr(error.message, "red"));

@@ -222,7 +222,7 @@ void test_print_subcommand_help_valid(void) {
     /* Redirect output to capture or just verify return value */
     bool result = clap_print_subcommand_help(parser, "commit", stdout);
     TEST_ASSERT_TRUE(result);
-    
+
     result = clap_print_subcommand_help(parser, "add", stdout);
     TEST_ASSERT_TRUE(result);
     
@@ -236,7 +236,7 @@ void test_print_subcommand_help_invalid_command(void) {
     
     bool result = clap_print_subcommand_help(parser, "nonexistent", stdout);
     TEST_ASSERT_FALSE(result);
-    
+
     clap_parser_free(parser);
 }
 
@@ -248,10 +248,10 @@ void test_print_subcommand_help_null_parser(void) {
 void test_print_subcommand_help_null_command(void) {
     clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
     clap_add_subparsers(parser, "cmd", NULL);
-    
+
     bool result = clap_print_subcommand_help(parser, NULL, stdout);
     TEST_ASSERT_FALSE(result);
-    
+
     clap_parser_free(parser);
 }
 
@@ -259,17 +259,17 @@ void test_print_subcommand_help_null_stream(void) {
     clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
     clap_subparser_add(subparsers, "commit", NULL);
-    
+
     bool result = clap_print_subcommand_help(parser, "commit", NULL);
     TEST_ASSERT_FALSE(result);
-    
+
     clap_parser_free(parser);
 }
 
 void test_print_subcommand_help_no_subparsers(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
     /* No subparsers added */
-    
+
     bool result = clap_print_subcommand_help(parser, "cmd", stdout);
     TEST_ASSERT_FALSE(result);
     
@@ -294,9 +294,9 @@ void test_subparser_parse_arguments(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *cmd;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "cmd", &cmd));
@@ -325,9 +325,9 @@ void test_subparser_parse_with_global_options(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool verbose;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose));
@@ -354,7 +354,7 @@ void test_subparser_invalid_command(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
     /* Should fail or treat as positional - depends on implementation */
     /* Current implementation treats unrecognized as positional */
@@ -374,9 +374,9 @@ void test_subparser_missing_required_subcommand_arg(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     TEST_ASSERT_EQUAL_STRING("commit", error.subcommand_name);
     

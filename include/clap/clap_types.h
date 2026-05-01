@@ -21,6 +21,25 @@ typedef struct clap_argument_s clap_argument_t;
 typedef struct clap_namespace_s clap_namespace_t;
 
 /**
+ * @brief Parse result codes returned by clap_parse_args()
+ *
+ * CLAP_PARSE_SUCCESS (0):  Parsing completed successfully.
+ * CLAP_PARSE_ERROR  (1):  An error occurred; check clap_error_t.
+ * CLAP_PARSE_HELP   (2):  --help or -h was requested; help has been
+ *                         printed to stdout.  The caller should exit
+ *                         with code 0.
+ * CLAP_PARSE_VERSION(3):  --version was requested; version has been
+ *                         printed to stdout.  The caller should exit
+ *                         with code 0.
+ */
+typedef enum {
+    CLAP_PARSE_SUCCESS = 0,
+    CLAP_PARSE_ERROR   = 1,
+    CLAP_PARSE_HELP    = 2,
+    CLAP_PARSE_VERSION = 3,
+} clap_parse_result_t;
+
+/**
  * @brief Type conversion handler function pointer
  */
 typedef bool (*clap_type_handler_t)(

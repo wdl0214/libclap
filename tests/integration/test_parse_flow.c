@@ -26,9 +26,9 @@ void test_parse_flow_no_arguments(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_NOT_NULL(ns);
     
     clap_namespace_free(ns);
@@ -55,9 +55,9 @@ void test_parse_flow_positional_only(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *input, *output;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &input));
@@ -82,9 +82,9 @@ void test_parse_flow_optional_only(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool verbose_val;
     const char *output_val;
@@ -112,9 +112,9 @@ void test_parse_flow_mixed_arguments(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *output_val, *input_val;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output_val));
@@ -137,9 +137,9 @@ void test_parse_flow_unrecognized_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_UNRECOGNIZED, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "Unrecognized"));
     
@@ -156,9 +156,9 @@ void test_parse_flow_missing_required(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
@@ -174,9 +174,9 @@ void test_parse_flow_invalid_choice(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_INVALID_CHOICE, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "yellow"));
     
@@ -193,9 +193,9 @@ void test_parse_flow_type_conversion_error(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_TYPE_CONVERSION, error.code);
     
     clap_parser_free(parser);
@@ -221,9 +221,9 @@ void test_parse_flow_mutex_conflict(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_MUTUALLY_EXCLUSIVE, error.code);
     
     clap_parser_free(parser);
@@ -243,9 +243,9 @@ void test_parse_flow_mutex_required_missing(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
@@ -268,9 +268,9 @@ void test_parse_flow_subcommand_basic(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *cmd;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "cmd", &cmd));
@@ -300,9 +300,9 @@ void test_parse_flow_subcommand_with_global(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     bool verbose_val;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
@@ -332,9 +332,9 @@ void test_parse_flow_subcommand_error(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     TEST_ASSERT_EQUAL_STRING("commit", error.subcommand_name);
     
@@ -354,9 +354,9 @@ void test_parse_flow_nargs_star(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char **file_list;
     size_t count;
@@ -379,15 +379,15 @@ void test_parse_flow_nargs_plus(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     clap_namespace_free(ns);
     
     /* Test failure with 0 arguments */
     char *argv2[] = {"prog"};
     result = clap_parse_args(parser, 1, argv2, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
@@ -403,9 +403,9 @@ void test_parse_flow_stop_parsing(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     
     const char *input;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &input));
@@ -431,8 +431,8 @@ void test_parse_flow_positional_nargs_exact_success(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
 
     const char **values;
@@ -459,8 +459,8 @@ void test_parse_flow_positional_nargs_too_few(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_TOO_FEW_ARGS, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "nums"));
     TEST_ASSERT_NULL(ns);
@@ -480,8 +480,8 @@ void test_parse_flow_positional_nargs_zero_provided(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "nums"));
     TEST_ASSERT_NULL(ns);
@@ -501,8 +501,8 @@ void test_parse_flow_positional_nargs_too_many(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_TOO_MANY_ARGS, error.code);
     TEST_ASSERT_NULL(ns);
 
@@ -525,8 +525,8 @@ void test_parse_flow_positional_nargs_with_optional_before(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     bool verbose_val;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
@@ -557,8 +557,8 @@ void test_parse_flow_optional_nargs_exact_success(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     const char **values;
     size_t count;
@@ -581,8 +581,8 @@ void test_parse_flow_optional_nargs_too_few(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_TOO_FEW_ARGS, error.code);
 
     clap_parser_free(parser);
@@ -600,8 +600,8 @@ void test_parse_flow_optional_nargs_zero_provided(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     clap_namespace_free(ns);
     clap_parser_free(parser);
@@ -619,8 +619,8 @@ void test_parse_flow_optional_nargs_plus_zero_provided(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
-    TEST_ASSERT_TRUE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
 
     clap_namespace_free(ns);
     clap_parser_free(parser);
@@ -639,8 +639,8 @@ void test_parse_flow_required_optional_nargs_zero(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
 
     clap_parser_free(parser);
@@ -659,8 +659,8 @@ void test_parse_flow_required_optional_nargs_plus_zero(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
 
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
-    TEST_ASSERT_FALSE(result);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
 
     clap_parser_free(parser);
@@ -686,9 +686,9 @@ void test_parse_flow_short_option_bundle(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     bool a_val, b_val, c_val;
@@ -719,9 +719,9 @@ void test_parse_flow_short_option_bundle_mixed_with_positional(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 4, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     bool a_val, b_val;
@@ -749,9 +749,9 @@ void test_parse_flow_short_option_bundle_unrecognized(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_UNRECOGNIZED, error.code);
     TEST_ASSERT_NULL(ns);
     
@@ -777,9 +777,9 @@ void test_parse_flow_short_option_bundle_multiple(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     bool a_val, b_val, c_val, d_val;
@@ -812,9 +812,9 @@ void test_parse_flow_short_option_bundle_with_long_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     bool a_val, b_val, verbose_val;
@@ -840,9 +840,9 @@ void test_parse_flow_short_option_with_value(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     const char *file_val;
@@ -863,9 +863,9 @@ void test_parse_flow_long_option_with_value(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     const char *file_val;
@@ -887,9 +887,9 @@ void test_parse_flow_option_append(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 5, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_NONE, error.code);
     
     const char **includes;

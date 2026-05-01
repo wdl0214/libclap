@@ -109,7 +109,7 @@ CLAP_EXPORT bool clap_print_subcommand_help(clap_parser_t *parser, const char *c
  * Parsing
  * ============================================================================ */
 
-CLAP_EXPORT bool clap_parse_args(
+CLAP_EXPORT clap_parse_result_t clap_parse_args(
     clap_parser_t *parser,
     int argc,
     char *argv[],

@@ -117,10 +117,15 @@ int main(int argc, char *argv[]) {
     clap_argument_help(arg, "Increase verbosity");
     clap_argument_action(arg, CLAP_ACTION_COUNT);
     
-    if (!clap_parse_args(parser, argc, argv, &ns, &error)) {
+    clap_parse_result_t result = clap_parse_args(parser, argc, argv, &ns, &error);
+    if (result == CLAP_PARSE_ERROR) {
         fprintf(stderr, "Error: %s\n", error.message);
         clap_parser_free(parser);
         return 1;
+    }
+    if (result == CLAP_PARSE_HELP || result == CLAP_PARSE_VERSION) {
+        clap_parser_free(parser);
+        return 0;
     }
 
     const char *input, *output;
@@ -166,10 +171,15 @@ clap_parser_set_version(parser, "1.0.0");
 
 clap_namespace_t *ns = NULL;
 clap_error_t error = {0};
-if (!clap_parse_args(parser, argc, argv, &ns, &error)) {
+clap_parse_result_t result = clap_parse_args(parser, argc, argv, &ns, &error);
+if (result == CLAP_PARSE_ERROR) {
     fprintf(stderr, "Error: %s\n", error.message);
     clap_parser_free(parser);
     return 1;
+}
+if (result == CLAP_PARSE_HELP || result == CLAP_PARSE_VERSION) {
+    clap_parser_free(parser);
+    return 0;
 }
 
 clap_namespace_free(ns);

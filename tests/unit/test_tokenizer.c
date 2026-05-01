@@ -143,10 +143,10 @@ void test_check_required_option_not_required(void) {
     clap_argument_t *arg = clap_add_argument(parser, "--opt");
     clap_namespace_t *ns = clap_namespace_new();
     clap_error_t error = {0};
-    
+
     bool result = check_required_option(arg, ns, &error);
     TEST_ASSERT_TRUE(result);
-    
+
     clap_namespace_free(ns);
     clap_parser_free(parser);
 }
@@ -157,11 +157,11 @@ void test_check_required_option_missing_string(void) {
     clap_argument_required(arg, true);
     clap_namespace_t *ns = clap_namespace_new();
     clap_error_t error = {0};
-    
+
     bool result = check_required_option(arg, ns, &error);
     TEST_ASSERT_FALSE(result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
-    
+
     clap_namespace_free(ns);
     clap_parser_free(parser);
 }
@@ -173,10 +173,10 @@ void test_check_required_option_present_string(void) {
     clap_namespace_t *ns = clap_namespace_new();
     clap_namespace_set_string(ns, "required", "value");
     clap_error_t error = {0};
-    
+
     bool result = check_required_option(arg, ns, &error);
     TEST_ASSERT_TRUE(result);
-    
+
     clap_namespace_free(ns);
     clap_parser_free(parser);
 }
@@ -188,11 +188,11 @@ void test_check_required_option_missing_store_true(void) {
     clap_argument_required(arg, true);
     clap_namespace_t *ns = clap_namespace_new();
     clap_error_t error = {0};
-    
+
     bool result = check_required_option(arg, ns, &error);
     TEST_ASSERT_FALSE(result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
-    
+
     clap_namespace_free(ns);
     clap_parser_free(parser);
 }
@@ -205,10 +205,10 @@ void test_check_required_option_present_store_true(void) {
     clap_namespace_t *ns = clap_namespace_new();
     clap_namespace_set_bool(ns, "flag", true);
     clap_error_t error = {0};
-    
+
     bool result = check_required_option(arg, ns, &error);
     TEST_ASSERT_TRUE(result);
-    
+
     clap_namespace_free(ns);
     clap_parser_free(parser);
 }
@@ -223,9 +223,9 @@ void test_parse_args_no_arguments(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     TEST_ASSERT_NOT_NULL(ns);
     
     clap_namespace_free(ns);
@@ -239,9 +239,9 @@ void test_parse_args_positional(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     const char *value;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &value));
     TEST_ASSERT_EQUAL_STRING("file.txt", value);
@@ -258,9 +258,9 @@ void test_parse_args_optional_store_true(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     bool value;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &value));
     TEST_ASSERT_TRUE(value);
@@ -277,9 +277,9 @@ void test_parse_args_optional_with_value(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     const char *value;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &value));
     TEST_ASSERT_EQUAL_STRING("out.txt", value);
@@ -296,9 +296,9 @@ void test_parse_args_optional_with_equals(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     const char *value;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &value));
     TEST_ASSERT_EQUAL_STRING("out.txt", value);
@@ -320,9 +320,9 @@ void test_parse_args_short_option_bundle(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     bool va, vb, vc;
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "a", &va)); TEST_ASSERT_TRUE(va);
     TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "b", &vb)); TEST_ASSERT_TRUE(vb);
@@ -338,9 +338,9 @@ void test_parse_args_unrecognized_option(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 2, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_UNRECOGNIZED, error.code);
     
     clap_parser_free(parser);
@@ -354,9 +354,9 @@ void test_parse_args_required_missing(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 1, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
     
-    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
     TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
     
     clap_parser_free(parser);
@@ -372,9 +372,9 @@ void test_parse_args_stop_parsing(void) {
     clap_namespace_t *ns = NULL;
     clap_error_t error = {0};
     
-    bool result = clap_parse_args(parser, 3, argv, &ns, &error);
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
     
-    TEST_ASSERT_TRUE(result);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
     /* --verbose should NOT be parsed as option, but as positional */
     const char *value;
     TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &value));

@@ -231,23 +231,23 @@ bool check_positional_nargs_constraint(clap_argument_t *arg, clap_namespace_t *n
     return true;
 }
 
-bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
+clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
                      clap_namespace_t **out_ns,
                      clap_error_t *error) {
     if (!parser || !argv || !out_ns) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid parameters");
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     clap_namespace_t *ns = clap_namespace_new();
     if (!ns) {
         clap_error_set(error, CLAP_ERR_MEMORY, "Failed to create namespace");
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     if (!clap_apply_defaults(parser, ns, error)) {
         clap_namespace_free(ns);
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     bool *mutex_group_used = NULL;
@@ -256,7 +256,7 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
         if (!mutex_group_used) {
             clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate mutex tracking");
             clap_namespace_free(ns);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
     }
 
@@ -265,7 +265,7 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
     if (!tokens && token_count > 0) {
         clap_free(mutex_group_used);
         clap_namespace_free(ns);
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     clap_pattern_t *pattern = clap_analyze_pattern(parser, tokens, token_count, error);
@@ -273,26 +273,26 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
         clap_tokenize_free(tokens, token_count);
         clap_free(mutex_group_used);
         clap_namespace_free(ns);
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
-    if (!clap_parse_with_pattern(parser, tokens, pattern, ns, mutex_group_used, error)) {
-        clap_pattern_free(pattern);
-        clap_tokenize_free(tokens, token_count);
-        clap_free(mutex_group_used);
-        clap_namespace_free(ns);
-        return false;
-    }
-
+    clap_parse_result_t result = clap_parse_with_pattern(parser, tokens, pattern,
+                                                          ns, mutex_group_used, error);
     clap_pattern_free(pattern);
     clap_tokenize_free(tokens, token_count);
+
+    if (result != CLAP_PARSE_SUCCESS) {
+        clap_free(mutex_group_used);
+        clap_namespace_free(ns);
+        return result;
+    }
 
     /* Check required positional arguments */
     for (size_t i = 0; i < parser->positional_count; i++) {
         if (!check_required_positional(parser->positional_args[i], ns, error)) {
             clap_free(mutex_group_used);
             clap_namespace_free(ns);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
     }
 
@@ -301,7 +301,7 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
         if (!check_required_option(parser->optional_args[i], ns, error)) {
             clap_free(mutex_group_used);
             clap_namespace_free(ns);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
     }
 
@@ -310,7 +310,7 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
         if (!check_positional_nargs_constraint(parser->positional_args[i], ns, error)) {
             clap_free(mutex_group_used);
             clap_namespace_free(ns);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
     }
 
@@ -332,11 +332,11 @@ bool clap_parse_args(clap_parser_t *parser, int argc, char *argv[],
             clap_buffer_free(opts);
             clap_free(mutex_group_used);
             clap_namespace_free(ns);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
     }
 
     clap_free(mutex_group_used);
     *out_ns = ns;
-    return true;
+    return CLAP_PARSE_SUCCESS;
 }

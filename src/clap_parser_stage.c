@@ -104,7 +104,7 @@ bool clap_validate_nargs_count(clap_argument_t *arg,
     }
 }
 
-static bool parse_single_option(clap_parser_t *parser,
+static clap_parse_result_t parse_single_option(clap_parser_t *parser,
                                 token_t *token,
                                 clap_namespace_t *ns,
                                 token_t *next_token,
@@ -116,7 +116,7 @@ static bool parse_single_option(clap_parser_t *parser,
         if (error) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid option parse parameters");
         }
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     bool ambiguous = false;
@@ -125,26 +125,26 @@ static bool parse_single_option(clap_parser_t *parser,
     if (ambiguous) {
         clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
                        "Ambiguous option '%s'", token->raw ? token->raw : token->option_name);
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     if (!arg) {
         clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
                        "Unrecognized option '%s'", token->raw ? token->raw : token->option_name);
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     if (!clap_mutex_check_conflict(parser, arg, mutex_group_used, token->raw, error)) {
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     if (arg->action == CLAP_ACTION_HELP) {
         clap_print_help(parser, stdout);
-        exit(0);
+        return CLAP_PARSE_HELP;
     }
     if (arg->action == CLAP_ACTION_VERSION) {
         clap_print_version(parser, stdout);
-        exit(0);
+        return CLAP_PARSE_VERSION;
     }
 
     const char *value = NULL;
@@ -157,7 +157,7 @@ static bool parse_single_option(clap_parser_t *parser,
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
                            "Missing required argument for option '%s'",
                            token->raw ? token->raw : token->option_name);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
 
         if (next_token->type == TOKEN_POSITIONAL) {
@@ -168,39 +168,34 @@ static bool parse_single_option(clap_parser_t *parser,
                            "argument %s: expected a value, got '%s'",
                            token->raw ? token->raw : token->option_name,
                            next_token->raw ? next_token->raw : "");
-            return false;
+            return CLAP_PARSE_ERROR;
         }
         /* nargs='?': next token is an option, leave value as NULL */
     }
 
     if (!clap_apply_argument_action(parser, arg, ns, value, error)) {
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     /* Handle fixed nargs > 1 for optional arguments */
     if (arg->nargs > 1 && arg->nargs != CLAP_NARGS_ZERO_OR_MORE &&
         arg->nargs != CLAP_NARGS_ONE_OR_MORE && arg->nargs != CLAP_NARGS_REMAINDER) {
         size_t nargs_needed = (size_t)arg->nargs;
-        size_t values_collected = 1;  /* We already collected 1 value */
+        size_t values_collected = 1;
 
-        /* If value came from next_token, we've already consumed it */
         if (*consumed > 1) {
             values_collected = 1;
         } else if (value != NULL) {
-            /* Value came from token->value (e.g., --nums=1), not from next_token */
-            /* next_token still points to the first unconsumed argument */
             values_collected = 1;
         }
 
-        /* Collect remaining values */
         for (size_t i = 1; i < nargs_needed; i++) {
-            /* Check if we have enough tokens */
             if (*consumed + 1 > remaining) {
                 clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
                                "argument '%s': expected %d argument(s), got %zu",
-                               token->raw ? token->raw : token->option_name, 
+                               token->raw ? token->raw : token->option_name,
                                arg->nargs, values_collected);
-                return false;
+                return CLAP_PARSE_ERROR;
             }
 
             if (next_token == NULL) {
@@ -208,7 +203,7 @@ static bool parse_single_option(clap_parser_t *parser,
                                "argument '%s': expected %d argument(s), got %zu",
                                token->raw ? token->raw : token->option_name,
                                arg->nargs, values_collected);
-                return false;
+                return CLAP_PARSE_ERROR;
             }
 
             token_t *val_token = &next_token[i];
@@ -217,11 +212,11 @@ static bool parse_single_option(clap_parser_t *parser,
                                "argument '%s': expected %d argument(s), got %zu",
                                token->raw ? token->raw : token->option_name,
                                arg->nargs, values_collected);
-                return false;
+                return CLAP_PARSE_ERROR;
             }
 
             if (!clap_apply_argument_action(parser, arg, ns, val_token->raw, error)) {
-                return false;
+                return CLAP_PARSE_ERROR;
             }
 
             (*consumed)++;
@@ -233,7 +228,7 @@ static bool parse_single_option(clap_parser_t *parser,
         if (next_token == NULL) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
                            "Cannot process remainder arguments: next_token is NULL");
-            return false;
+            return CLAP_PARSE_ERROR;
         }
         for (size_t i = *consumed; i < remaining; i++) {
             token_t *remaining_token = &next_token[i - 1];
@@ -242,16 +237,16 @@ static bool parse_single_option(clap_parser_t *parser,
             }
             if (!clap_namespace_append_string(ns, clap_buffer_cstr(arg->dest), remaining_token->raw)) {
                 clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store remainder values");
-                return false;
+                return CLAP_PARSE_ERROR;
             }
         }
         *consumed = remaining;
     }
 
-    return true;
+    return CLAP_PARSE_SUCCESS;
 }
 
-static bool parse_short_bundle(clap_parser_t *parser,
+static clap_parse_result_t parse_short_bundle(clap_parser_t *parser,
                                token_t *token,
                                clap_token_t *tokens,
                                size_t token_count,
@@ -264,7 +259,7 @@ static bool parse_short_bundle(clap_parser_t *parser,
     char **expanded = clap_expand_short_bundle(token->option_name, &bundle_count);
     if (!expanded) {
         clap_error_set(error, CLAP_ERR_MEMORY, "Failed to expand option bundle");
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     size_t total_consumed = 1;
@@ -274,12 +269,13 @@ static bool parse_short_bundle(clap_parser_t *parser,
         token_t *next_token = (pos + total_consumed < token_count) ? &tokens[pos + total_consumed] : NULL;
         size_t remaining = token_count - pos;
 
-        if (!parse_single_option(parser, &sub_token, ns, next_token, remaining, mutex_group_used, &sub_consumed, error)) {
+        clap_parse_result_t r = parse_single_option(parser, &sub_token, ns, next_token, remaining, mutex_group_used, &sub_consumed, error);
+        if (r != CLAP_PARSE_SUCCESS) {
             for (size_t j = 0; j < bundle_count; j++) {
                 clap_free(expanded[j]);
             }
             clap_free(expanded);
-            return false;
+            return r;
         }
 
         if (sub_consumed > 1) {
@@ -293,10 +289,10 @@ static bool parse_short_bundle(clap_parser_t *parser,
     clap_free(expanded);
 
     *consumed = total_consumed;
-    return true;
+    return CLAP_PARSE_SUCCESS;
 }
 
-bool clap_parse_with_pattern(clap_parser_t *parser,
+clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                              clap_token_t *tokens,
                              clap_pattern_t *pattern,
                              clap_namespace_t *ns,
@@ -306,7 +302,7 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
         if (error) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid parser stage parameters");
         }
-        return false;
+        return CLAP_PARSE_ERROR;
     }
 
     size_t positional_index = 0;
@@ -329,9 +325,11 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
         if (parsing_options) {
             if (token->type == TOKEN_SHORT_OPTION_BUNDLE) {
                 size_t consumed = 0;
-                if (!parse_short_bundle(parser, token, tokens, pattern->pattern_len, pos, ns,
-                                        mutex_group_used, &consumed, error)) {
-                    return false;
+                clap_parse_result_t r = parse_short_bundle(parser, token, tokens,
+                    pattern->pattern_len, pos, ns,
+                    mutex_group_used, &consumed, error);
+                if (r != CLAP_PARSE_SUCCESS) {
+                    return r;
                 }
                 pos += consumed;
                 continue;
@@ -340,8 +338,10 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
             size_t consumed = 0;
             clap_token_t *next = (pos + 1 < pattern->pattern_len) ? &tokens[pos + 1] : NULL;
             size_t remaining = pattern->pattern_len - pos;
-            if (!parse_single_option(parser, token, ns, next, remaining, mutex_group_used, &consumed, error)) {
-                return false;
+            clap_parse_result_t r = parse_single_option(parser, token, ns, next,
+                remaining, mutex_group_used, &consumed, error);
+            if (r != CLAP_PARSE_SUCCESS) {
+                return r;
             }
             pos += consumed;
             continue;
@@ -371,7 +371,7 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
                 char **sub_argv = clap_calloc(remaining > 0 ? remaining : 1, sizeof(char*));
                 if (!sub_argv) {
                     clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate subcommand argv");
-                    return false;
+                    return CLAP_PARSE_ERROR;
                 }
 
                 /* Build argv for the subparser in the same shape as a normal main(). */
@@ -381,24 +381,26 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
                 }
 
                 clap_namespace_t *sub_ns = NULL;
-                if (!clap_parse_args(subparser, (int)remaining, sub_argv, &sub_ns, error)) {
+                clap_parse_result_t sub_result = clap_parse_args(subparser,
+                    (int)remaining, sub_argv, &sub_ns, error);
+                if (sub_result != CLAP_PARSE_SUCCESS) {
                     error->subcommand_name = token->raw;
                     clap_free(sub_argv);
-                    return false;
+                    return sub_result;
                 }
 
                 clap_free(sub_argv);
                 clap_namespace_set_string(ns, clap_buffer_cstr(parser->subparser_dest), token->raw);
                 clap_namespace_merge(ns, sub_ns);
                 clap_namespace_free(sub_ns);
-                return true;
+                return CLAP_PARSE_SUCCESS;
             }
         }
 
         if (positional_index >= parser->positional_count) {
             clap_error_set(error, CLAP_ERR_TOO_MANY_ARGS,
                            "Unexpected argument '%s'", token->raw);
-            return false;
+            return CLAP_PARSE_ERROR;
         }
 
         clap_argument_t *pos_arg = parser->positional_args[positional_index];
@@ -406,7 +408,7 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
 
         if (pos_arg->choices && pos_arg->choice_count > 0) {
             if (!clap_validate_choice(pos_arg, token->raw, error)) {
-                return false;
+                return CLAP_PARSE_ERROR;
             }
         }
 
@@ -418,10 +420,10 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
                 }
                 if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), remaining->raw)) {
                     clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store remainder values");
-                    return false;
+                    return CLAP_PARSE_ERROR;
                 }
             }
-            return true;
+            return CLAP_PARSE_SUCCESS;
         }
 
         if (nargs_needed > 1 && nargs_needed != CLAP_NARGS_ZERO_OR_MORE &&
@@ -431,13 +433,13 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
                                "argument %s: expected %d argument(s), got %zu",
                                clap_buffer_cstr(pos_arg->display_name), nargs_needed,
                                pattern->pattern_len - pos);
-                return false;
+                return CLAP_PARSE_ERROR;
             }
             for (size_t i = 0; i < (size_t)nargs_needed; i++) {
                 clap_token_t *value_token = &tokens[pos + i];
                 if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), value_token->raw)) {
                     clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store positional values");
-                    return false;
+                    return CLAP_PARSE_ERROR;
                 }
             }
             pos += (size_t)nargs_needed;
@@ -448,19 +450,19 @@ bool clap_parse_with_pattern(clap_parser_t *parser,
         if (pos_arg->flags & CLAP_ARG_MULTIPLE) {
             if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), token->raw)) {
                 clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store positional values");
-                return false;
+                return CLAP_PARSE_ERROR;
             }
             pos++;
             continue;
         }
 
         if (!clap_apply_argument_action(parser, pos_arg, ns, token->raw, error)) {
-            return false;
+            return CLAP_PARSE_ERROR;
         }
 
         pos++;
         positional_index++;
     }
 
-    return true;
+    return CLAP_PARSE_SUCCESS;
 }

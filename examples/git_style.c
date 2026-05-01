@@ -231,16 +231,16 @@ int main(int argc, char *argv[]) {
     /* ====================================================================
      * 4. Parse arguments
      * ==================================================================== */
-    bool parse_ok = clap_parse_args(parser, argc, argv, &ns, &error);
-    
-    if (!parse_ok) {
+    clap_parse_result_t parse_ok = clap_parse_args(parser, argc, argv, &ns, &error);
+
+    if (parse_ok == CLAP_PARSE_ERROR) {
         const char *base_name = strrchr(argv[0], '/');
         if (!base_name) base_name = strrchr(argv[0], '\\');
         if (base_name) base_name++;
         else base_name = argv[0];
-        
+
         if (error.subcommand_name) {
-            fprintf(stderr, "%s %s: error: %s\n\n", 
+            fprintf(stderr, "%s %s: error: %s\n\n",
                     base_name, error.subcommand_name, error.message);
             clap_print_subcommand_help(parser, error.subcommand_name, stderr);
         } else {
@@ -250,7 +250,11 @@ int main(int argc, char *argv[]) {
         exit_code = EXIT_FAILURE;
         goto cleanup_parser;
     }
-    
+    if (parse_ok == CLAP_PARSE_HELP || parse_ok == CLAP_PARSE_VERSION) {
+        exit_code = EXIT_SUCCESS;
+        goto cleanup_parser;
+    }
+
     /* ====================================================================
      * 5. Route to appropriate subcommand handler
      * Flat namespace - same as Python argparse!
