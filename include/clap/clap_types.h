@@ -15,9 +15,34 @@
 extern "C" {
 #endif
 
-/* Forward declarations */
+/**
+ * @struct clap_parser_s
+ * @brief Parsing engine state and configuration.
+ *
+ * Opaque structure.  Created with clap_parser_new(), configured via
+ * clap_parser_set_*() and clap_add_argument() family, then passed
+ * to clap_parse_args().  Members are internal.
+ */
 typedef struct clap_parser_s clap_parser_t;
+
+/**
+ * @struct clap_argument_s
+ * @brief Argument definition (positional or optional).
+ *
+ * Opaque structure.  Created by clap_add_argument(), configured via
+ * clap_argument_*() setter functions.  Not freed directly — owned
+ * by the parser.
+ */
 typedef struct clap_argument_s clap_argument_t;
+
+/**
+ * @struct clap_namespace_s
+ * @brief Container for parsed argument values.
+ *
+ * Opaque structure.  Allocated by clap_parse_args(), freed with
+ * clap_namespace_free().  Values are retrieved via the
+ * clap_namespace_get_*() accessor family.
+ */
 typedef struct clap_namespace_s clap_namespace_t;
 
 /**

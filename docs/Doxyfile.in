@@ -6,7 +6,6 @@ PROJECT_NUMBER         = @PROJECT_VERSION@
 PROJECT_BRIEF          = "Command Line Argument Parser for C"
 OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
-                         @CMAKE_CURRENT_SOURCE_DIR@/src \
                          @CMAKE_CURRENT_SOURCE_DIR@/readme.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/CHANGELOG.md
 
