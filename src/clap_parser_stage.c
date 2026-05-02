@@ -183,22 +183,15 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
         size_t nargs_needed = (size_t)arg->nargs;
         size_t values_collected = 1;
 
-        if (*consumed > 1) {
-            values_collected = 1;
-        } else if (value != NULL) {
-            values_collected = 1;
+        if (next_token == NULL) {
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
+                           "argument '%s': token sequence ended unexpectedly",
+                           token->raw ? token->raw : token->option_name);
+            return CLAP_PARSE_ERROR;
         }
 
         for (size_t i = 1; i < nargs_needed; i++) {
             if (*consumed + 1 > remaining) {
-                clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
-                               "argument '%s': expected %d argument(s), got %zu",
-                               token->raw ? token->raw : token->option_name,
-                               arg->nargs, values_collected);
-                return CLAP_PARSE_ERROR;
-            }
-
-            if (next_token == NULL) {
                 clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
                                "argument '%s': expected %d argument(s), got %zu",
                                token->raw ? token->raw : token->option_name,

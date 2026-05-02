@@ -41,6 +41,18 @@ typedef enum {
 
 /**
  * @brief Type conversion handler function pointer
+ *
+ * Converts a string input into a typed value.  Built-in handlers exist
+ * for "string", "int", "float", and "bool".  Register custom handlers
+ * with clap_register_type().
+ *
+ * @param input    NUL-terminated string to convert.
+ * @param output   Pointer to output buffer of @p output_size bytes.
+ *                 The handler writes the converted value here.
+ * @param output_size  Size of the @p output buffer in bytes.
+ * @param error    Optional (may be NULL).  Set on failure with a
+ *                 descriptive message.
+ * @return true on success, false on conversion failure (error is set).
  */
 typedef bool (*clap_type_handler_t)(
     const char *input,
@@ -51,6 +63,43 @@ typedef bool (*clap_type_handler_t)(
 
 /**
  * @brief Custom action handler function pointer
+ *
+ * Invoked when a CUSTOM-action argument is encountered during parsing.
+ * The handler receives the full parser context and the list of values
+ * associated with this argument occurrence.
+ *
+ * @param parser     The parser being used for this parse run.
+ *                   The handler may inspect parser state but should not
+ *                   add/modify arguments or groups during parsing.
+ * @param argument   The argument definition that triggered this handler.
+ * @param ns         The result namespace.  Write parsed values here
+ *                   via clap_namespace_set_* / clap_namespace_append_*.
+ * @param values     Array of raw string values for this occurrence.
+ *                   For nargs=1 or the first value of nargs>1, this
+ *                   contains one element.  The handler is called once
+ *                   per argument occurrence.
+ * @param value_count  Number of elements in @p values.
+ * @param user_data  Opaque pointer set via
+ *                   clap_argument_handler(arg, handler)->action_data.
+ *                   May be NULL.
+ * @param error      Set on failure with a descriptive message.
+ * @return true on success, false on failure (parse aborts with error).
+ *
+ * @example
+ * // Custom handler that counts file lines:
+ * static bool count_lines(clap_parser_t *p, clap_argument_t *a,
+ *                         clap_namespace_t *ns, const char **vals,
+ *                         size_t n, void *data, clap_error_t *err) {
+ *     (void)p; (void)a; (void)data;
+ *     FILE *f = fopen(vals[0], "r");
+ *     if (!f) { clap_error_set(err, CLAP_ERR_CUSTOM, "cannot open"); return false; }
+ *     long lines = 0;
+ *     while (fgetc(f) != EOF) if (fgetc(f) == '\n') lines++;
+ *     rewind(f); while (fgetc(f) != EOF) if (fgetc(f) == '\n') lines++;
+ *     // ^ simplified for illustration
+ *     fclose(f);
+ *     return clap_namespace_set_int(ns, clap_buffer_cstr(a->dest), (int)lines);
+ * }
  */
 typedef bool (*clap_action_handler_t)(
     clap_parser_t *parser,

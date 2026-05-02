@@ -184,3 +184,39 @@ jobs:
           name: fuzz-corpus-update
           path: fuzz_corpus/
           retention-days: 7
+
+  docs:
+      name: Documentation
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Docs
+        run: cmake --build build --target docs
+
+      - name: Upload Docs Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/docs/html
+
+  deploy-docs:
+      name: Deploy Docs to GitHub Pages
+      needs: docs
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      permissions:
+        pages: write
+        id-token: write
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+      runs-on: ubuntu-latest
+      steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

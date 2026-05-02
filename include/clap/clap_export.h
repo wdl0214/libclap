@@ -42,4 +42,16 @@
 #  define CLAP_EXPORT
 #endif
 
+/* ============================================================================
+ * Deprecation annotation
+ * ============================================================================ */
+
+#if defined(__GNUC__) || defined(__clang__)
+#  define CLAP_DEPRECATED(msg) __attribute__((deprecated(msg)))
+#elif defined(_MSC_VER) && _MSC_VER >= 1900
+#  define CLAP_DEPRECATED(msg) __declspec(deprecated(msg))
+#else
+#  define CLAP_DEPRECATED(msg)
+#endif
+
 #endif /* CLAP_EXPORT_H */

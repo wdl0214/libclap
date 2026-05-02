@@ -11,7 +11,22 @@ extern "C" {
 #endif
 
 /**
- * @brief Set custom memory allocator functions
+ * @brief Set custom memory allocator functions.
+ *
+ * All subsequent allocations (internal buffers, trie nodes, namespace
+ * entries, etc.) use these callbacks.  Must be called before any other
+ * libclap function — once parsing begins the allocator is locked in.
+ *
+ * @param malloc_fn  Allocation callback, must match malloc() semantics.
+ *                   Must not be NULL.
+ * @param free_fn    Deallocation callback, must match free() semantics.
+ *                   Must not be NULL.
+ * @param realloc_fn Reallocation callback, must match realloc() semantics.
+ *                   Pass NULL if not needed (libclap falls back to
+ *                   malloc+copy+free internally).
+ *
+ * @note This function must be called before any parser is created.
+ *       Calling it after clap_parser_new() has undefined behavior.
  */
 CLAP_EXPORT void clap_set_allocator(
     void *(*malloc_fn)(size_t),

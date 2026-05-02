@@ -475,14 +475,23 @@ void test_argument_metavar_basic(void) {
  * clap_argument_mutex_group Tests
  * ============================================================================ */
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 void test_argument_mutex_group_basic(void) {
     clap_argument_t *arg = clap_add_argument(g_parser, "--verbose");
-    
+
     clap_argument_t *result = clap_argument_mutex_group(arg, 5);
-    
+
     TEST_ASSERT_EQUAL_PTR(arg, result);
     TEST_ASSERT_EQUAL(5, arg->mutex_group_id);
 }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 /* ============================================================================
  * clap_argument_dest Tests

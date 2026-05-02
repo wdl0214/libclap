@@ -1,0 +1,28 @@
+# Doxyfile for libclap
+# @configure_input@
+
+PROJECT_NAME           = "libclap"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+PROJECT_BRIEF          = "Command Line Argument Parser for C"
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@/docs
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
+                         @CMAKE_CURRENT_SOURCE_DIR@/readme.md
+FILE_PATTERNS          = *.h
+RECURSIVE              = YES
+
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/readme.md
+
+GENERATE_LATEX         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+
+ALIASES                = "example=\par Example:\n"
+
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = NO
+EXTRACT_PRIVATE        = NO
+
+WARN_IF_UNDOCUMENTED   = YES
+WARN_NO_PARAMDOC       = YES
+
+SORT_MEMBER_DOCS       = YES

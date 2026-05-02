@@ -106,7 +106,6 @@ static clap_parser_t* create_fuzz_parser(void) {
     
     clap_argument_t *mutex1 = clap_add_argument(parser, "--mutex1");
     clap_argument_action(mutex1, CLAP_ACTION_STORE_TRUE);
-    clap_argument_mutex_group(mutex1, group);
     clap_mutex_group_add_argument(parser, group, mutex1);
     
     clap_argument_t *mutex2 = clap_add_argument(parser, "--mutex2");

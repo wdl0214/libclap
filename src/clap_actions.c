@@ -5,18 +5,32 @@
 
 #include "clap_parser_internal.h"
 
-static bool resolve_type_handler(clap_parser_t *parser, clap_argument_t *arg) {
-    if (arg->type_handler || !parser) return false;
+/* Resolve a custom type handler from the parser registry.
+ * Returns CLAP_PARSE_SUCCESS on success, or sets *error and returns
+ * CLAP_PARSE_ERROR if the type name is not registered.
+ * Returns CLAP_PARSE_SUCCESS (no error) if the handler is already set. */
+static clap_parse_result_t resolve_type_handler(clap_parser_t *parser,
+                                                 clap_argument_t *arg,
+                                                 clap_error_t *error) {
+    if (arg->type_handler) return CLAP_PARSE_SUCCESS;
+    if (!parser) {
+        clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
+                       "No parser available for type resolution");
+        return CLAP_PARSE_ERROR;
+    }
 
     const char *type_name = clap_buffer_cstr(arg->type_name);
     for (size_t i = 0; i < parser->type_handler_count; i++) {
         if (strcmp(parser->type_handlers[i].name, type_name) == 0) {
             arg->type_handler = parser->type_handlers[i].handler;
             arg->type_size = parser->type_handlers[i].size;
-            return true;
+            return CLAP_PARSE_SUCCESS;
         }
     }
-    return false;
+
+    clap_error_set(error, CLAP_ERR_TYPE_CONVERSION,
+                   "Unknown type: '%s'", type_name);
+    return CLAP_PARSE_ERROR;
 }
 
 static bool convert_and_store(clap_parser_t *parser,
@@ -65,7 +79,9 @@ static bool convert_and_store(clap_parser_t *parser,
 
     /* Resolve custom type handler from parser's registry */
     if (!arg->type_handler) {
-        resolve_type_handler(parser, arg);
+        if (resolve_type_handler(parser, arg, error) != CLAP_PARSE_SUCCESS) {
+            return false;
+        }
     }
 
     if (arg->type_handler) {

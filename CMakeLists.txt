@@ -150,10 +150,10 @@ endif()
 # ============================================================================
 if(CLAP_ENABLE_COVERAGE)
     find_program(GCOVR gcovr)
-    
+
     if(GCOVR)
         add_custom_target(coverage
-            COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR} 
+            COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
                     --html --html-details -o coverage.html
             COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -163,4 +163,22 @@ if(CLAP_ENABLE_COVERAGE)
     else()
         message(WARNING "gcovr not found. Install with: pip install gcovr")
     endif()
+endif()
+
+# ============================================================================
+# Documentation target (optional, requires Doxygen)
+# ============================================================================
+find_program(DOXYGEN doxygen)
+if(DOXYGEN)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        @ONLY
+    )
+    add_custom_target(docs
+        COMMAND ${DOXYGEN} "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+    )
+    message(STATUS "Doxygen found: use 'make docs' to generate API docs")
 endif()

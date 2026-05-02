@@ -7,6 +7,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Standard](https://img.shields.io/badge/C-99-standard.svg)](https://en.wikipedia.org/wiki/C99)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)]()
+[![Docs](https://img.shields.io/badge/docs-Doxygen-blue.svg)](https://wdl0214.github.io/libclap/)
 
 libclap is a modern, secure, and extensible command-line argument parsing library for C, inspired by Python's `argparse`. It provides a familiar, feature-rich API while maintaining C99 compatibility, zero external dependencies, and a strong focus on memory safety.
 
@@ -302,7 +303,58 @@ int main() {
 }
 ```
 
-## 🧪 Testing
+## Frequently Asked Questions
+
+### How do I handle CLAP_PARSE_HELP / CLAP_PARSE_VERSION?
+
+These are not errors.  The library has already printed the help/version
+text to stdout.  The caller should clean up and exit successfully:
+
+```c
+if (result == CLAP_PARSE_HELP || result == CLAP_PARSE_VERSION) {
+    clap_parser_free(parser);
+    return 0;
+}
+```
+
+### Why does my custom type handler return "Unknown type"?
+
+You registered a type name via `clap_argument_type(arg, "ip_addr")`
+but forgot to register the converter with `clap_register_type(parser,
+"ip_addr", my_handler, sizeof(my_ip_t))`.  The type handler must be
+registered on the parser before parsing begins.
+
+### What is CLAP_STATIC and when do I need it?
+
+When linking libclap **statically** (e.g. `libclap.a` on Unix or
+`clap.lib` on Windows), you **must** define `CLAP_STATIC` at compile
+time (`-DCLAP_STATIC` or `#define CLAP_STATIC`).  This is required
+because libclap's headers use `__declspec(dllimport)` on Windows by
+default, which is incompatible with a static library.  Shared library
+users do **not** need this define.
+
+### My --verbose/-v flag doesn't consume a value, but the next argument is skipped
+
+This is expected.  Flags using `CLAP_ACTION_STORE_TRUE`, `STORE_FALSE`,
+`STORE_CONST`, `APPEND_CONST`, or `COUNT` do **not** consume a value.
+If you need a flag that takes a value, use `CLAP_ACTION_STORE` (the
+default) with `clap_argument_type()`.
+
+### Why is my subcommand's help not showing the right name?
+
+Subcommand names are extracted from the parser's `prog_name`.  When
+creating a subparser with `clap_subparser_add(subparsers, "commit", ...)`,
+the subparser's `prog_name` is set to `"parent_prog commit"`.  The
+display logic extracts the portion after the last space, so names
+with spaces (e.g. `"myprog nested sub"`) will only show `"sub"`.
+
+### How do I make a positional argument optional?
+
+Use `clap_argument_nargs(arg, '?')` (zero or one), `'*'` (zero or
+more), or set `CLAP_NARGS_REMAINDER`.  By default, positional
+arguments are required.
+
+## Testing
 
 libclap includes a comprehensive test suite built with Unity.
 
@@ -381,7 +433,11 @@ Contributions are welcome! Please open an issue or pull request on GitHub. Ensur
 - Valgrind/ASan reports no leaks
 - Parser and tokenizer changes are validated with fuzzing when possible
 
-## 📄 License
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
+## License
 
 libclap is released under the **MIT License**. See [LICENSE](LICENSE) for details.
 

@@ -86,9 +86,16 @@ char* clap_strdup(const char *str) {
     return copy;
 }
 
+/* Portable C99 strnlen replacement — max n bytes scanned */
+static inline size_t clap_strnlen(const char *s, size_t n) {
+    size_t len = 0;
+    while (len < n && s[len] != '\0') len++;
+    return len;
+}
+
 char* clap_strndup(const char *str, size_t n) {
     if (!str) return NULL;
-    size_t len = strnlen(str, n);
+    size_t len = clap_strnlen(str, n);
     char *copy = clap_malloc(len + 1);
     if (copy) {
         memcpy(copy, str, len);

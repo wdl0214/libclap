@@ -42,22 +42,33 @@ typedef struct clap_error_s {
 } clap_error_t;
 
 /**
- * @brief Initialize error structure
+ * @brief Initialize an error structure to NONE / empty.
+ * @param error Error struct to initialize (must not be NULL).
  */
 CLAP_EXPORT void clap_error_init(clap_error_t *error);
 
 /**
- * @brief Set error with formatted message
+ * @brief Set error code and printf-style message.
+ * @param error  Error struct to fill.
+ * @param code   Error code (CLAP_ERR_* constant).
+ * @param format printf-style format string.
+ * @param ...    printf arguments.
  */
 CLAP_EXPORT void clap_error_set(clap_error_t *error, int code, const char *format, ...);
 
 /**
- * @brief Set error with va_list
+ * @brief Set error code and message with va_list.
+ * @param error  Error struct to fill.
+ * @param code   Error code (CLAP_ERR_* constant).
+ * @param format printf-style format string.
+ * @param ap     va_list of format arguments.
  */
 CLAP_EXPORT void clap_error_vset(clap_error_t *error, int code, const char *format, va_list ap);
 
 /**
- * @brief Get string description of error code
+ * @brief Get a human-readable description for an error code.
+ * @param code Error code (CLAP_ERR_* constant).
+ * @return A static NUL-terminated string.  Never returns NULL.
  */
 CLAP_EXPORT const char* clap_strerror(int code);
 

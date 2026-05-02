@@ -176,13 +176,13 @@ bool check_required_option(clap_argument_t *arg, clap_namespace_t *ns, clap_erro
                arg->action == CLAP_ACTION_STORE_FALSE) {
         bool value;
         is_present = clap_namespace_get_bool(ns, clap_buffer_cstr(arg->dest), &value);
-               } else if (arg->action == CLAP_ACTION_COUNT) {
-                   int count;
-                   is_present = clap_namespace_get_int(ns, clap_buffer_cstr(arg->dest), &count) && count > 0;
-               } else {
-                   const char *value;
-                   is_present = clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value);
-               }
+    } else if (arg->action == CLAP_ACTION_COUNT) {
+        int count;
+        is_present = clap_namespace_get_int(ns, clap_buffer_cstr(arg->dest), &count) && count > 0;
+    } else {
+        const char *value;
+        is_present = clap_namespace_get_string(ns, clap_buffer_cstr(arg->dest), &value);
+    }
 
     if (!is_present) {
         clap_buffer_t *opt_name = clap_buffer_empty();
