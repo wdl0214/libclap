@@ -5,7 +5,22 @@
 
 #include "clap_parser_internal.h"
 
-static bool convert_and_store(clap_argument_t *arg,
+static bool resolve_type_handler(clap_parser_t *parser, clap_argument_t *arg) {
+    if (arg->type_handler || !parser) return false;
+
+    const char *type_name = clap_buffer_cstr(arg->type_name);
+    for (size_t i = 0; i < parser->type_handler_count; i++) {
+        if (strcmp(parser->type_handlers[i].name, type_name) == 0) {
+            arg->type_handler = parser->type_handlers[i].handler;
+            arg->type_size = parser->type_handlers[i].size;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool convert_and_store(clap_parser_t *parser,
+                              clap_argument_t *arg,
                               clap_namespace_t *ns,
                               const char *value,
                               clap_error_t *error) {
@@ -48,6 +63,11 @@ static bool convert_and_store(clap_argument_t *arg,
         return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), bool_val);
     }
 
+    /* Resolve custom type handler from parser's registry */
+    if (!arg->type_handler) {
+        resolve_type_handler(parser, arg);
+    }
+
     if (arg->type_handler) {
         void *buffer = clap_malloc(arg->type_size);
         if (!buffer) {
@@ -76,11 +96,10 @@ bool clap_action_store(clap_parser_t *parser,
                        size_t count,
                        void *user_data,
                        clap_error_t *error) {
-    (void)parser;
     (void)user_data;
-    
+
     if (count == 0) return true;
-    return convert_and_store(arg, ns, values[0], error);
+    return convert_and_store(parser, arg, ns, values[0], error);
 }
 
 /* STORE_CONST action */
@@ -91,18 +110,17 @@ bool clap_action_store_const(clap_parser_t *parser,
                               size_t count,
                               void *user_data,
                               clap_error_t *error) {
-    (void)parser;
     (void)values;
     (void)count;
     (void)user_data;
-    
+
     if (!arg->const_value) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
                        "STORE_CONST action requires const value");
         return false;
     }
-    
-    return convert_and_store(arg, ns, clap_buffer_cstr(arg->const_value), error);
+
+    return convert_and_store(parser, arg, ns, clap_buffer_cstr(arg->const_value), error);
 }
 
 /* STORE_TRUE action */

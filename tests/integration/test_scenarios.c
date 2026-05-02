@@ -338,7 +338,7 @@ void test_scenario_option_not_consuming_next_option(void) {
 }
 
 /* ============================================================================
- * Scenario 11: Option with nargs='?' followed by another option
+ * Scenario 10: Option with nargs='?' followed by another option
  *
  * Unlike nargs=1, nargs='?' does NOT require a value. When followed by
  * another option, the next token should NOT be consumed and no error
@@ -385,7 +385,75 @@ void test_scenario_optional_nargs_followed_by_option(void) {
 }
 
 /* ============================================================================
- * Scenario 10: Float type values should be retrievable via get_float
+ * Scenario 11: clap_apply_defaults silently swallows type conversion errors
+ * ============================================================================ */
+
+void test_scenario_default_conversion_error_ignored(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    /* Optional int with an invalid default string */
+    clap_argument_t *port = clap_add_argument(parser, "--port");
+    clap_argument_type(port, "int");
+    clap_argument_default(port, "not_a_number");
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TYPE_CONVERSION, error.code);
+    TEST_ASSERT_NULL(ns);
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 12: Custom type registry not consulted during parsing
+ * ============================================================================ */
+
+static bool g_custom_handler_invoked = false;
+
+static bool test_type_handler(const char *input, void *output,
+                               size_t output_size, clap_error_t *error) {
+    g_custom_handler_invoked = true;
+    (void)input;
+    (void)output;
+    (void)output_size;
+    (void)error;
+    /* Simulate what string handler does */
+    if (output_size != sizeof(char*)) return false;
+    *(const char**)output = input;
+    return true;
+}
+
+void test_scenario_custom_type_registry_not_used(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    /* Register a custom type — stored in parser->type_handlers[] */
+    clap_register_type(parser, "test_type", test_type_handler, sizeof(char*));
+
+    clap_argument_t *arg = clap_add_argument(parser, "--name");
+    clap_argument_type(arg, "test_type");
+
+    g_custom_handler_invoked = false;
+
+    char *argv[] = {"prog", "--name", "hello"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    TEST_ASSERT_TRUE(g_custom_handler_invoked);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 13: Float type values should be retrievable via get_float
  * ============================================================================ */
 
 void test_scenario_float_type_storage(void) {
@@ -436,6 +504,8 @@ int main(void) {
     RUN_TEST(test_scenario_option_not_consuming_next_option);
     RUN_TEST(test_scenario_optional_nargs_followed_by_option);
     RUN_TEST(test_scenario_float_type_storage);
+    RUN_TEST(test_scenario_default_conversion_error_ignored);
+    RUN_TEST(test_scenario_custom_type_registry_not_used);
 
     return UNITY_END();
 }

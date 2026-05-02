@@ -96,14 +96,11 @@ bool clap_type_bool_handler(const char *input, void *output,
 }
 
 bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error_t *error) {
-    (void)error;
-    
     for (size_t i = 0; i < parser->arg_count; i++) {
         clap_argument_t *arg = parser->arguments[i];
         const char *dest = clap_buffer_cstr(arg->dest);
 
         if (arg->default_string) {
-            /* Use type conversion for default values */
             const char *type_name = clap_buffer_cstr(arg->type_name);
 
             if (strcmp(type_name, "string") == 0) {
@@ -117,6 +114,8 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
                 if (handler(clap_buffer_cstr(arg->default_string),
                             &int_val, sizeof(int), error)) {
                     clap_namespace_set_int(ns, dest, int_val);
+                } else {
+                    return false;
                 }
 
             } else if (strcmp(type_name, "float") == 0) {
@@ -127,6 +126,8 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
                             &float_val, sizeof(double), error)) {
                     clap_namespace_set_string(ns, dest,
                         clap_buffer_cstr(arg->default_string));
+                } else {
+                    return false;
                 }
 
             } else if (strcmp(type_name, "bool") == 0) {
@@ -136,10 +137,11 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
                 if (handler(clap_buffer_cstr(arg->default_string),
                             &bool_val, sizeof(bool), error)) {
                     clap_namespace_set_bool(ns, dest, bool_val);
+                } else {
+                    return false;
                 }
 
             } else {
-                /* Custom or unknown type - store as string */
                 clap_namespace_set_string(ns, dest,
                     clap_buffer_cstr(arg->default_string));
             }
