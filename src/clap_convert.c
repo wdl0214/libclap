@@ -124,8 +124,7 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
                     arg->type_handler : clap_type_float_handler;
                 if (handler(clap_buffer_cstr(arg->default_string),
                             &float_val, sizeof(double), error)) {
-                    clap_namespace_set_string(ns, dest,
-                        clap_buffer_cstr(arg->default_string));
+                    clap_namespace_set_float(ns, dest, float_val);
                 } else {
                     return false;
                 }

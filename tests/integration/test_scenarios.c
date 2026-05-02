@@ -487,6 +487,51 @@ void test_scenario_float_type_storage(void) {
 }
 
 /* ============================================================================
+ * Scenario 14: Int, float, bool defaults via clap_parse_args
+ * ============================================================================ */
+
+void test_scenario_typed_defaults(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *ratio = clap_add_argument(parser, "--ratio");
+    clap_argument_type(ratio, "float");
+    clap_argument_default(ratio, "3.14");
+
+    clap_argument_t *count = clap_add_argument(parser, "--count");
+    clap_argument_type(count, "int");
+    clap_argument_default(count, "42");
+
+    clap_argument_t *flag = clap_add_argument(parser, "--flag");
+    clap_argument_type(flag, "bool");
+    clap_argument_default(flag, "true");
+
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    /* Float default should be retrievable via get_float */
+    double ratio_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_float(ns, "ratio", &ratio_val));
+    TEST_ASSERT_TRUE(ratio_val > 3.13 && ratio_val < 3.15);
+
+    /* Int default should be retrievable via get_int */
+    int count_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_int(ns, "count", &count_val));
+    TEST_ASSERT_EQUAL(42, count_val);
+
+    /* Bool default should be retrievable via get_bool */
+    bool flag_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "flag", &flag_val));
+    TEST_ASSERT_TRUE(flag_val);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -506,6 +551,7 @@ int main(void) {
     RUN_TEST(test_scenario_float_type_storage);
     RUN_TEST(test_scenario_default_conversion_error_ignored);
     RUN_TEST(test_scenario_custom_type_registry_not_used);
+    RUN_TEST(test_scenario_typed_defaults);
 
     return UNITY_END();
 }

@@ -489,11 +489,53 @@ void test_apply_defaults_multiple(void) {
 void test_apply_defaults_no_defaults(void) {
     clap_add_argument(g_parser, "--output");
     clap_add_argument(g_parser, "input");
-    
+
     bool result = clap_apply_defaults(g_parser, g_ns, NULL);
-    
+
     TEST_ASSERT_TRUE(result);
     TEST_ASSERT_EQUAL(0, g_ns->value_count);
+}
+
+void test_apply_defaults_int(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--count");
+    clap_argument_type(arg, "int");
+    clap_argument_default(arg, "42");
+    clap_argument_dest(arg, "count");
+
+    bool result = clap_apply_defaults(g_parser, g_ns, NULL);
+    TEST_ASSERT_TRUE(result);
+
+    int value;
+    TEST_ASSERT_TRUE(clap_namespace_get_int(g_ns, "count", &value));
+    TEST_ASSERT_EQUAL(42, value);
+}
+
+void test_apply_defaults_bool(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--flag");
+    clap_argument_type(arg, "bool");
+    clap_argument_default(arg, "true");
+    clap_argument_dest(arg, "flag");
+
+    bool result = clap_apply_defaults(g_parser, g_ns, NULL);
+    TEST_ASSERT_TRUE(result);
+
+    bool value;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(g_ns, "flag", &value));
+    TEST_ASSERT_TRUE(value);
+}
+
+void test_apply_defaults_float(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--ratio");
+    clap_argument_type(arg, "float");
+    clap_argument_default(arg, "3.14");
+    clap_argument_dest(arg, "ratio");
+
+    bool result = clap_apply_defaults(g_parser, g_ns, NULL);
+    TEST_ASSERT_TRUE(result);
+
+    double value;
+    TEST_ASSERT_TRUE(clap_namespace_get_float(g_ns, "ratio", &value));
+    TEST_ASSERT_TRUE(value > 3.13 && value < 3.15);
 }
 
 /* ============================================================================
@@ -549,6 +591,9 @@ void run_test_convert(void) {
     RUN_TEST(test_apply_defaults_count);
     RUN_TEST(test_apply_defaults_multiple);
     RUN_TEST(test_apply_defaults_no_defaults);
+    RUN_TEST(test_apply_defaults_int);
+    RUN_TEST(test_apply_defaults_bool);
+    RUN_TEST(test_apply_defaults_float);
 }
 
 #ifdef STANDALONE_TEST
