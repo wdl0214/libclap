@@ -72,7 +72,7 @@ typedef bool (*clap_type_handler_t)(
  *                   The handler may inspect parser state but should not
  *                   add/modify arguments or groups during parsing.
  * @param argument   The argument definition that triggered this handler.
- * @param ns         The result namespace.  Write parsed values here
+ * @param namespace  The result namespace.  Write parsed values here
  *                   via clap_namespace_set_* / clap_namespace_append_*.
  * @param values     Array of raw string values for this occurrence.
  *                   For nargs=1 or the first value of nargs>1, this
@@ -85,21 +85,22 @@ typedef bool (*clap_type_handler_t)(
  * @param error      Set on failure with a descriptive message.
  * @return true on success, false on failure (parse aborts with error).
  *
- * @example
- * // Custom handler that counts file lines:
+ * @par Example
+ * @code
  * static bool count_lines(clap_parser_t *p, clap_argument_t *a,
  *                         clap_namespace_t *ns, const char **vals,
  *                         size_t n, void *data, clap_error_t *err) {
  *     (void)p; (void)a; (void)data;
  *     FILE *f = fopen(vals[0], "r");
  *     if (!f) { clap_error_set(err, CLAP_ERR_CUSTOM, "cannot open"); return false; }
- *     long lines = 0;
- *     while (fgetc(f) != EOF) if (fgetc(f) == '\n') lines++;
- *     rewind(f); while (fgetc(f) != EOF) if (fgetc(f) == '\n') lines++;
- *     // ^ simplified for illustration
+ *     long lines = 0; int c;
+ *     while ((c = fgetc(f)) != EOF) if (c == '\n') lines++;
+ *     rewind(f);
+ *     while ((c = fgetc(f)) != EOF) if (c == '\n') lines++;
  *     fclose(f);
  *     return clap_namespace_set_int(ns, clap_buffer_cstr(a->dest), (int)lines);
  * }
+ * @endcode
  */
 typedef bool (*clap_action_handler_t)(
     clap_parser_t *parser,

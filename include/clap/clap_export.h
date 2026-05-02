@@ -8,13 +8,13 @@
  * - On Windows, handles dllexport/dllimport.
  * - For static builds, CLAP_EXPORT is a no-op.
  *
- * @note If you link libclap statically, you must define CLAP_STATIC
- *       before including any libclap header (e.g. -DCLAP_STATIC or
- *       #define CLAP_STATIC).  When using CMake, pass -DCLAP_STATIC
+ * @note If you link libclap statically, you must define @c CLAP_STATIC
+ *       before including any libclap header (e.g. @c -DCLAP_STATIC or
+ *       <code>\#define CLAP_STATIC</code>).  When using CMake, pass @c -DCLAP_STATIC
  *       via target_compile_definitions or add it to your project's
  *       compile flags.  This is required on all platforms, but most
- *       important on Windows where the absence of CLAP_STATIC would
- *       cause the compiler to emit __declspec(dllimport) decorations
+ *       important on Windows where the absence of @c CLAP_STATIC would
+ *       cause the compiler to emit @c __declspec(dllimport) decorations
  *       that are incompatible with a static library.
  */
 

@@ -1,4 +1,7 @@
-// include/clap/clap_allocator.h
+/**
+ * @file clap_allocator.h
+ * @brief Custom memory allocator support
+ */
 
 #ifndef CLAP_ALLOCATOR_H
 #define CLAP_ALLOCATOR_H
