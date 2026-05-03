@@ -43,7 +43,7 @@ bool clap_namespace_merge(clap_namespace_t *dst, clap_namespace_t *src) {
                 clap_namespace_set_int(dst, src_val->name, src_val->data.int_val);
                 break;
             case CLAP_VAL_FLOAT:
-                /* Add float support if needed */
+                clap_namespace_set_float(dst, src_val->name, src_val->data.float_val);
                 break;
             case CLAP_VAL_BOOL:
                 clap_namespace_set_bool(dst, src_val->name, src_val->data.bool_val);

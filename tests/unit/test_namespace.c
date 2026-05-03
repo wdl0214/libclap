@@ -425,26 +425,31 @@ void test_namespace_merge_with_arrays(void) {
 void test_namespace_merge_mixed_types(void) {
     clap_namespace_t *dst = clap_namespace_new();
     clap_namespace_t *src = clap_namespace_new();
-    
+
     clap_namespace_set_string(src, "str", "hello");
     clap_namespace_set_int(src, "num", 42);
+    clap_namespace_set_float(src, "pi", 3.14);
     clap_namespace_set_bool(src, "flag", true);
-    
+
     TEST_ASSERT_TRUE(clap_namespace_merge(dst, src));
-    
+
     const char *str_val;
     int int_val;
+    double float_val;
     bool bool_val;
-    
+
     TEST_ASSERT_TRUE(clap_namespace_get_string(dst, "str", &str_val));
     TEST_ASSERT_EQUAL_STRING("hello", str_val);
-    
+
     TEST_ASSERT_TRUE(clap_namespace_get_int(dst, "num", &int_val));
     TEST_ASSERT_EQUAL(42, int_val);
-    
+
+    TEST_ASSERT_TRUE(clap_namespace_get_float(dst, "pi", &float_val));
+    TEST_ASSERT_TRUE(float_val > 3.13 && float_val < 3.15);
+
     TEST_ASSERT_TRUE(clap_namespace_get_bool(dst, "flag", &bool_val));
     TEST_ASSERT_TRUE(bool_val);
-    
+
     clap_namespace_free(dst);
     clap_namespace_free(src);
 }
