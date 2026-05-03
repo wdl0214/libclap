@@ -545,7 +545,7 @@ CLAP_EXPORT void clap_print_version(clap_parser_t *parser, FILE *stream);
  * ============================================================================ */
 
 /**
- * @brief Register a custom type converter.
+ * @brief Register a custom type validator/converter.
  *
  * After registration, arguments can use this type name with
  * clap_argument_type().  Custom type handlers are resolved at
@@ -553,9 +553,16 @@ CLAP_EXPORT void clap_print_version(clap_parser_t *parser, FILE *stream);
  * clap_parse_args() returns CLAP_PARSE_ERROR with code
  * CLAP_ERR_TYPE_CONVERSION and message "Unknown type".
  *
+ * @note Custom type handlers are used for **input validation**.  The
+ * handler's converted output is not persisted — the raw string is
+ * always stored in the namespace (retrievable via
+ * clap_namespace_get_string()).  Use CLAP_ACTION_CUSTOM if you
+ * need to persist a typed conversion result.
+ *
  * @param parser      Target parser.
  * @param type_name   Type name (e.g. "ip_addr", "regex").
- * @param handler     Conversion function: const char* → typed value.
+ * @param handler     Validation function: const char* → typed value.
+ *                    Return false to reject the input.
  * @param output_size Size of the output buffer in bytes (e.g.
  *                    sizeof(my_type_t)).
  * @return true on success, false if @p type_name duplicates an

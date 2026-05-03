@@ -65,11 +65,18 @@ typedef enum {
 } clap_parse_result_t;
 
 /**
- * @brief Type conversion handler function pointer
+ * @brief Type validation / conversion handler function pointer
  *
  * Converts a string input into a typed value.  Built-in handlers exist
- * for "string", "int", "float", and "bool".  Register custom handlers
- * with clap_register_type().
+ * for "string", "int", "float", and "bool" and their converted output
+ * is persisted in the namespace.
+ *
+ * Custom type handlers registered via clap_register_type() are used
+ * for **validation only** — the handler must return false on invalid
+ * input, but the converted output value is discarded.  The raw input
+ * string is always stored in the namespace, retrievable via
+ * clap_namespace_get_string().  Use CLAP_ACTION_CUSTOM if you need
+ * to persist a typed conversion result.
  *
  * @param input    NUL-terminated string to convert.
  * @param output   Pointer to output buffer of @p output_size bytes.

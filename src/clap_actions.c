@@ -80,22 +80,21 @@ static bool convert_and_store(clap_parser_t *parser,
         return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), bool_val);
     }
 
-    /* Custom type handler */
+    /* Custom type handler — validation only.
+     * The handler validates the input; the converted output is discarded
+     * because the namespace has no generic blob type.  The raw string is
+     * always stored.  Use CLAP_ACTION_CUSTOM if you need to persist a
+     * typed conversion result. */
     if (arg->type_handler) {
-        void *buffer = clap_malloc(arg->type_size);
-        if (!buffer) {
+        void *scratch = clap_malloc(arg->type_size);
+        if (!scratch) {
             clap_error_set(error, CLAP_ERR_MEMORY,
-                           "Failed to allocate memory for type conversion");
+                           "Failed to allocate memory for type validation");
             return false;
         }
-
-        bool result = arg->type_handler(value, buffer, arg->type_size, error);
-        clap_free(buffer);
-
-        if (result) {
-            return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
-        }
-        return false;
+        bool ok = arg->type_handler(value, scratch, arg->type_size, error);
+        clap_free(scratch);
+        if (!ok) return false;
     }
 
     return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);

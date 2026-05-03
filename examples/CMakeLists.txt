@@ -19,3 +19,11 @@ if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/action_demo.c)
     target_compile_definitions(action_demo PRIVATE CLAP_STATIC)
     set_clap_sanitizers(action_demo)
 endif()
+
+# Custom type example
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/custom_type.c)
+    add_executable(custom_type custom_type.c)
+    target_link_libraries(custom_type PRIVATE clap_static)
+    target_compile_definitions(custom_type PRIVATE CLAP_STATIC)
+    set_clap_sanitizers(custom_type)
+endif()
