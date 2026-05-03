@@ -104,8 +104,7 @@ typedef bool (*clap_type_handler_t)(
  *                   contains one element.  The handler is called once
  *                   per argument occurrence.
  * @param value_count  Number of elements in @p values.
- * @param user_data  Opaque pointer set via
- *                   clap_argument_handler(arg, handler)->action_data.
+ * @param user_data  Opaque pointer set via clap_argument_data().
  *                   May be NULL.
  * @param error      Set on failure with a descriptive message.
  * @return true on success, false on failure (parse aborts with error).
@@ -120,10 +119,8 @@ typedef bool (*clap_type_handler_t)(
  *     if (!f) { clap_error_set(err, CLAP_ERR_CUSTOM, "cannot open"); return false; }
  *     long lines = 0; int c;
  *     while ((c = fgetc(f)) != EOF) if (c == '\n') lines++;
- *     rewind(f);
- *     while ((c = fgetc(f)) != EOF) if (c == '\n') lines++;
  *     fclose(f);
- *     return clap_namespace_set_int(ns, clap_buffer_cstr(a->dest), (int)lines);
+ *     return clap_namespace_set_int(ns, "lines", (int)lines);
  * }
  * @endcode
  */

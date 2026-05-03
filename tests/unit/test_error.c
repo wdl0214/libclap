@@ -264,6 +264,24 @@ void test_error_fields_can_be_set(void) {
     TEST_ASSERT_EQUAL_STRING("commit", error.subcommand_name);
 }
 
+void test_error_code_accessor(void) {
+    clap_error_t error;
+    clap_error_init(&error);
+    clap_error_set(&error, CLAP_ERR_INVALID_CHOICE, "invalid choice: %s", "blue");
+
+    TEST_ASSERT_EQUAL(CLAP_ERR_INVALID_CHOICE, clap_error_code(&error));
+}
+
+void test_error_message_accessor(void) {
+    clap_error_t error;
+    clap_error_init(&error);
+    clap_error_set(&error, CLAP_ERR_TYPE_CONVERSION, "cannot convert");
+
+    const char *msg = clap_error_message(&error);
+    TEST_ASSERT_NOT_NULL(msg);
+    TEST_ASSERT_NOT_NULL(strstr(msg, "cannot convert"));
+}
+
 void test_error_message_buffer_size(void) {
     clap_error_t error;
     
@@ -349,6 +367,8 @@ void run_test_error(void) {
     
     /* Error Structure Fields Tests */
     RUN_TEST(test_error_fields_can_be_set);
+    RUN_TEST(test_error_code_accessor);
+    RUN_TEST(test_error_message_accessor);
     RUN_TEST(test_error_message_buffer_size);
     
     /* Integration Tests */

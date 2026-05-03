@@ -37,8 +37,7 @@ int main(int argc, char *argv[]) {
 
     clap_parse_result_t parse_result = clap_parse_args(parser, argc, argv, &ns, &error);
     if (parse_result == CLAP_PARSE_ERROR) {
-        fprintf(stderr, "Error: %s\n", error.message);
-        clap_print_help(parser, stderr);
+        clap_print_help_on_error(parser, &error, stderr);
 
         clap_parser_free(parser);
         return EXIT_FAILURE;

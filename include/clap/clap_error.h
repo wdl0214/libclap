@@ -42,12 +42,6 @@ typedef struct clap_error_s {
 } clap_error_t;
 
 /**
- * @brief Initialize an error structure to NONE / empty.
- * @param error Error struct to initialize (must not be NULL).
- */
-CLAP_EXPORT void clap_error_init(clap_error_t *error);
-
-/**
  * @brief Set error code and printf-style message.
  * @param error  Error struct to fill.
  * @param code   Error code (CLAP_ERR_* constant).
@@ -57,20 +51,18 @@ CLAP_EXPORT void clap_error_init(clap_error_t *error);
 CLAP_EXPORT void clap_error_set(clap_error_t *error, int code, const char *format, ...);
 
 /**
- * @brief Set error code and message with va_list.
- * @param error  Error struct to fill.
- * @param code   Error code (CLAP_ERR_* constant).
- * @param format printf-style format string.
- * @param ap     va_list of format arguments.
+ * @brief Get the error code from an error structure.
+ * @param error Error struct (must not be NULL).
+ * @return The CLAP_ERR_* code.
  */
-CLAP_EXPORT void clap_error_vset(clap_error_t *error, int code, const char *format, va_list ap);
+CLAP_EXPORT int clap_error_code(const clap_error_t *error);
 
 /**
- * @brief Get a human-readable description for an error code.
- * @param code Error code (CLAP_ERR_* constant).
- * @return A static NUL-terminated string.  Never returns NULL.
+ * @brief Get the human-readable message from an error structure.
+ * @param error Error struct (must not be NULL).
+ * @return Pointer to the internal message buffer.  Never returns NULL.
  */
-CLAP_EXPORT const char* clap_strerror(int code);
+CLAP_EXPORT const char* clap_error_message(const clap_error_t *error);
 
 #ifdef __cplusplus
 }

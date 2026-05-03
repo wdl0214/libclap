@@ -102,3 +102,17 @@ bool clap_print_subcommand_help(clap_parser_t *parser, const char *command_name,
     
     return false;
 }
+
+void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, FILE *stream) {
+    if (!parser || !error || !stream) return;
+
+    fprintf(stream, "%s: error: %s\n\n",
+            clap_buffer_cstr(parser->prog_name),
+            clap_error_message(error));
+
+    if (error->subcommand_name) {
+        clap_print_subcommand_help(parser, error->subcommand_name, stream);
+    } else {
+        clap_print_help(parser, stream);
+    }
+}

@@ -32,8 +32,6 @@ extern "C" {
 #define CLAP_NARGS_ONE_OR_MORE   (-5)  /**< '+' - 1 or more arguments */
 #define CLAP_NARGS_OPTIONAL      CLAP_NARGS_ZERO_OR_ONE
 #define CLAP_NARGS_REMAINDER     (-1)  /**< Consume all remaining arguments */
-#define CLAP_NARGS_PARSER        (-2)  /**< Consume for subparser */
-#define CLAP_NARGS_DEFAULT       (1)
 /* ============================================================================
  * Parser API
  * ============================================================================ */
@@ -172,7 +170,9 @@ CLAP_EXPORT clap_argument_t* clap_argument_choices(clap_argument_t *arg, const c
  * Character literals '?', '+', '*' are also accepted.
  *
  * @param arg   Target argument.
- * @param nargs Number of values.  CLAP_NARGS_DEFAULT (1) by default.
+ * @param nargs Number of values.  Use CLAP_NARGS_* constants or a positive
+ *              integer.  Character literals '?', '+', '*' are also accepted.
+ *              Default: 1.
  * @return @p arg for chaining.
  */
 CLAP_EXPORT clap_argument_t* clap_argument_nargs(clap_argument_t *arg, int nargs);
@@ -215,8 +215,30 @@ CLAP_EXPORT clap_argument_t* clap_argument_const(clap_argument_t *arg, const cha
  * @return @p arg for chaining.
  */
 CLAP_EXPORT clap_argument_t* clap_argument_handler(clap_argument_t *arg, clap_action_handler_t handler);
-CLAP_EXPORT CLAP_DEPRECATED("Use clap_mutex_group_add_argument() instead")
-clap_argument_t* clap_argument_mutex_group(clap_argument_t *arg, int mutex_group_id);
+/**
+ * @brief Set user data pointer for a CLAP_ACTION_CUSTOM argument.
+ *
+ * The pointer is passed as the @p user_data argument to the handler
+ * registered with clap_argument_handler().  May be NULL to clear.
+ *
+ * @param arg  Target argument with action=CLAP_ACTION_CUSTOM.
+ * @param data Opaque pointer passed to the handler.  Not copied or freed.
+ * @return @p arg for chaining.
+ *
+ * @par Example
+ * @code
+ * struct config { int limit; };
+ * static bool my_handler(..., void *user_data, ...) {
+ *     struct config *cfg = (struct config *)user_data;
+ *     // use cfg->limit ...
+ * }
+ *
+ * struct config cfg = { .limit = 100 };
+ * clap_argument_handler(arg, my_handler);
+ * clap_argument_data(arg, &cfg);
+ * @endcode
+ */
+CLAP_EXPORT clap_argument_t* clap_argument_data(clap_argument_t *arg, void *data);
 
 /* ============================================================================
  * Mutually Exclusive Groups
@@ -333,6 +355,23 @@ CLAP_EXPORT void clap_subparsers_metavar(clap_parser_t *parser, const char *meta
  * @return true on success, false if @p command_name is not found.
  */
 CLAP_EXPORT bool clap_print_subcommand_help(clap_parser_t *parser, const char *command_name, FILE *stream);
+
+/**
+ * @brief Print "<prog>: error: <message>" and contextual help.
+ *
+ * Prints a one-line error prefix (using the parser's program name and
+ * the error message), then:
+ *   - If the error occurred inside a subcommand (error->subcommand_name
+ *     is set), prints help for that subcommand.
+ *   - Otherwise prints the parser's full help.
+ *
+ * Typically called after clap_parse_args() returns CLAP_PARSE_ERROR.
+ *
+ * @param parser Target parser.
+ * @param error  Error struct from clap_parse_args().
+ * @param stream Output stream (e.g. stdout, stderr).
+ */
+CLAP_EXPORT void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, FILE *stream);
 
 /* ============================================================================
  * Parsing

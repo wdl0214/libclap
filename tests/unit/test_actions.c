@@ -299,12 +299,81 @@ void test_action_custom_missing_handler(void) {
     clap_argument_t *arg = create_arg("--custom", "custom");
     /* No handler set */
     clap_error_t error = {0};
-    
+
     bool result = clap_action_custom(g_parser, arg, g_ns, NULL, 0, NULL, &error);
-    
+
     TEST_ASSERT_FALSE(result);
     TEST_ASSERT_EQUAL(CLAP_ERR_INVALID_ARGUMENT, error.code);
     TEST_ASSERT_NOT_NULL(strstr(error.message, "CUSTOM"));
+}
+
+/* Test handler that validates user_data */
+static bool test_user_data_handler(clap_parser_t *p, clap_argument_t *a,
+                                    clap_namespace_t *n, const char **v,
+                                    size_t c, void *d, clap_error_t *e) {
+    (void)p; (void)a; (void)n; (void)v; (void)c; (void)e;
+    int expected = *(int *)d;
+    return expected == 42;
+}
+
+void test_action_custom_user_data(void) {
+    clap_argument_t *arg = create_arg("--custom", "custom");
+    int my_data = 42;
+
+    /* Use public API to set handler and user_data */
+    clap_argument_handler(arg, test_user_data_handler);
+    clap_argument_data(arg, &my_data);
+
+    const char *values[] = {"test"};
+    clap_error_t error = {0};
+
+    /* Pass arg->action_data as user_data to clap_action_custom */
+    bool result = clap_action_custom(g_parser, arg, g_ns, values, 1, arg->action_data, &error);
+    TEST_ASSERT_TRUE(result);
+}
+
+static bool test_user_data_null_handler(clap_parser_t *p, clap_argument_t *a,
+                                         clap_namespace_t *n, const char **v,
+                                         size_t c, void *d, clap_error_t *e) {
+    (void)p; (void)a; (void)n; (void)v; (void)c; (void)e;
+    /* user_data should be NULL when not set via clap_argument_data() */
+    return d == NULL;
+}
+
+void test_action_custom_user_data_null(void) {
+    clap_argument_t *arg = create_arg("--custom", "custom");
+
+    /* Set handler via public API, but no user_data */
+    clap_argument_handler(arg, test_user_data_null_handler);
+
+    const char *values[] = {"test"};
+    clap_error_t error = {0};
+
+    /* Pass NULL user_data to verify clap_argument_data was not called */
+    bool result = clap_action_custom(g_parser, arg, g_ns, values, 1, arg->action_data, &error);
+    TEST_ASSERT_TRUE(result);
+}
+
+/* Integration test: clap_argument_handler + clap_argument_data + full parse */
+void test_action_custom_parse_with_user_data(void) {
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--custom");
+    clap_argument_action(arg, CLAP_ACTION_CUSTOM);
+
+    int my_data = 42;
+    clap_argument_handler(arg, test_user_data_handler);
+    clap_argument_data(arg, &my_data);
+
+    char *argv[] = {"test", "--custom", "value"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    /* This should parse --custom, triggering the handler with user_data=42 */
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
 }
 
 /* ============================================================================
@@ -437,6 +506,9 @@ void run_test_actions(void) {
     /* CUSTOM Tests */
     RUN_TEST(test_action_custom_basic);
     RUN_TEST(test_action_custom_missing_handler);
+    RUN_TEST(test_action_custom_user_data);
+    RUN_TEST(test_action_custom_user_data_null);
+    RUN_TEST(test_action_custom_parse_with_user_data);
     
     /* get_action_handler Tests */
     RUN_TEST(test_get_action_handler_store);

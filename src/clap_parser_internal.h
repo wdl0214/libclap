@@ -29,6 +29,10 @@
 #define CLAP_MAX_CHOICES        1000
 #define CLAP_MAX_DEPENDENCIES   16
 
+/* nargs internal constants (not in public API) */
+#define CLAP_NARGS_PARSER       (-2)  /**< Consume for subparser */
+#define CLAP_NARGS_DEFAULT      (1)
+
 /* Group identifier constants */
 #define CLAP_MUTEX_GROUP_NONE    (-1)
 #define CLAP_DISPLAY_GROUP_NONE  (-1)
@@ -512,6 +516,11 @@ bool clap_type_bool_handler(const char *input, void *output,
                              size_t output_size, clap_error_t *error);
 bool clap_register_builtin_types(clap_parser_t *parser);
 
+/* Error internals — not in public API (use ={0} and clap_error_set() instead) */
+void clap_error_init(clap_error_t *error);
+void clap_error_vset(clap_error_t *error, int code, const char *format, va_list ap);
+const char* clap_strerror(int code);
+
 /* Option lookup */
 clap_argument_t* clap_find_option(clap_parser_t *parser, const char *name, bool is_long);
 clap_argument_t* clap_find_option_fast(clap_parser_t *parser, const char *name, bool is_long);
@@ -527,5 +536,8 @@ bool clap_mutex_check_conflict(clap_parser_t *parser,
                           bool *mutex_group_used,
                           const char *option_str,
                           clap_error_t *error);
+
+/* Removed from public API (deprecated) — kept for internal/tests */
+clap_argument_t* clap_argument_mutex_group(clap_argument_t *arg, int mutex_group_id);
 
 #endif /* CLAP_PARSER_INTERNAL_H */

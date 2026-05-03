@@ -194,13 +194,7 @@ int main(int argc, char *argv[]) {
     clap_parse_result_t parse_ok = clap_parse_args(parser, argc, argv, &ns, &error);
 
     if (parse_ok == CLAP_PARSE_ERROR) {
-        const char *base_name = strrchr(argv[0], '/');
-        if (!base_name) base_name = strrchr(argv[0], '\\');
-        if (base_name) base_name++;
-        else base_name = argv[0];
-
-        fprintf(stderr, "%s: error: %s\n", base_name, error.message);
-        fprintf(stderr, "\nTry '%s --help' for more information.\n", base_name);
+        clap_print_help_on_error(parser, &error, stderr);
 
         clap_parser_free(parser);
         return EXIT_FAILURE;

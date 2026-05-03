@@ -307,3 +307,10 @@ clap_argument_t* clap_argument_handler(clap_argument_t *arg, clap_action_handler
     }
     return arg;
 }
+
+clap_argument_t* clap_argument_data(clap_argument_t *arg, void *data) {
+    if (arg) {
+        arg->action_data = data;
+    }
+    return arg;
+}
