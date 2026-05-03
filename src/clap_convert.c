@@ -95,6 +95,25 @@ bool clap_type_bool_handler(const char *input, void *output,
     return false;
 }
 
+bool clap_register_builtin_types(clap_parser_t *parser) {
+    if (!parser) return false;
+    clap_register_type(parser, "string", clap_type_string_handler, sizeof(char*));
+    clap_register_type(parser, "int", clap_type_int_handler, sizeof(int));
+    clap_register_type(parser, "float", clap_type_float_handler, sizeof(double));
+    clap_register_type(parser, "bool", clap_type_bool_handler, sizeof(bool));
+    return true;
+}
+
+/* Look up a type handler from the parser's type registry by name. */
+static clap_type_handler_t find_type_handler(clap_parser_t *parser, const char *type_name) {
+    for (size_t i = 0; i < parser->type_handler_count; i++) {
+        if (strcmp(parser->type_handlers[i].name, type_name) == 0) {
+            return parser->type_handlers[i].handler;
+        }
+    }
+    return NULL;
+}
+
 bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error_t *error) {
     for (size_t i = 0; i < parser->arg_count; i++) {
         clap_argument_t *arg = parser->arguments[i];
@@ -110,8 +129,8 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
             } else if (strcmp(type_name, "int") == 0) {
                 int int_val;
                 clap_type_handler_t handler = arg->type_handler ?
-                    arg->type_handler : clap_type_int_handler;
-                if (handler(clap_buffer_cstr(arg->default_string),
+                    arg->type_handler : find_type_handler(parser, "int");
+                if (handler && handler(clap_buffer_cstr(arg->default_string),
                             &int_val, sizeof(int), error)) {
                     clap_namespace_set_int(ns, dest, int_val);
                 } else {
@@ -121,8 +140,8 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
             } else if (strcmp(type_name, "float") == 0) {
                 double float_val;
                 clap_type_handler_t handler = arg->type_handler ?
-                    arg->type_handler : clap_type_float_handler;
-                if (handler(clap_buffer_cstr(arg->default_string),
+                    arg->type_handler : find_type_handler(parser, "float");
+                if (handler && handler(clap_buffer_cstr(arg->default_string),
                             &float_val, sizeof(double), error)) {
                     clap_namespace_set_float(ns, dest, float_val);
                 } else {
@@ -132,8 +151,8 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
             } else if (strcmp(type_name, "bool") == 0) {
                 bool bool_val;
                 clap_type_handler_t handler = arg->type_handler ?
-                    arg->type_handler : clap_type_bool_handler;
-                if (handler(clap_buffer_cstr(arg->default_string),
+                    arg->type_handler : find_type_handler(parser, "bool");
+                if (handler && handler(clap_buffer_cstr(arg->default_string),
                             &bool_val, sizeof(bool), error)) {
                     clap_namespace_set_bool(ns, dest, bool_val);
                 } else {

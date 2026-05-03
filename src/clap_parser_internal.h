@@ -499,6 +499,19 @@ bool clap_validate_nargs(clap_argument_t *arg, size_t value_count, clap_error_t 
 /* Defaults */
 bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error_t *error);
 
+/* Built-in type handlers — declared here (not public API, not part of ABI).
+ * Automatically registered by clap_parser_new(). Users register custom
+ * types via clap_register_type() instead. */
+bool clap_type_string_handler(const char *input, void *output,
+                               size_t output_size, clap_error_t *error);
+bool clap_type_int_handler(const char *input, void *output,
+                            size_t output_size, clap_error_t *error);
+bool clap_type_float_handler(const char *input, void *output,
+                              size_t output_size, clap_error_t *error);
+bool clap_type_bool_handler(const char *input, void *output,
+                             size_t output_size, clap_error_t *error);
+bool clap_register_builtin_types(clap_parser_t *parser);
+
 /* Option lookup */
 clap_argument_t* clap_find_option(clap_parser_t *parser, const char *name, bool is_long);
 clap_argument_t* clap_find_option_fast(clap_parser_t *parser, const char *name, bool is_long);

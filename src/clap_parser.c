@@ -5,9 +5,6 @@
 
 #include "clap_parser_internal.h"
 
-/* Default built-in types */
-static void register_builtin_types(clap_parser_t *parser);
-
 clap_parser_t* clap_parser_new(const char *prog_name,
                                 const char *description,
                                 const char *epilog) {
@@ -31,7 +28,7 @@ clap_parser_t* clap_parser_new(const char *prog_name,
     parser->next_mutex_group_id = 0;
     parser->subparsers_container = NULL;
 
-    register_builtin_types(parser);
+    clap_register_builtin_types(parser);
 
     /* Add default help option */
     if (parser->add_help_option) {
@@ -138,12 +135,6 @@ void clap_parser_set_version(clap_parser_t *parser, const char *version) {
     }
 }
 
-static void register_builtin_types(clap_parser_t *parser) {
-    clap_register_type(parser, "string", clap_type_string_handler, sizeof(char*));
-    clap_register_type(parser, "int", clap_type_int_handler, sizeof(int));
-    clap_register_type(parser, "float", clap_type_float_handler, sizeof(double));
-    clap_register_type(parser, "bool", clap_type_bool_handler, sizeof(bool));
-}
 
 bool clap_register_type(clap_parser_t *parser,
                         const char *type_name,

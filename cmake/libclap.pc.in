@@ -6,7 +6,7 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 Name: libclap
 Description: Command Line Argument Parser Library
 Version: @PROJECT_VERSION@
-URL: https://github.com/yourname/libclap
+URL: https://github.com/wdl0214/libclap
 Requires: 
 Libs: -L${libdir} -lclap
 Cflags: -I${includedir}

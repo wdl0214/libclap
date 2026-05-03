@@ -137,16 +137,6 @@ typedef bool (*clap_action_handler_t)(
     clap_error_t *error
 );
 
-/* Built-in type handlers */
-CLAP_EXPORT bool clap_type_string_handler(const char *input, void *output,
-                               size_t output_size, clap_error_t *error);
-CLAP_EXPORT bool clap_type_int_handler(const char *input, void *output,
-                            size_t output_size, clap_error_t *error);
-CLAP_EXPORT bool clap_type_float_handler(const char *input, void *output,
-                              size_t output_size, clap_error_t *error);
-CLAP_EXPORT bool clap_type_bool_handler(const char *input, void *output,
-                             size_t output_size, clap_error_t *error);
-
 #ifdef __cplusplus
 }
 #endif

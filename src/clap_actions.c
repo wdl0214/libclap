@@ -44,11 +44,15 @@ static bool convert_and_store(clap_parser_t *parser,
         return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
     }
 
+    /* Resolve handler from registry for all non-string types */
+    if (!arg->type_handler) {
+        if (resolve_type_handler(parser, arg, error) != CLAP_PARSE_SUCCESS) {
+            return false;
+        }
+    }
+
     if (strcmp(type_name, "int") == 0) {
         int int_val;
-        if (!arg->type_handler) {
-            arg->type_handler = clap_type_int_handler;
-        }
         if (!arg->type_handler(value, &int_val, sizeof(int), error)) {
             return false;
         }
@@ -57,9 +61,6 @@ static bool convert_and_store(clap_parser_t *parser,
 
     if (strcmp(type_name, "float") == 0) {
         double float_val;
-        if (!arg->type_handler) {
-            arg->type_handler = clap_type_float_handler;
-        }
         if (!arg->type_handler(value, &float_val, sizeof(double), error)) {
             return false;
         }
@@ -68,22 +69,13 @@ static bool convert_and_store(clap_parser_t *parser,
 
     if (strcmp(type_name, "bool") == 0) {
         bool bool_val;
-        if (!arg->type_handler) {
-            arg->type_handler = clap_type_bool_handler;
-        }
         if (!arg->type_handler(value, &bool_val, sizeof(bool), error)) {
             return false;
         }
         return clap_namespace_set_bool(ns, clap_buffer_cstr(arg->dest), bool_val);
     }
 
-    /* Resolve custom type handler from parser's registry */
-    if (!arg->type_handler) {
-        if (resolve_type_handler(parser, arg, error) != CLAP_PARSE_SUCCESS) {
-            return false;
-        }
-    }
-
+    /* Custom type handler */
     if (arg->type_handler) {
         void *buffer = clap_malloc(arg->type_size);
         if (!buffer) {
