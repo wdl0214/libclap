@@ -97,7 +97,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure CMake with Sanitizers
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_ENABLE_ASAN=ON -DCLAP_ENABLE_UBSAN=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_BUILD_SHARED=OFF -DCLAP_ENABLE_ASAN=ON -DCLAP_ENABLE_UBSAN=ON
 
       - name: Build
         run: cmake --build build
