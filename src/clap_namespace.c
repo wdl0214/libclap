@@ -193,6 +193,11 @@ bool clap_namespace_get_string_array(clap_namespace_t *ns, const char *name, con
     return true;
 }
 
+bool clap_namespace_has(clap_namespace_t *ns, const char *name) {
+    if (!ns || !name) return false;
+    return find_value(ns, name) != NULL;
+}
+
 static void value_free(clap_value_t *val) {
     if (!val) return;
 

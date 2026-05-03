@@ -465,6 +465,50 @@ void test_namespace_merge_null_params(void) {
 }
 
 /* ============================================================================
+ * clap_namespace_has Tests
+ * ============================================================================ */
+
+void test_namespace_has_exists(void) {
+    clap_namespace_t *ns = clap_namespace_new();
+
+    clap_namespace_set_int(ns, "num", 42);
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "num"));
+
+    clap_namespace_free(ns);
+}
+
+void test_namespace_has_missing(void) {
+    clap_namespace_t *ns = clap_namespace_new();
+
+    TEST_ASSERT_FALSE(clap_namespace_has(ns, "nonexistent"));
+
+    clap_namespace_free(ns);
+}
+
+void test_namespace_has_any_type(void) {
+    clap_namespace_t *ns = clap_namespace_new();
+
+    clap_namespace_set_string(ns, "str", "hello");
+    clap_namespace_set_int(ns, "num", 42);
+    clap_namespace_set_float(ns, "pi", 3.14);
+    clap_namespace_set_bool(ns, "flag", true);
+    clap_namespace_append_string(ns, "list", "item");
+
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "str"));
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "num"));
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "pi"));
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "flag"));
+    TEST_ASSERT_TRUE(clap_namespace_has(ns, "list"));
+
+    clap_namespace_free(ns);
+}
+
+void test_namespace_has_null_params(void) {
+    TEST_ASSERT_FALSE(clap_namespace_has(NULL, "key"));
+    TEST_ASSERT_FALSE(clap_namespace_has(NULL, NULL));
+}
+
+/* ============================================================================
  * Namespace Free Tests
  * ============================================================================ */
 
@@ -587,7 +631,13 @@ void run_test_namespace(void) {
     RUN_TEST(test_namespace_merge_with_arrays);
     RUN_TEST(test_namespace_merge_mixed_types);
     RUN_TEST(test_namespace_merge_null_params);
-    
+
+    /* Has Tests */
+    RUN_TEST(test_namespace_has_exists);
+    RUN_TEST(test_namespace_has_missing);
+    RUN_TEST(test_namespace_has_any_type);
+    RUN_TEST(test_namespace_has_null_params);
+
     /* Free Tests */
     RUN_TEST(test_namespace_free_null_safe);
     RUN_TEST(test_namespace_free_with_values);

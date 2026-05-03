@@ -463,6 +463,19 @@ CLAP_EXPORT bool clap_namespace_set_bool(clap_namespace_t *ns, const char *name,
  */
 CLAP_EXPORT bool clap_namespace_append_string(clap_namespace_t *ns, const char *name, const char *value);
 
+/**
+ * @brief Check if a key exists in the namespace.
+ *
+ * Unlike the typed getters (clap_namespace_get_*), this function
+ * returns true regardless of the value's type.  Use it to test
+ * whether an argument was provided before calling a typed getter.
+ *
+ * @param ns    Target namespace.
+ * @param name  Destination key.
+ * @return true if the key exists with any type, false otherwise.
+ */
+CLAP_EXPORT bool clap_namespace_has(clap_namespace_t *ns, const char *name);
+
 /* ============================================================================
  * Help and Version
  * ============================================================================ */
