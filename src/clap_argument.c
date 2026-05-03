@@ -128,6 +128,7 @@ clap_argument_t* clap_add_argument(clap_parser_t *parser, const char *name_or_fl
 
     clap_error_t error = {0};
     if (!parse_name_or_flags(arg, name_or_flags, &error)) {
+        clap_buffer_free(arg->type_name);
         clap_free(arg);
         parser->last_error = error;
         return NULL;

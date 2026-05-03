@@ -369,12 +369,14 @@ void test_allocator_huge_allocation(void) {
     TEST_ASSERT_TRUE(1);
 }
 
+#ifndef __SANITIZE_ADDRESS__
 void test_allocator_max_size_allocation(void) {
     /* Try to allocate SIZE_MAX (should fail gracefully) */
     void *ptr = clap_malloc(SIZE_MAX);
-    
+
     TEST_ASSERT_NULL(ptr);
 }
+#endif
 
 void test_allocator_zero_handling(void) {
     void *ptr1 = clap_malloc(0);
@@ -438,7 +440,9 @@ void run_test_allocator(void) {
     
     /* Edge Cases */
     RUN_TEST(test_allocator_huge_allocation);
+#ifndef __SANITIZE_ADDRESS__
     RUN_TEST(test_allocator_max_size_allocation);
+#endif
     RUN_TEST(test_allocator_zero_handling);
 }
 

@@ -50,6 +50,7 @@ void clap_parser_free(clap_parser_t *parser) {
     clap_buffer_free(parser->epilog);
     clap_buffer_free(parser->version);
     clap_buffer_free(parser->subparser_dest);
+    clap_buffer_free(parser->subparser_metavar);
 
     /* Free arguments */
     for (size_t i = 0; i < parser->arg_count; i++) {
@@ -72,6 +73,14 @@ void clap_parser_free(clap_parser_t *parser) {
         }
         clap_free(arg->choices);
         clap_free(arg->default_value);
+
+        /* Free dependencies */
+        for (size_t j = 0; j < arg->dependency_count; j++) {
+            clap_free(arg->dependencies[j]->error_message);
+            clap_free(arg->dependencies[j]->targets);
+            clap_free(arg->dependencies[j]);
+        }
+        clap_free(arg->dependencies);
 
         clap_free(arg);
     }

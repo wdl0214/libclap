@@ -61,6 +61,7 @@ void test_tokenize_long_option_with_equals(void) {
     TEST_ASSERT_EQUAL(TOKEN_LONG_OPTION_EQ, token.type);
     TEST_ASSERT_EQUAL_STRING("output", token.option_name);
     TEST_ASSERT_EQUAL_STRING("file.txt", token.value);
+    if (token.name_allocated) clap_free((void*)token.option_name);
 }
 
 void test_tokenize_long_option_with_multiple_equals(void) {
@@ -68,6 +69,7 @@ void test_tokenize_long_option_with_multiple_equals(void) {
     TEST_ASSERT_EQUAL(TOKEN_LONG_OPTION_EQ, token.type);
     /* option_name points to "config=a=b=c", caller handles '=' */
     TEST_ASSERT_EQUAL_STRING("a=b=c", token.value);
+    if (token.name_allocated) clap_free((void*)token.option_name);
 }
 
 /* ============================================================================
