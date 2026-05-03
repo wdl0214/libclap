@@ -49,6 +49,11 @@ static bool convert_and_store(clap_parser_t *parser,
         if (resolve_type_handler(parser, arg, error) != CLAP_PARSE_SUCCESS) {
             return false;
         }
+        /* Defensive: handler may still be NULL if type not in registry.
+         * Fall back to storing the raw string value. */
+        if (!arg->type_handler) {
+            return clap_namespace_set_string(ns, clap_buffer_cstr(arg->dest), value);
+        }
     }
 
     if (strcmp(type_name, "int") == 0) {
