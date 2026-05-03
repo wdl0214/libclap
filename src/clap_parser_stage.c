@@ -5,6 +5,19 @@
 
 #include "clap_parser_internal.h"
 
+/* Check if a string looks like a negative number (e.g. "-1", "-3.14").
+ * Python argparse treats these as values rather than short options when
+ * an option argument is expected. */
+bool looks_like_negative_number(const char *s) {
+    if (!s || *s != '-') return false;
+    s++; /* skip leading '-' */
+    if (*s == '\0') return false; /* bare '-' is not a number */
+
+    char *endptr = NULL;
+    strtod(s, &endptr);
+    return endptr != s && *endptr == '\0';
+}
+
 static bool is_action_value_required(clap_argument_t *arg) {
     return arg->nargs != 0 &&
            arg->action != CLAP_ACTION_STORE_TRUE &&
@@ -71,6 +84,10 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
         }
 
         if (next_token->type == TOKEN_POSITIONAL) {
+            value = next_token->raw;
+            *consumed = 2;
+        } else if (looks_like_negative_number(next_token->raw)) {
+            /* e.g. -t -1  — treat negative number as option value */
             value = next_token->raw;
             *consumed = 2;
         } else if (arg->nargs != CLAP_NARGS_ZERO_OR_ONE) {

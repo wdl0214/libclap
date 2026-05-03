@@ -97,6 +97,13 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
             break;
 
         case TOKEN_SHORT_OPTION:
+            /* Treat negative numbers like "-1" as values, not short options */
+            if (looks_like_negative_number(token->raw)) {
+                pattern->pattern[i] = PATTERN_ARGUMENT;
+                break;
+            }
+            /* Fall through — analyze as a regular short option */
+            /* FALLTHROUGH */
         case TOKEN_LONG_OPTION:
         case TOKEN_LONG_OPTION_EQ: {
             pattern->pattern[i] = PATTERN_OPTION;

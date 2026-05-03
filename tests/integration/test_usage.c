@@ -136,7 +136,7 @@ static void clear_capture(void) {
  * ============================================================================ */
 
 static void extract_usage_line(const char *help_output, char *usage_line, size_t size) {
-    const char *start = strstr(help_output, "usage: ");
+    const char *start = strstr(help_output, "Usage: ");
     if (!start) {
         usage_line[0] = '\0';
         return;
@@ -191,7 +191,7 @@ void tearDown(void) {
 
 /* ============================================================================
  * Test 1: Basic Format - Only Positional Arguments
- * Expected: usage: PROG [-h] input output
+ * Expected: Usage: PROG [-h] input output
  * ============================================================================ */
 void test_1_basic_positional(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test basic positional", NULL);
@@ -202,14 +202,14 @@ void test_1_basic_positional(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] input output");
+    assert_usage_equals("Usage: PROG [-h] input output");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 2a: Positional with nargs='*'
- * Expected: usage: PROG [-h] [files ...]
+ * Expected: Usage: PROG [-h] [files ...]
  * ============================================================================ */
 void test_2a_positional_nargs_star(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test nargs *", NULL);
@@ -220,14 +220,14 @@ void test_2a_positional_nargs_star(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [files ...]");
+    assert_usage_equals("Usage: PROG [-h] [files ...]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 2b: Positional with nargs='+'
- * Expected: usage: PROG [-h] files [files ...]
+ * Expected: Usage: PROG [-h] files [files ...]
  * ============================================================================ */
 void test_2b_positional_nargs_plus(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test nargs +", NULL);
@@ -238,14 +238,14 @@ void test_2b_positional_nargs_plus(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] files [files ...]");
+    assert_usage_equals("Usage: PROG [-h] files [files ...]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 2c: Positional with nargs='?'
- * Expected: usage: PROG [-h] [dest]
+ * Expected: Usage: PROG [-h] [dest]
  * ============================================================================ */
 void test_2c_positional_nargs_question(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test nargs ?", NULL);
@@ -256,14 +256,14 @@ void test_2c_positional_nargs_question(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [dest]");
+    assert_usage_equals("Usage: PROG [-h] [dest]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 3a: Only Optional Arguments
- * Expected: usage: PROG [-h] [--verbose] [--output OUTPUT]
+ * Expected: Usage: PROG [-h] [--verbose] [--output OUTPUT]
  * ============================================================================ */
 void test_3a_only_optional(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test optional only", NULL);
@@ -278,14 +278,14 @@ void test_3a_only_optional(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--verbose] [--output OUTPUT]");
+    assert_usage_equals("Usage: PROG [-h] [--verbose] [--output OUTPUT]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 3b: Required Optional Arguments
- * Expected: usage: PROG [-h] --host HOST [--port PORT]
+ * Expected: Usage: PROG [-h] --host HOST [--port PORT]
  * ============================================================================ */
 void test_3b_required_optional(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test required optional", NULL);
@@ -300,14 +300,14 @@ void test_3b_required_optional(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] --host HOST [--port PORT]");
+    assert_usage_equals("Usage: PROG [-h] --host HOST [--port PORT]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 4: Mixed Arguments (Positional + Optional)
- * Expected: usage: PROG [-h] [--config CONFIG] [--verbose] file
+ * Expected: Usage: PROG [-h] [--config CONFIG] [--verbose] file
  * ============================================================================ */
 void test_4_mixed_arguments(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test mixed", NULL);
@@ -322,14 +322,14 @@ void test_4_mixed_arguments(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--config CONFIG] [--verbose] file");
+    assert_usage_equals("Usage: PROG [-h] [--config CONFIG] [--verbose] file");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 5a: Mutually Exclusive Group (Optional)
- * Expected: usage: PROG [-h] [--verbose | --quiet]
+ * Expected: Usage: PROG [-h] [--verbose | --quiet]
  * ============================================================================ */
 void test_5a_mutex_optional(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test mutex optional", NULL);
@@ -347,14 +347,14 @@ void test_5a_mutex_optional(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--verbose | --quiet]");
+    assert_usage_equals("Usage: PROG [-h] [--verbose | --quiet]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 5b: Mutually Exclusive Group (Required)
- * Expected: usage: PROG [-h] (--start START | --stop STOP)
+ * Expected: Usage: PROG [-h] (--start START | --stop STOP)
  * ============================================================================ */
 void test_5b_mutex_required(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test mutex required", NULL);
@@ -370,14 +370,14 @@ void test_5b_mutex_required(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] (--start START | --stop STOP)");
+    assert_usage_equals("Usage: PROG [-h] (--start START | --stop STOP)");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 5c: Mutually Exclusive Group (Mixed types)
- * Expected: usage: PROG [-h] [--output OUTPUT | --stdout]
+ * Expected: Usage: PROG [-h] [--output OUTPUT | --stdout]
  * ============================================================================ */
 void test_5c_mutex_mixed(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test mutex mixed", NULL);
@@ -394,14 +394,14 @@ void test_5c_mutex_mixed(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--output OUTPUT | --stdout]");
+    assert_usage_equals("Usage: PROG [-h] [--output OUTPUT | --stdout]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 6a: Subcommands
- * Expected: usage: git [-h] {commit,push} ...
+ * Expected: Usage: git [-h] {commit,push} ...
  * ============================================================================ */
 void test_6a_subcommands(void) {
     clap_parser_t *parser = clap_parser_new("git", "Test subcommands", NULL);
@@ -413,14 +413,14 @@ void test_6a_subcommands(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: git [-h] {commit,push} ...");
+    assert_usage_equals("Usage: git [-h] {commit,push} ...");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 6b: Subcommands with Global Options
- * Expected: usage: git [-h] [--version] {commit} ...
+ * Expected: Usage: git [-h] [--version] {commit} ...
  * ============================================================================ */
 void test_6b_subcommands_with_global(void) {
     clap_parser_t *parser = clap_parser_new("git", "Test subcommands with global", NULL);
@@ -435,14 +435,14 @@ void test_6b_subcommands_with_global(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: git [-h] [--version] {commit} ...");
+    assert_usage_equals("Usage: git [-h] [--version] {commit} ...");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 7: Subcommand Help
- * Expected: usage: PROG commit [-h] [-m MESSAGE]
+ * Expected: Usage: PROG commit [-h] [-m MESSAGE]
  * ============================================================================ */
 void test_7_subcommand_help(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Main program", NULL);
@@ -458,14 +458,14 @@ void test_7_subcommand_help(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG commit [-h] [-m MSG]");  /* Update expected */
+    assert_usage_equals("Usage: PROG commit [-h] [-m MSG]");  /* Update expected */
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 8: nargs='?' with const
- * Expected: usage: PROG [-h] [--output [OUTPUT]]
+ * Expected: Usage: PROG [-h] [--output [OUTPUT]]
  * ============================================================================ */
 void test_8_nargs_question_with_const(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test nargs ? with const", NULL);
@@ -478,14 +478,14 @@ void test_8_nargs_question_with_const(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--output [OUTPUT]]");
+    assert_usage_equals("Usage: PROG [-h] [--output [OUTPUT]]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 9: REMAINDER nargs
- * Expected: usage: PROG [-h] cmd ...
+ * Expected: Usage: PROG [-h] cmd ...
  * ============================================================================ */
 void test_9_remainder_nargs(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test REMAINDER", NULL);
@@ -498,14 +498,14 @@ void test_9_remainder_nargs(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] cmd ...");
+    assert_usage_equals("Usage: PROG [-h] cmd ...");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 10: STORE_CONST action usage
- * Expected: usage: PROG [-h] [--fast] [--slow]
+ * Expected: Usage: PROG [-h] [--fast] [--slow]
  * ============================================================================ */
 void test_10_store_const_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test STORE_CONST", NULL);
@@ -524,14 +524,14 @@ void test_10_store_const_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--fast] [--slow]");
+    assert_usage_equals("Usage: PROG [-h] [--fast] [--slow]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 11: APPEND_CONST action usage
- * Expected: usage: PROG [-h] [--add-tag] [--add-flag]
+ * Expected: Usage: PROG [-h] [--add-tag] [--add-flag]
  * ============================================================================ */
 void test_11_append_const_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test APPEND_CONST", NULL);
@@ -550,14 +550,14 @@ void test_11_append_const_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--add-tag] [--add-flag]");
+    assert_usage_equals("Usage: PROG [-h] [--add-tag] [--add-flag]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 12: STORE_CONST with nargs='?' usage
- * Expected: usage: PROG [-h] [--level [LEVEL]]
+ * Expected: Usage: PROG [-h] [--level [LEVEL]]
  * ============================================================================ */
 void test_12_store_const_nargs_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test STORE_CONST with nargs", NULL);
@@ -571,14 +571,14 @@ void test_12_store_const_nargs_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--level [LEVEL]]");
+    assert_usage_equals("Usage: PROG [-h] [--level [LEVEL]]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 13: CUSTOM action usage
- * Expected: usage: PROG [-h] [--custom CUSTOM]
+ * Expected: Usage: PROG [-h] [--custom CUSTOM]
  * ============================================================================ */
 void test_13_custom_action_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test CUSTOM action", NULL);
@@ -591,14 +591,14 @@ void test_13_custom_action_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--custom CUSTOM]");
+    assert_usage_equals("Usage: PROG [-h] [--custom CUSTOM]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 14: Combined STORE_CONST and APPEND_CONST usage
- * Expected: usage: PROG [-h] [--fast] [--slow] [--tag] input
+ * Expected: Usage: PROG [-h] [--fast] [--slow] [--tag] input
  * ============================================================================ */
 void test_14_combined_const_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test combined const actions", NULL);
@@ -624,14 +624,14 @@ void test_14_combined_const_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--fast] [--slow] [--tag] input");
+    assert_usage_equals("Usage: PROG [-h] [--fast] [--slow] [--tag] input");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 15: STORE_CONST with required argument
- * Expected: usage: PROG [-h] --mode-fast
+ * Expected: Usage: PROG [-h] --mode-fast
  * ============================================================================ */
 void test_15_store_const_required_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test STORE_CONST required", NULL);
@@ -646,14 +646,14 @@ void test_15_store_const_required_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] --mode-fast");
+    assert_usage_equals("Usage: PROG [-h] --mode-fast");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 16: APPEND_CONST with metavar
- * Expected: usage: PROG [-h] [--tag]
+ * Expected: Usage: PROG [-h] [--tag]
  * ============================================================================ */
 void test_16_append_const_metavar_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test APPEND_CONST with metavar", NULL);
@@ -668,14 +668,14 @@ void test_16_append_const_metavar_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--tag]");
+    assert_usage_equals("Usage: PROG [-h] [--tag]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 17: Choices validation - basic
- * Expected: usage: PROG [-h] [--color {red,green,blue}]
+ * Expected: Usage: PROG [-h] [--color {red,green,blue}]
  * ============================================================================ */
 void test_17_choices_basic_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test choices", NULL);
@@ -689,14 +689,14 @@ void test_17_choices_basic_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] [--color {red,green,blue}]");
+    assert_usage_equals("Usage: PROG [-h] [--color {red,green,blue}]");
     
     clap_parser_free(parser);
 }
 
 /* ============================================================================
  * Test 18: Choices with positional argument
- * Expected: usage: PROG [-h] action
+ * Expected: Usage: PROG [-h] action
  * ============================================================================ */
 void test_18_choices_positional_usage(void) {
     clap_parser_t *parser = clap_parser_new("PROG", "Test positional choices", NULL);
@@ -709,7 +709,7 @@ void test_18_choices_positional_usage(void) {
     fflush(stdout);
     capture_stop();
     
-    assert_usage_equals("usage: PROG [-h] action");
+    assert_usage_equals("Usage: PROG [-h] action");
     
     clap_parser_free(parser);
 }

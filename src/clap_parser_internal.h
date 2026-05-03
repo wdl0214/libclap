@@ -305,6 +305,10 @@ void* clap_realloc(void *ptr, size_t size);
 char* clap_strdup(const char *str);
 char* clap_strndup(const char *str, size_t n);
 
+/* Negative number detection — used by parser stage and pattern analysis.
+ * Returns true if the string is a valid negative integer or float. */
+bool looks_like_negative_number(const char *s);
+
 /* ============================================================================
  * Internal Function Declarations
  * ============================================================================ */

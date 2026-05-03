@@ -378,7 +378,7 @@ void test_display_group_usage_still_shows_all_args(void) {
 
     const char *output = get_captured();
     char usage[1024];
-    const char *start = strstr(output, "usage: ");
+    const char *start = strstr(output, "Usage: ");
     TEST_ASSERT_NOT_NULL(start);
     const char *end = strchr(start, '\n');
     size_t len = end ? (size_t)(end - start) : strlen(start);

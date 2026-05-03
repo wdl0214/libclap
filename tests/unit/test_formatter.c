@@ -117,7 +117,7 @@ void tearDown(void) {
  * ============================================================================ */
 
 static void extract_usage_line(const char *help_output, char *usage_line, size_t size) {
-    const char *start = strstr(help_output, "usage: ");
+    const char *start = strstr(help_output, "Usage: ");
     if (!start) {
         usage_line[0] = '\0';
         return;
@@ -342,7 +342,7 @@ void test_print_help_usage_basic(void) {
     fflush(stdout);
     capture_stop();
 
-    assert_usage_contains("usage: prog [-h]");
+    assert_usage_contains("Usage: prog [-h]");
 
     clap_parser_free(parser);
 }

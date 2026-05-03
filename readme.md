@@ -148,7 +148,7 @@ Compile and run:
 ```bash
 $ gcc -o myapp myapp.c -lclap
 $ ./myapp --help
-usage: my_program [-h] [--output OUTPUT] [--verbose] input
+Usage: my_program [-h] [--output OUTPUT] [--verbose] input
 
 A simple example
 
@@ -277,7 +277,7 @@ clap_argument_group_add_argument(parser, net_group, port);
 Help output:
 
 ```
-usage: prog [-h] [--host HOST] [--port PORT]
+Usage: prog [-h] [--host HOST] [--port PORT]
 
 Optional arguments:
   -h, --help  Show this help message and exit

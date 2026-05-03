@@ -532,7 +532,87 @@ void test_scenario_typed_defaults(void) {
 }
 
 /* ============================================================================
- * Main Test Runner
+ * Scenario 15: Negative numbers consumed as option values
+ *
+ * Python argparse treats tokens like "-1" as numeric values rather than
+ * short options when an option argument is expected.  libclap follows
+ * the same convention.
+ * ============================================================================ */
+
+void test_scenario_negative_number_as_value(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *count = clap_add_argument(parser, "--count/-c");
+    clap_argument_type(count, "int");
+
+    clap_argument_t *ratio = clap_add_argument(parser, "--ratio/-r");
+    clap_argument_type(ratio, "float");
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose/-v");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+
+    /* Test 1: -c -5  → -5 consumed as value, then --verbose */
+    {
+        char *argv[] = {"prog", "-c", "-5", "--verbose"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+        int count_val;
+        TEST_ASSERT_TRUE(clap_namespace_get_int(ns, "count", &count_val));
+        TEST_ASSERT_EQUAL(-5, count_val);
+
+        bool verbose_val;
+        TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
+        TEST_ASSERT_TRUE(verbose_val);
+
+        clap_namespace_free(ns);
+    }
+
+    /* Test 2: --ratio -3.14  → negative float consumed as value */
+    {
+        char *argv[] = {"prog", "--ratio", "-3.14"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+        double ratio_val;
+        TEST_ASSERT_TRUE(clap_namespace_get_float(ns, "ratio", &ratio_val));
+        TEST_ASSERT_TRUE(ratio_val > -3.15 && ratio_val < -3.13);
+
+        clap_namespace_free(ns);
+    }
+
+    /* Test 3: -c --verbose  → --verbose NOT a number, error expected */
+    {
+        char *argv[] = {"prog", "-c", "--verbose"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+        TEST_ASSERT_NULL(ns);
+    }
+
+    /* Test 4: -c -v  → -v NOT a number, error expected */
+    {
+        char *argv[] = {"prog", "-c", "-v"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+        TEST_ASSERT_NULL(ns);
+    }
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * ============================================================================ */
 
 int main(void) {
@@ -552,6 +632,7 @@ int main(void) {
     RUN_TEST(test_scenario_default_conversion_error_ignored);
     RUN_TEST(test_scenario_custom_type_registry_not_used);
     RUN_TEST(test_scenario_typed_defaults);
+    RUN_TEST(test_scenario_negative_number_as_value);
 
     return UNITY_END();
 }
