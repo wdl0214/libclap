@@ -14,7 +14,7 @@ bool looks_like_negative_number(const char *s) {
     if (*s == '\0') return false; /* bare '-' is not a number */
 
     char *endptr = NULL;
-    strtod(s, &endptr);
+    (void)strtod(s, &endptr);
     return endptr != s && *endptr == '\0';
 }
 
