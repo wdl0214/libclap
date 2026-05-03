@@ -51,9 +51,7 @@ endfunction()
 set(UNIT_TESTS
     test_clap
     test_allocator
-    test_arena
     test_buffer
-    test_trie
     test_error
     test_parser
     test_argument

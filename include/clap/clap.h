@@ -72,8 +72,7 @@ CLAP_EXPORT void clap_parser_set_help_width(clap_parser_t *parser, int width);
  * @brief Enable or disable abbreviated option matching.
  *
  * When enabled, "--ver" will match "--verbose" if no other option
- * shares the prefix.  Abbrev matching uses a prefix trie and detects
- * ambiguity.  Default: disabled.
+ * shares the prefix.  Default: disabled.
  *
  * @param parser Target parser.
  * @param allow  true to enable prefix abbreviation matching.

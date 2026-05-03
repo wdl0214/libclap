@@ -21,8 +21,6 @@ set(CLAP_SOURCES
     clap_subparser.c
     clap_find.c
     clap_buffer.c
-    clap_arena.c
-    clap_trie.c
     clap_allocator.c
 )
 

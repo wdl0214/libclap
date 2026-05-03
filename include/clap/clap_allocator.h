@@ -16,7 +16,7 @@ extern "C" {
 /**
  * @brief Set custom memory allocator functions.
  *
- * All subsequent allocations (internal buffers, trie nodes, namespace
+ * All subsequent allocations (internal buffers, namespace
  * entries, etc.) use these callbacks.  Must be called before any other
  * libclap function — once parsing begins the allocator is locked in.
  *

@@ -75,8 +75,6 @@ static inline bool clap_flags_has(clap_arg_flags_t flags, clap_arg_flags_t flag)
  * ============================================================================ */
 
 typedef struct clap_buffer_s clap_buffer_t;
-typedef struct clap_arena_s clap_arena_t;
-typedef struct clap_trie_s clap_trie_t;
 typedef struct clap_mutex_group_s clap_mutex_group_t;
 typedef struct clap_display_group_s clap_display_group_t;
 typedef struct clap_dependency_s clap_dependency_t;
@@ -428,44 +426,9 @@ struct clap_buffer_s {
 };
 
 /* ============================================================================
- * Arena Structure (Internal)
+ * Buffer API
  * ============================================================================ */
 
-typedef struct clap_arena_chunk_s {
-    struct clap_arena_chunk_s *next;
-    size_t capacity;
-    size_t used;
-    uintptr_t data[];
-} clap_arena_chunk_t;
-
-struct clap_arena_s {
-    clap_arena_chunk_t *current;
-    clap_arena_chunk_t *first;
-    size_t chunk_size;
-};
-
-/* ============================================================================
- * Trie Structure (Internal)
- * ============================================================================ */
-
-typedef struct clap_trie_node_s {
-    char character;
-    clap_argument_t *argument;
-    struct clap_trie_node_s *children[256];
-    bool is_end_of_word;
-} clap_trie_node_t;
-
-struct clap_trie_s {
-    clap_trie_node_t *root;
-    clap_arena_t *arena;
-    size_t node_count;
-};
-
-/* ============================================================================
- * Internal Function Declarations
- * ============================================================================ */
-
-/* Buffer API */
 clap_buffer_t* clap_buffer_new(const char *init);
 clap_buffer_t* clap_buffer_new_len(const void *init, size_t len);
 clap_buffer_t* clap_buffer_empty(void);
@@ -478,20 +441,6 @@ const char* clap_buffer_cstr(const clap_buffer_t *buf);
 size_t clap_buffer_len(const clap_buffer_t *buf);
 void clap_buffer_truncate(clap_buffer_t *buf, size_t len);
 void clap_buffer_sanitize(clap_buffer_t *buf);
-
-/* Arena API */
-clap_arena_t* clap_arena_new(size_t chunk_size);
-void clap_arena_free(clap_arena_t *arena);
-void* clap_arena_alloc(clap_arena_t *arena, size_t size);
-char* clap_arena_strdup(clap_arena_t *arena, const char *str);
-void clap_arena_reset(clap_arena_t *arena);
-
-/* Trie API */
-clap_trie_t* clap_trie_new(void);
-void clap_trie_free(clap_trie_t *trie);
-bool clap_trie_insert(clap_trie_t *trie, const char *key, clap_argument_t *arg);
-clap_argument_t* clap_trie_find_exact(clap_trie_t *trie, const char *key);
-clap_argument_t* clap_trie_find_prefix(clap_trie_t *trie, const char *prefix, bool allow_ambiguous);
 
 /* Validation */
 bool clap_argument_validate(clap_argument_t *arg, clap_error_t *error);
@@ -523,7 +472,6 @@ const char* clap_strerror(int code);
 
 /* Option lookup */
 clap_argument_t* clap_find_option(clap_parser_t *parser, const char *name, bool is_long);
-clap_argument_t* clap_find_option_fast(clap_parser_t *parser, const char *name, bool is_long);
 clap_argument_t* clap_find_option_best_match(clap_parser_t *parser, const char *name, bool is_long, bool *ambiguous);
 
 /* Namespace internal */

@@ -18,7 +18,7 @@ libclap is a modern, secure, and extensible command-line argument parsing librar
 - **Type Conversion** – Built-in support for `int`, `float`, `string`, and `bool`, plus user‑defined converters.
 - **Automatic Help Generation** – Beautifully formatted usage and help messages with smart line‑wrapping and alignment.
 - **Subcommands** – Full support for git‑style sub‑parsers with flat namespace merging.
-- **Memory Safe** – Arena allocator, bounds‑checked string buffers, input validation, and comprehensive leak testing (Valgrind/ASan clean).
+- **Memory Safe** – Bounds‑checked string buffers, input validation, and comprehensive leak testing (Valgrind/ASan clean).
 - **Cross‑Platform** – Windows, Linux, macOS, and BSD. Works with GCC, Clang, and MSVC.
 - **Zero Dependencies** – Only requires a C99 standard library.
 - **CMake Integration** – Easy to build and consume with `find_package(clap)` or `pkg-config`.

@@ -269,67 +269,6 @@ void test_find_option_no_optional_args(void) {
 }
 
 /* ============================================================================
- * clap_find_option_fast Tests
- * ============================================================================ */
-
-void test_find_option_fast_basic(void) {
-    clap_parser_t *parser = create_parser_with_options();
-    clap_argument_t *expected = clap_add_argument(parser, "--verbose");
-
-    clap_argument_t *result = clap_find_option_fast(parser, "verbose", true);
-
-    TEST_ASSERT_NOT_NULL(result);
-    TEST_ASSERT_EQUAL_PTR(expected, result);
-
-    clap_parser_free(parser);
-}
-
-void test_find_option_fast_short_option(void) {
-    clap_parser_t *parser = create_parser_with_options();
-    clap_argument_t *expected = clap_add_argument(parser, "-v");
-
-    clap_argument_t *result = clap_find_option_fast(parser, "v", false);
-
-    TEST_ASSERT_NOT_NULL(result);
-    TEST_ASSERT_EQUAL_PTR(expected, result);
-
-    clap_parser_free(parser);
-}
-
-void test_find_option_fast_null_parser(void) {
-    clap_argument_t *result = clap_find_option_fast(NULL, "verbose", true);
-    TEST_ASSERT_NULL(result);
-}
-
-void test_find_option_fast_null_name(void) {
-    clap_parser_t *parser = create_parser_with_options();
-
-    clap_argument_t *result = clap_find_option_fast(parser, NULL, true);
-    TEST_ASSERT_NULL(result);
-
-    clap_parser_free(parser);
-}
-
-void test_find_option_fast_returns_same_as_slow(void) {
-    clap_parser_t *parser = create_parser_with_options();
-    clap_add_argument(parser, "--verbose/-v");
-    clap_add_argument(parser, "--version/-V");
-    clap_add_argument(parser, "--output/-o");
-
-    /* Fast and slow should return the same results */
-    const char *test_names[] = {"verbose", "v", "version", "V", "output", "o", "nonexistent"};
-    bool is_long[] = {true, false, true, false, true, false, true};
-
-    for (int j = 0; j < 7; j++) {
-        clap_argument_t *slow = clap_find_option(parser, test_names[j], is_long[j]);
-        clap_argument_t *fast = clap_find_option_fast(parser, test_names[j], is_long[j]);
-        TEST_ASSERT_EQUAL_PTR(slow, fast);
-    }
-
-    clap_parser_free(parser);
-}
-
-/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -362,12 +301,6 @@ void run_test_find(void) {
     RUN_TEST(test_find_option_first_match);
     RUN_TEST(test_find_option_no_optional_args);
 
-    /* Fast Option Tests */
-    RUN_TEST(test_find_option_fast_basic);
-    RUN_TEST(test_find_option_fast_short_option);
-    RUN_TEST(test_find_option_fast_null_parser);
-    RUN_TEST(test_find_option_fast_null_name);
-    RUN_TEST(test_find_option_fast_returns_same_as_slow);
 }
 
 #ifdef STANDALONE_TEST

@@ -17,8 +17,6 @@ Initial public release.
 - Short option bundling (`-abc` → `-a -b -c`)
 - nargs specifiers: N, `'?'` (0/1), `'*'` (0+), `'+'` (1+), REMAINDER, PARSER
 - Custom memory allocator support via `clap_set_allocator()`
-- Arena allocator for internal long-lived structures (trie nodes)
-- Trie-based fast option lookup
 - Safe string buffer (`clap_buffer_t`) with bounds checking
 - Zero-initialized memory wrappers (`clap_malloc`, `clap_calloc`)
 - DLL export/import macros with static/shared library support

@@ -84,7 +84,3 @@ clap_argument_t* clap_find_option_best_match(clap_parser_t *parser, const char *
     return seen_ambiguous ? NULL : match;
 }
 
-clap_argument_t* clap_find_option_fast(clap_parser_t *parser, const char *name, bool is_long) {
-    /* For now, just use the linear search */
-    return clap_find_option(parser, name, is_long);
-}
