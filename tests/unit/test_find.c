@@ -269,6 +269,99 @@ void test_find_option_no_optional_args(void) {
 }
 
 /* ============================================================================
+ * clap_parser_set_allow_abbrev Tests
+ * ============================================================================ */
+
+void test_allow_abbrev_default_disabled(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_add_argument(parser, "--verbose");
+    bool ambig = false;
+
+    /* Default is disabled, so abbreviation should not match */
+    clap_argument_t *result = clap_find_option_best_match(parser, "ver", true, &ambig);
+    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_FALSE(ambig);
+
+    clap_parser_free(parser);
+}
+
+void test_allow_abbrev_enable_unique_match(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *expected = clap_add_argument(parser, "--verbose");
+    bool ambig = false;
+
+    clap_parser_set_allow_abbrev(parser, true);
+
+    /* "ver" uniquely matches "--verbose" */
+    clap_argument_t *result = clap_find_option_best_match(parser, "ver", true, &ambig);
+    TEST_ASSERT_EQUAL_PTR(expected, result);
+    TEST_ASSERT_FALSE(ambig);
+
+    clap_parser_free(parser);
+}
+
+void test_allow_abbrev_ambiguous(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_add_argument(parser, "--verbose");
+    clap_add_argument(parser, "--version");
+    bool ambig = false;
+
+    clap_parser_set_allow_abbrev(parser, true);
+
+    /* "ver" could match both --verbose and --version */
+    clap_argument_t *result = clap_find_option_best_match(parser, "ver", true, &ambig);
+    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_TRUE(ambig);
+
+    clap_parser_free(parser);
+}
+
+void test_allow_abbrev_disable_after_enable(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_add_argument(parser, "--verbose");
+    bool ambig = false;
+
+    /* Enable then disable */
+    clap_parser_set_allow_abbrev(parser, true);
+    clap_parser_set_allow_abbrev(parser, false);
+
+    clap_argument_t *result = clap_find_option_best_match(parser, "ver", true, &ambig);
+    TEST_ASSERT_NULL(result);
+    TEST_ASSERT_FALSE(ambig);
+
+    clap_parser_free(parser);
+}
+
+void test_allow_abbrev_exact_match_still_works(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *expected = clap_add_argument(parser, "--version");
+    bool ambig = false;
+
+    clap_parser_set_allow_abbrev(parser, true);
+
+    /* Exact match should still work even when abbrev is enabled */
+    clap_argument_t *result = clap_find_option_best_match(parser, "version", true, &ambig);
+    TEST_ASSERT_EQUAL_PTR(expected, result);
+    TEST_ASSERT_FALSE(ambig);
+
+    clap_parser_free(parser);
+}
+
+void test_allow_abbrev_only_affects_long_options(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_add_argument(parser, "-v");
+    bool ambig = false;
+
+    clap_parser_set_allow_abbrev(parser, true);
+
+    /* Short options should always require exact match, even with abbrev enabled */
+    clap_argument_t *result = clap_find_option_best_match(parser, "v", false, &ambig);
+    TEST_ASSERT_NOT_NULL(result);
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -300,6 +393,14 @@ void run_test_find(void) {
     RUN_TEST(test_find_option_with_numbers);
     RUN_TEST(test_find_option_first_match);
     RUN_TEST(test_find_option_no_optional_args);
+
+    /* Allow Abbrev Tests */
+    RUN_TEST(test_allow_abbrev_default_disabled);
+    RUN_TEST(test_allow_abbrev_enable_unique_match);
+    RUN_TEST(test_allow_abbrev_ambiguous);
+    RUN_TEST(test_allow_abbrev_disable_after_enable);
+    RUN_TEST(test_allow_abbrev_exact_match_still_works);
+    RUN_TEST(test_allow_abbrev_only_affects_long_options);
 
 }
 

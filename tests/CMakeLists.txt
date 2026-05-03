@@ -30,6 +30,7 @@ function(add_clap_test test_name test_source)
     target_compile_definitions(${test_name} PRIVATE CLAP_STATIC)
 
     set_clap_platform_definitions(${test_name})
+    set_clap_sanitizers(${test_name})
 
     target_link_libraries(${test_name} PRIVATE clap_static unity)
     target_include_directories(${test_name} PRIVATE 

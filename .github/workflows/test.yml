@@ -25,15 +25,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Cache CMake build
-      uses: actions/cache@v4
-      with:
-        path: build
-        key: ${{ matrix.os }}-${{ matrix.build_type }}-${{ hashFiles('**/CMakeLists.txt', 'src/**') }}
-        restore-keys: |
-          ${{ matrix.os }}-${{ matrix.build_type }}-
-    
+
     - name: Configure CMake
       run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
     
@@ -97,6 +89,21 @@ jobs:
           name: coverage-report
           path: build/coverage.html
           retention-days: 30
+
+  sanitizers:
+      name: ASAN+UBSAN
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure CMake with Sanitizers
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_ENABLE_ASAN=ON -DCLAP_ENABLE_UBSAN=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
 
   fuzz:
       name: Fuzz Test

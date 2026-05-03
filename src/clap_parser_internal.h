@@ -324,14 +324,6 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
 void clap_pattern_free(clap_pattern_t *pattern);
 
 
-size_t clap_match_nargs(clap_argument_t *arg,
-                        const char *pattern,
-                        size_t start_idx,
-                        size_t pattern_len);
-bool clap_validate_nargs_count(clap_argument_t *arg,
-                                size_t consumed,
-                                clap_error_t *error);
-
 clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                              clap_token_t *tokens,
                              clap_pattern_t *pattern,
