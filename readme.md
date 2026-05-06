@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     
     clap_parse_result_t result = clap_parse_args(parser, argc, argv, &ns, &error);
     if (result == CLAP_PARSE_ERROR) {
-        fprintf(stderr, "Error: %s\n", error.message);
+        clap_print_help_on_error(parser, &error, stderr);
         clap_parser_free(parser);
         return 1;
     }
@@ -174,7 +174,7 @@ clap_namespace_t *ns = NULL;
 clap_error_t error = {0};
 clap_parse_result_t result = clap_parse_args(parser, argc, argv, &ns, &error);
 if (result == CLAP_PARSE_ERROR) {
-    fprintf(stderr, "Error: %s\n", error.message);
+    clap_print_help_on_error(parser, &error, stderr);
     clap_parser_free(parser);
     return 1;
 }
@@ -406,6 +406,7 @@ unexpected exits, leaks, and other parser edge cases.
 | `examples/basic.c` | Minimal argument parsing |
 | `examples/git_style.c` | Full git‑style CLI with subcommands |
 | `examples/action_demo.c` | Demonstrates all 10 action types |
+| `examples/custom_type.c` | Demonstrates custom type validation and typed storage with `CLAP_ACTION_CUSTOM` |
 
 ## 🏗️ Project Structure
 
