@@ -222,7 +222,7 @@ clap_argument_metavar(arg, "FILE");
 | `*` (`CLAP_NARGS_ZERO_OR_MORE`) | Zero or more arguments |
 | `+` (`CLAP_NARGS_ONE_OR_MORE`) | One or more arguments |
 | `N` | Exactly N arguments |
-| `REMAINDER` | Consume all remaining arguments |
+| `REMAINDER` (`CLAP_NARGS_REMAINDER`) | Consume all remaining arguments |
 
 ### Subcommands
 
@@ -420,8 +420,7 @@ libclap/
 │   ├── unit/                 # Per-module unit tests
 │   ├── integration/          # End-to-end tests
 │   └── fuzz/                 # Fuzz testing
-├── examples/                 # Example programs
-└── scripts/                  # Test and utility scripts
+└── examples/                 # Example programs
 ```
 
 ## 🤝 Contributing
