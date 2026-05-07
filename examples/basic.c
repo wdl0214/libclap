@@ -35,6 +35,12 @@ int main(int argc, char *argv[]) {
     clap_argument_help(arg, "Verbose output");
     clap_argument_action(arg, CLAP_ACTION_COUNT);
 
+    /* Deprecated argument */
+    arg = clap_add_argument(parser, "--format/-f");
+    clap_argument_help(arg, "Output format");
+    clap_argument_type(arg, "string");
+    clap_argument_deprecated(arg, "use --output instead");
+
     clap_parse_result_t parse_result = clap_parse_args(parser, argc, argv, &ns, &error);
     if (parse_result == CLAP_PARSE_ERROR) {
         clap_print_help_on_error(parser, &error, stderr);
@@ -47,15 +53,17 @@ int main(int argc, char *argv[]) {
         return EXIT_SUCCESS;
     }
 
-    const char *input, *output;
+    const char *input, *output, *format;
     int verbose = 0;
 
     clap_namespace_get_string(ns, "input", &input);
     clap_namespace_get_string(ns, "output", &output);
+    clap_namespace_get_string(ns, "format", &format);
     clap_namespace_get_int(ns, "verbose", &verbose);
 
     printf("Input: %s\n", input);
     printf("Output: %s\n", output);
+    if (format) printf("Format: %s\n", format);
     printf("Verbose: %d\n", verbose);
 
     clap_namespace_free(ns);

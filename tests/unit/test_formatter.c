@@ -500,6 +500,36 @@ void test_print_help_shows_choices(void) {
     clap_parser_free(parser);
 }
 
+void test_print_help_shows_deprecated_with_message(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--old");
+    clap_argument_help(arg, "Old feature");
+    clap_argument_deprecated(arg, "use --new instead");
+
+    clap_print_help(parser, stdout);
+    fflush(stdout);
+    capture_stop();
+
+    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "(deprecated: use --new instead)"));
+
+    clap_parser_free(parser);
+}
+
+void test_print_help_shows_deprecated_no_message(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--old");
+    clap_argument_help(arg, "Old feature");
+    clap_argument_deprecated(arg, NULL);
+
+    clap_print_help(parser, stdout);
+    fflush(stdout);
+    capture_stop();
+
+    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "(deprecated)"));
+
+    clap_parser_free(parser);
+}
+
 void test_print_help_has_commands_section(void) {
     clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
@@ -617,6 +647,8 @@ void run_test_formatter(void) {
     RUN_TEST(test_print_help_has_optional_section);
     RUN_TEST(test_print_help_shows_default_value);
     RUN_TEST(test_print_help_shows_choices);
+    RUN_TEST(test_print_help_shows_deprecated_with_message);
+    RUN_TEST(test_print_help_shows_deprecated_no_message);
     RUN_TEST(test_print_help_has_commands_section);
     RUN_TEST(test_print_help_null_parser);
     RUN_TEST(test_print_help_null_stream);

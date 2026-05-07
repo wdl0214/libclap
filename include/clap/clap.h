@@ -239,6 +239,21 @@ CLAP_EXPORT clap_argument_t* clap_argument_handler(clap_argument_t *arg, clap_ac
  */
 CLAP_EXPORT clap_argument_t* clap_argument_data(clap_argument_t *arg, void *data);
 
+/**
+ * @brief Mark an argument as deprecated.
+ *
+ * When a deprecated argument is used during parsing, a warning is emitted
+ * to stderr.  If @p msg is non-NULL and non-empty, it is included in the
+ * warning and shown in help output.  If @p msg is NULL or empty, a generic
+ * "(deprecated)" marker is used.
+ *
+ * @param arg  Target argument.
+ * @param msg  Optional deprecation message (e.g. "use --new-flag instead"),
+ *             or NULL for a generic marker.
+ * @return @p arg for chaining.
+ */
+CLAP_EXPORT clap_argument_t* clap_argument_deprecated(clap_argument_t *arg, const char *msg);
+
 /* ============================================================================
  * Mutually Exclusive Groups
  * ============================================================================ */

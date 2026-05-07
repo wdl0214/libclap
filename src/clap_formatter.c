@@ -118,6 +118,15 @@ static clap_buffer_t *build_arg_help(clap_argument_t *arg) {
     if (arg->help_text) {
         clap_buffer_cat(&help, clap_buffer_cstr(arg->help_text));
     }
+    if (arg->flags & CLAP_ARG_DEPRECATED) {
+        if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
+        if (arg->deprecated_msg) {
+            clap_buffer_cat_printf(&help, "(deprecated: %s)",
+                                   clap_buffer_cstr(arg->deprecated_msg));
+        } else {
+            clap_buffer_cat(&help, "(deprecated)");
+        }
+    }
     if (arg->choices && arg->choice_count > 0) {
         if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
         clap_buffer_cat(&help, "(choices: ");

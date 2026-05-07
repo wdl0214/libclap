@@ -7,6 +7,9 @@
 #include <clap/clap.h>
 #include "../src/clap_parser_internal.h"
 #include <string.h>
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
+#include <unistd.h>
+#endif
 
 /* ============================================================================
  * Test Setup and Teardown
@@ -903,13 +906,103 @@ void test_parse_flow_option_append(void) {
     clap_parser_free(parser);
 }
 
+void test_parse_flow_deprecated_warning(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *old_opt = clap_add_argument(parser, "--old");
+    clap_argument_deprecated(old_opt, "use --new instead");
+
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
+    FILE *capture_file = tmpfile();
+    TEST_ASSERT_NOT_NULL(capture_file);
+    fflush(stderr);
+    int stderr_backup = dup(STDERR_FILENO);
+    dup2(fileno(capture_file), STDERR_FILENO);
+
+    char *argv[] = {"prog", "--old", "value"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+
+    fflush(stderr);
+    dup2(stderr_backup, STDERR_FILENO);
+    close(stderr_backup);
+
+    rewind(capture_file);
+    char buf[2048] = {0};
+    fread(buf, 1, sizeof(buf) - 1, capture_file);
+    fclose(capture_file);
+
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    TEST_ASSERT_NOT_NULL(strstr(buf, "warning: argument --old is deprecated: use --new instead"));
+
+    clap_namespace_free(ns);
+#else
+    /* Windows: skip stderr capture test */
+    char *argv[] = {"prog", "--old", "value"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    clap_namespace_free(ns);
+#endif
+
+    clap_parser_free(parser);
+}
+
+void test_parse_flow_deprecated_no_message(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *old_opt = clap_add_argument(parser, "--old");
+    clap_argument_deprecated(old_opt, NULL);
+
+#if defined(__APPLE__) || defined(__linux__) || defined(__unix__)
+    FILE *capture_file = tmpfile();
+    TEST_ASSERT_NOT_NULL(capture_file);
+    fflush(stderr);
+    int stderr_backup = dup(STDERR_FILENO);
+    dup2(fileno(capture_file), STDERR_FILENO);
+
+    char *argv[] = {"prog", "--old", "value"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+
+    fflush(stderr);
+    dup2(stderr_backup, STDERR_FILENO);
+    close(stderr_backup);
+
+    rewind(capture_file);
+    char buf[2048] = {0};
+    fread(buf, 1, sizeof(buf) - 1, capture_file);
+    fclose(capture_file);
+
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    TEST_ASSERT_NOT_NULL(strstr(buf, "warning: argument --old is deprecated"));
+    TEST_ASSERT_NULL(strstr(buf, "deprecated:"));
+
+    clap_namespace_free(ns);
+#else
+    char *argv[] = {"prog", "--old", "value"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    clap_namespace_free(ns);
+#endif
+
+    clap_parser_free(parser);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
 int main(void) {
     UNITY_BEGIN();
-    
+
     RUN_TEST(test_parse_flow_no_arguments);
     RUN_TEST(test_parse_flow_help_option);
     RUN_TEST(test_parse_flow_positional_only);
@@ -955,6 +1048,9 @@ int main(void) {
     RUN_TEST(test_parse_flow_short_option_with_value);
     RUN_TEST(test_parse_flow_long_option_with_value);
     RUN_TEST(test_parse_flow_option_append);
+
+    RUN_TEST(test_parse_flow_deprecated_warning);
+    RUN_TEST(test_parse_flow_deprecated_no_message);
 
     return UNITY_END();
 }

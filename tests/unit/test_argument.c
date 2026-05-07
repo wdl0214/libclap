@@ -526,6 +526,64 @@ void test_argument_handler_basic(void) {
 }
 
 /* ============================================================================
+ * clap_argument_deprecated Tests
+ * ============================================================================ */
+
+void test_argument_deprecated_basic(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--old");
+
+    clap_argument_t *result = clap_argument_deprecated(arg, "use --new instead");
+
+    TEST_ASSERT_EQUAL_PTR(arg, result);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_DEPRECATED);
+    TEST_ASSERT_EQUAL_STRING("use --new instead", clap_buffer_cstr(arg->deprecated_msg));
+}
+
+void test_argument_deprecated_null_msg(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--old");
+
+    clap_argument_t *result = clap_argument_deprecated(arg, NULL);
+
+    TEST_ASSERT_EQUAL_PTR(arg, result);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_DEPRECATED);
+    TEST_ASSERT_NULL(arg->deprecated_msg);
+}
+
+void test_argument_deprecated_empty_msg(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--old");
+
+    clap_argument_t *result = clap_argument_deprecated(arg, "");
+
+    TEST_ASSERT_EQUAL_PTR(arg, result);
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_DEPRECATED);
+    TEST_ASSERT_NULL(arg->deprecated_msg);
+}
+
+void test_argument_deprecated_overwrite(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--old");
+    clap_argument_deprecated(arg, "first msg");
+    clap_argument_deprecated(arg, "second msg");
+
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_DEPRECATED);
+    TEST_ASSERT_EQUAL_STRING("second msg", clap_buffer_cstr(arg->deprecated_msg));
+}
+
+void test_argument_deprecated_null_arg(void) {
+    clap_argument_t *result = clap_argument_deprecated(NULL, "msg");
+
+    TEST_ASSERT_NULL(result);
+}
+
+void test_argument_deprecated_flag_persists(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--old");
+    clap_argument_deprecated(arg, "msg");
+    clap_argument_deprecated(arg, NULL);
+
+    TEST_ASSERT_TRUE(arg->flags & CLAP_ARG_DEPRECATED);
+    TEST_ASSERT_NULL(arg->deprecated_msg);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -608,6 +666,14 @@ void run_test_argument(void) {
 
     /* Handler Tests */
     RUN_TEST(test_argument_handler_basic);
+
+    /* Deprecated Tests */
+    RUN_TEST(test_argument_deprecated_basic);
+    RUN_TEST(test_argument_deprecated_null_msg);
+    RUN_TEST(test_argument_deprecated_empty_msg);
+    RUN_TEST(test_argument_deprecated_overwrite);
+    RUN_TEST(test_argument_deprecated_null_arg);
+    RUN_TEST(test_argument_deprecated_flag_persists);
 }
 
 #ifdef STANDALONE_TEST

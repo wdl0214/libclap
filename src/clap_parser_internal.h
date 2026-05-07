@@ -56,6 +56,7 @@ typedef enum {
     CLAP_ARG_REQUIRED   = 1u << 2,
     CLAP_ARG_MULTIPLE   = 1u << 3,
     CLAP_ARG_CONSUMED   = 1u << 4,
+    CLAP_ARG_DEPRECATED = 1u << 5,
 } clap_arg_flags_t;
 
 static inline void clap_flags_set(clap_arg_flags_t *flags, clap_arg_flags_t flag) {
@@ -104,6 +105,7 @@ struct clap_argument_s {
 
     int nargs;
     clap_buffer_t *help_text;
+    clap_buffer_t *deprecated_msg;
     clap_buffer_t *metavar;
 
     /* Validation */

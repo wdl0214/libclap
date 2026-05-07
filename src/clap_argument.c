@@ -315,3 +315,16 @@ clap_argument_t* clap_argument_data(clap_argument_t *arg, void *data) {
     }
     return arg;
 }
+
+clap_argument_t* clap_argument_deprecated(clap_argument_t *arg, const char *msg) {
+    if (arg) {
+        arg->flags |= CLAP_ARG_DEPRECATED;
+        clap_buffer_free(arg->deprecated_msg);
+        if (msg && *msg) {
+            arg->deprecated_msg = clap_buffer_new(msg);
+        } else {
+            arg->deprecated_msg = NULL;
+        }
+    }
+    return arg;
+}

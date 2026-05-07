@@ -58,6 +58,7 @@ void clap_parser_free(clap_parser_t *parser) {
         clap_buffer_free(arg->display_name);
         clap_buffer_free(arg->dest);
         clap_buffer_free(arg->help_text);
+        clap_buffer_free(arg->deprecated_msg);
         clap_buffer_free(arg->metavar);
         clap_buffer_free(arg->const_value);
         clap_buffer_free(arg->type_name);
