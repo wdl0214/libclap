@@ -57,6 +57,7 @@ set(UNIT_TESTS
     test_parser
     test_argument
     test_namespace
+    test_pattern
     test_validator
     test_convert
     test_actions

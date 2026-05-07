@@ -249,6 +249,179 @@ void test_dependency_error_message_copy(void) {
 }
 
 /* ============================================================================
+ * Parse-Time Dependency Enforcement Tests
+ * ============================================================================ */
+
+void test_parse_requires_satisfied(void) {
+    clap_argument_t *arg_a = create_arg("--input");
+    clap_argument_t *arg_b = create_arg("--output");
+    clap_argument_requires(arg_a, arg_b, NULL);
+
+    char *argv[] = {"prog", "--input", "in.txt", "--output", "out.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    TEST_ASSERT_NOT_NULL(ns);
+
+    clap_namespace_free(ns);
+}
+
+void test_parse_requires_broken(void) {
+    clap_argument_t *arg_a = create_arg("--input");
+    clap_argument_t *arg_b = create_arg("--output");
+    clap_argument_requires(arg_a, arg_b, NULL);
+
+    char *argv[] = {"prog", "--input", "in.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_DEPENDENCY_VIOLATION, error.code);
+}
+
+void test_parse_requires_self_not_present(void) {
+    clap_argument_t *arg_a = create_arg("--input");
+    clap_argument_t *arg_b = create_arg("--output");
+    clap_argument_requires(arg_a, arg_b, NULL);
+
+    /* Neither provided — no dependency violation */
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+    TEST_ASSERT_NOT_NULL(ns);
+
+    clap_namespace_free(ns);
+}
+
+void test_parse_requires_only_target_present(void) {
+    clap_argument_t *arg_a = create_arg("--input");
+    clap_argument_t *arg_b = create_arg("--output");
+    clap_argument_requires(arg_a, arg_b, NULL);
+
+    /* Only target provided — source not present, so no violation */
+    char *argv[] = {"prog", "--output", "out.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    clap_namespace_free(ns);
+}
+
+void test_parse_conflicts_both_present(void) {
+    clap_argument_t *arg_a = create_arg("--verbose");
+    clap_argument_action(arg_a, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *arg_b = create_arg("--quiet");
+    clap_argument_action(arg_b, CLAP_ACTION_STORE_TRUE);
+    clap_argument_conflicts(arg_a, arg_b, NULL);
+
+    char *argv[] = {"prog", "--verbose", "--quiet"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_DEPENDENCY_VIOLATION, error.code);
+}
+
+void test_parse_conflicts_no_conflict(void) {
+    clap_argument_t *arg_a = create_arg("--verbose");
+    clap_argument_action(arg_a, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *arg_b = create_arg("--quiet");
+    clap_argument_action(arg_b, CLAP_ACTION_STORE_TRUE);
+    clap_argument_conflicts(arg_a, arg_b, NULL);
+
+    /* Only one provided — no conflict */
+    char *argv[] = {"prog", "--verbose"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 2, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    clap_namespace_free(ns);
+}
+
+void test_parse_conflicts_neither_present(void) {
+    clap_argument_t *arg_a = create_arg("--verbose");
+    clap_argument_action(arg_a, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *arg_b = create_arg("--quiet");
+    clap_argument_action(arg_b, CLAP_ACTION_STORE_TRUE);
+    clap_argument_conflicts(arg_a, arg_b, NULL);
+
+    /* Neither provided — no conflict */
+    char *argv[] = {"prog"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 1, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    clap_namespace_free(ns);
+}
+
+void test_parse_dependency_custom_message(void) {
+    clap_argument_t *arg_a = create_arg("--a");
+    clap_argument_action(arg_a, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *arg_b = create_arg("--b");
+    clap_argument_action(arg_b, CLAP_ACTION_STORE_TRUE);
+    clap_argument_requires(arg_a, arg_b, "--a needs --b for operation");
+
+    char *argv[] = {"prog", "--a"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 2, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_DEPENDENCY_VIOLATION, error.code);
+    TEST_ASSERT_EQUAL_STRING("--a needs --b for operation", error.message);
+}
+
+void test_parse_dependency_chain_requires(void) {
+    clap_argument_t *argA = create_arg("--a");
+    clap_argument_action(argA, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *argB = create_arg("--b");
+    clap_argument_action(argB, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *argC = create_arg("--c");
+    clap_argument_action(argC, CLAP_ACTION_STORE_TRUE);
+    clap_argument_requires(argA, argB, NULL);
+    clap_argument_requires(argB, argC, NULL);
+
+    /* A provided, B provided, C missing — B requires C */
+    char *argv[] = {"prog", "--a", "--b"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_DEPENDENCY_VIOLATION, error.code);
+}
+
+void test_parse_conflicts_custom_message(void) {
+    clap_argument_t *arg_a = create_arg("--verbose");
+    clap_argument_action(arg_a, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *arg_b = create_arg("--quiet");
+    clap_argument_action(arg_b, CLAP_ACTION_STORE_TRUE);
+    clap_argument_conflicts(arg_a, arg_b, "Cannot combine verbose and quiet");
+
+    char *argv[] = {"prog", "--verbose", "--quiet"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(g_parser, 3, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_DEPENDENCY_VIOLATION, error.code);
+    TEST_ASSERT_EQUAL_STRING("Cannot combine verbose and quiet", error.message);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -275,6 +448,18 @@ void run_test_dependency(void) {
     /* Dependency Structure Tests */
     RUN_TEST(test_dependency_structure_allocation);
     RUN_TEST(test_dependency_error_message_copy);
+
+    /* Parse-Time Dependency Enforcement Tests */
+    RUN_TEST(test_parse_requires_satisfied);
+    RUN_TEST(test_parse_requires_broken);
+    RUN_TEST(test_parse_requires_self_not_present);
+    RUN_TEST(test_parse_requires_only_target_present);
+    RUN_TEST(test_parse_conflicts_both_present);
+    RUN_TEST(test_parse_conflicts_no_conflict);
+    RUN_TEST(test_parse_conflicts_neither_present);
+    RUN_TEST(test_parse_dependency_custom_message);
+    RUN_TEST(test_parse_dependency_chain_requires);
+    RUN_TEST(test_parse_conflicts_custom_message);
 }
 
 #ifdef STANDALONE_TEST

@@ -440,7 +440,6 @@ void clap_buffer_sanitize(clap_buffer_t *buf);
 
 /* Validation */
 bool clap_argument_validate(clap_argument_t *arg, clap_error_t *error);
-bool clap_validate_mutex_groups(clap_parser_t *parser, clap_error_t *error);
 bool clap_validate_dependencies(clap_parser_t *parser, clap_namespace_t *ns, clap_error_t *error);
 bool clap_validate_choice(clap_argument_t *arg, const char *value, clap_error_t *error);
 bool clap_validate_nargs(clap_argument_t *arg, size_t value_count, clap_error_t *error);

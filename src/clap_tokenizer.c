@@ -245,11 +245,6 @@ clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[
         return CLAP_PARSE_ERROR;
     }
 
-    if (!clap_apply_defaults(parser, ns, error)) {
-        clap_namespace_free(ns);
-        return CLAP_PARSE_ERROR;
-    }
-
     bool *mutex_group_used = NULL;
     if (parser->mutex_group_count > 0) {
         mutex_group_used = clap_calloc(parser->mutex_group_count, sizeof(bool));
@@ -334,6 +329,21 @@ clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[
             clap_namespace_free(ns);
             return CLAP_PARSE_ERROR;
         }
+    }
+
+    /* Check argument dependencies */
+    if (!clap_validate_dependencies(parser, ns, error)) {
+        clap_free(mutex_group_used);
+        clap_namespace_free(ns);
+        return CLAP_PARSE_ERROR;
+    }
+
+    /* Apply defaults after validation so dependency checks see only
+       explicitly provided values, not default values */
+    if (!clap_apply_defaults(parser, ns, error)) {
+        clap_free(mutex_group_used);
+        clap_namespace_free(ns);
+        return CLAP_PARSE_ERROR;
     }
 
     clap_free(mutex_group_used);

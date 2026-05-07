@@ -1,5 +1,5 @@
 /**
-* @file clap_dependency.c
+ * @file clap_dependency.c
  * @brief Argument dependency implementation
  */
 
@@ -31,6 +31,58 @@ bool clap_argument_requires(clap_argument_t *arg,
     }
 
     arg->dependencies[arg->dependency_count++] = dep;
+    return true;
+}
+
+static bool is_arg_present(clap_argument_t *arg, clap_namespace_t *ns) {
+    if (!arg || !ns) return false;
+    return clap_namespace_has(ns, clap_buffer_cstr(arg->dest));
+}
+
+bool clap_validate_dependencies(clap_parser_t *parser,
+                                clap_namespace_t *ns,
+                                clap_error_t *error) {
+    if (!parser || !ns) return true;
+
+    for (size_t i = 0; i < parser->arg_count; i++) {
+        clap_argument_t *arg = parser->arguments[i];
+        if (!arg || arg->dependency_count == 0) continue;
+        if (!is_arg_present(arg, ns)) continue;
+
+        for (size_t j = 0; j < arg->dependency_count; j++) {
+            clap_dependency_t *dep = arg->dependencies[j];
+            if (!dep) continue;
+
+            bool target_present = is_arg_present(dep->targets[0], ns);
+
+            if (dep->type == CLAP_DEP_REQUIRES && !target_present) {
+                if (dep->error_message) {
+                    clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
+                                   "%s", dep->error_message);
+                } else {
+                    clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
+                                   "argument '%s' requires '%s'",
+                                   clap_buffer_cstr(arg->display_name),
+                                   clap_buffer_cstr(dep->targets[0]->display_name));
+                }
+                return false;
+            }
+
+            if (dep->type == CLAP_DEP_CONFLICTS && target_present) {
+                if (dep->error_message) {
+                    clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
+                                   "%s", dep->error_message);
+                } else {
+                    clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
+                                   "argument '%s' conflicts with '%s'",
+                                   clap_buffer_cstr(arg->display_name),
+                                   clap_buffer_cstr(dep->targets[0]->display_name));
+                }
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 

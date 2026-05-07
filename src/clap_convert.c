@@ -119,6 +119,9 @@ bool clap_apply_defaults(clap_parser_t *parser, clap_namespace_t *ns, clap_error
         clap_argument_t *arg = parser->arguments[i];
         const char *dest = clap_buffer_cstr(arg->dest);
 
+        /* Don't overwrite values already set by parsing */
+        if (clap_namespace_has(ns, dest)) continue;
+
         if (arg->default_string) {
             const char *type_name = clap_buffer_cstr(arg->type_name);
 

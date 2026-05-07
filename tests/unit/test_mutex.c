@@ -391,6 +391,86 @@ void test_mutex_group_multiple_groups(void) {
 }
 
 /* ============================================================================
+ * clap_mutex_check_conflict Tests
+ * ============================================================================ */
+
+void test_mutex_check_conflict_no_conflict_first_in_group(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    int group_id = clap_add_mutually_exclusive_group(parser, false);
+    clap_argument_t *arg = clap_add_argument(parser, "--verbose");
+    clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
+    clap_mutex_group_add_argument(parser, group_id, arg);
+
+    bool mutex_used[4] = {false};
+    clap_error_t error = {0};
+
+    bool result = clap_mutex_check_conflict(parser, arg, mutex_used, "--verbose", &error);
+    TEST_ASSERT_TRUE(result);
+    /* mutex_used should be set */
+    TEST_ASSERT_TRUE(mutex_used[group_id]);
+
+    clap_parser_free(parser);
+}
+
+void test_mutex_check_conflict_conflict_detected(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    int group_id = clap_add_mutually_exclusive_group(parser, false);
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+    clap_mutex_group_add_argument(parser, group_id, verbose);
+    clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
+    clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
+    clap_mutex_group_add_argument(parser, group_id, quiet);
+
+    bool mutex_used[4] = {false};
+    mutex_used[group_id] = true;  /* Simulate verbose already used */
+    clap_error_t error = {0};
+
+    /* quiet should conflict with verbose */
+    bool result = clap_mutex_check_conflict(parser, quiet, mutex_used, "--quiet", &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_MUTUALLY_EXCLUSIVE, error.code);
+
+    clap_parser_free(parser);
+}
+
+void test_mutex_check_conflict_arg_not_in_group(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    int group_id = clap_add_mutually_exclusive_group(parser, false);
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+    clap_mutex_group_add_argument(parser, group_id, verbose);
+
+    clap_argument_t *output = clap_add_argument(parser, "--output");
+    /* output is NOT added to any mutex group */
+
+    bool mutex_used[4] = {false};
+    clap_error_t error = {0};
+
+    /* Arguments not in any group should pass through */
+    bool result = clap_mutex_check_conflict(parser, output, mutex_used, "--output", &error);
+    TEST_ASSERT_TRUE(result);
+
+    clap_parser_free(parser);
+}
+
+void test_mutex_check_conflict_null_mutex_used(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    int group_id = clap_add_mutually_exclusive_group(parser, false);
+    clap_argument_t *arg = clap_add_argument(parser, "--verbose");
+    clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
+    clap_mutex_group_add_argument(parser, group_id, arg);
+
+    clap_error_t error = {0};
+
+    /* clap_mutex_check_conflict handles null mutex_group_used gracefully */
+    bool result = clap_mutex_check_conflict(parser, arg, NULL, "--verbose", &error);
+    TEST_ASSERT_TRUE(result);
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -411,6 +491,12 @@ void run_test_mutex(void) {
     RUN_TEST(test_mutex_group_add_argument_null_arg);
     RUN_TEST(test_mutex_group_add_argument_sets_group_id);
     
+    /* clap_mutex_check_conflict Tests */
+    RUN_TEST(test_mutex_check_conflict_no_conflict_first_in_group);
+    RUN_TEST(test_mutex_check_conflict_conflict_detected);
+    RUN_TEST(test_mutex_check_conflict_arg_not_in_group);
+    RUN_TEST(test_mutex_check_conflict_null_mutex_used);
+
     /* Integration Tests */
     RUN_TEST(test_mutex_group_conflict_detection);
     RUN_TEST(test_mutex_group_no_conflict_single_option);

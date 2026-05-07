@@ -257,6 +257,34 @@ clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
 clap_mutex_group_add_argument(parser, group, quiet);
 ```
 
+### Argument Dependencies
+
+Declare that one argument requires or conflicts with another.  When a dependecy
+is violated during parsing, `CLAP_ERR_DEPENDENCY_VIOLATION` is returned.
+
+**Requires** — if `--input` is given, `--output` must also be provided:
+
+```c
+clap_argument_t *input = clap_add_argument(parser, "--input");
+clap_argument_t *output = clap_add_argument(parser, "--output");
+
+clap_argument_requires(input, output, "--input requires --output");
+```
+
+**Conflicts** — `--verbose` and `--quiet` may not be used together:
+
+```c
+clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
+clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
+
+clap_argument_conflicts(verbose, quiet, "Can't use --verbose and --quiet together");
+```
+
+The third parameter (`error_msg`) is optional — pass `NULL` to get a default
+error message.
+
 ### Argument Groups
 
 Organize related arguments into named sections in the help output:

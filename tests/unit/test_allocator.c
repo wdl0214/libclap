@@ -290,11 +290,60 @@ void test_clap_strndup_empty_string(void) {
 
 void test_clap_set_allocator_basic(void) {
     reset_custom_counts();
-    
-    /* Note: Allocator can only be set once globally */
-    /* This test assumes it hasn't been locked yet */
-    
-    TEST_ASSERT_TRUE(1);  /* Placeholder - actual test depends on global state */
+
+    clap_set_allocator(custom_malloc, custom_free, custom_realloc);
+
+    /* Verify the custom allocator is used */
+    void *ptr = clap_malloc(100);
+    TEST_ASSERT_NOT_NULL(ptr);
+    TEST_ASSERT_EQUAL(1, g_custom_malloc_count);
+
+    clap_free(ptr);
+    TEST_ASSERT_EQUAL(1, g_custom_free_count);
+}
+
+void test_clap_set_allocator_end_to_end_parser(void) {
+    reset_custom_counts();
+
+    clap_set_allocator(custom_malloc, custom_free, custom_realloc);
+
+    /* Create parser with custom allocator */
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    TEST_ASSERT_NOT_NULL(parser);
+    TEST_ASSERT_GREATER_OR_EQUAL(1, g_custom_malloc_count);
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+    clap_argument_t *output = clap_add_argument(parser, "--output");
+    clap_argument_type(output, "string");
+
+    size_t malloc_before_parse = g_custom_malloc_count;
+
+    /* Parse some arguments */
+    char *argv[] = {"test", "--verbose", "--output", "out.txt"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t parse_result = clap_parse_args(parser, 4, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, parse_result);
+    TEST_ASSERT_NOT_NULL(ns);
+
+    TEST_ASSERT_GREATER_OR_EQUAL(malloc_before_parse, g_custom_malloc_count);
+
+    /* Verify parsed values */
+    bool verbose_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
+    TEST_ASSERT_TRUE(verbose_val);
+
+    const char *output_val;
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output_val));
+    TEST_ASSERT_EQUAL_STRING("out.txt", output_val);
+
+    clap_namespace_free(ns);
+    TEST_ASSERT_GREATER_OR_EQUAL(1, g_custom_free_count);
+
+    clap_parser_free(parser);
+    TEST_ASSERT_GREATER_OR_EQUAL(2, g_custom_free_count);
 }
 
 /* ============================================================================
@@ -397,42 +446,46 @@ void test_allocator_zero_handling(void) {
  * Main Test Runner
  * ============================================================================ */
 
-void run_test_allocator(void) {    
+void run_test_allocator(void) {
+    /* clap_set_allocator must run FIRST — before any clap_malloc call locks the allocator */
+    RUN_TEST(test_clap_set_allocator_basic);
+    RUN_TEST(test_clap_set_allocator_end_to_end_parser);
+
     /* clap_malloc Tests */
     RUN_TEST(test_clap_malloc_basic);
     RUN_TEST(test_clap_malloc_zero_size);
     RUN_TEST(test_clap_malloc_large);
-    
+
     /* clap_calloc Tests */
     RUN_TEST(test_clap_calloc_basic);
     RUN_TEST(test_clap_calloc_zero_nmemb);
     RUN_TEST(test_clap_calloc_zero_size);
     RUN_TEST(test_clap_calloc_overflow);
     RUN_TEST(test_clap_calloc_large);
-    
+
     /* clap_free Tests */
     RUN_TEST(test_clap_free_null);
     RUN_TEST(test_clap_free_valid);
-    
+
     /* clap_realloc Tests */
     RUN_TEST(test_clap_realloc_grow);
     RUN_TEST(test_clap_realloc_shrink);
     RUN_TEST(test_clap_realloc_zero_size);
     RUN_TEST(test_clap_realloc_null);
-    
+
     /* clap_strdup Tests */
     RUN_TEST(test_clap_strdup_basic);
     RUN_TEST(test_clap_strdup_empty);
     RUN_TEST(test_clap_strdup_null);
     RUN_TEST(test_clap_strdup_long);
-    
+
     /* clap_strndup Tests */
     RUN_TEST(test_clap_strndup_basic);
     RUN_TEST(test_clap_strndup_full_length);
     RUN_TEST(test_clap_strndup_zero);
     RUN_TEST(test_clap_strndup_null);
     RUN_TEST(test_clap_strndup_empty_string);
-    
+
     /* Integration Tests */
     RUN_TEST(test_allocator_malloc_free_cycle);
     RUN_TEST(test_allocator_realloc_cycle);

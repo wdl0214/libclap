@@ -245,6 +245,70 @@ void test_apply_argument_action_validates_choices(void) {
     clap_parser_free(parser);
 }
 
+void test_apply_argument_action_null_parser(void) {
+    clap_argument_t *arg = NULL;
+    clap_namespace_t *ns = clap_namespace_new();
+    clap_error_t error = {0};
+
+    bool result = clap_apply_argument_action(NULL, arg, ns, "value", &error);
+    TEST_ASSERT_FALSE(result);
+
+    clap_namespace_free(ns);
+}
+
+void test_apply_argument_action_null_arg(void) {
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    clap_namespace_t *ns = clap_namespace_new();
+    clap_error_t error = {0};
+
+    bool result = clap_apply_argument_action(parser, NULL, ns, "value", &error);
+    TEST_ASSERT_FALSE(result);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_apply_argument_action_null_namespace(void) {
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--test");
+    clap_error_t error = {0};
+
+    bool result = clap_apply_argument_action(parser, arg, NULL, "value", &error);
+    TEST_ASSERT_FALSE(result);
+
+    clap_parser_free(parser);
+}
+
+void test_apply_argument_action_invalid_action(void) {
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--test");
+    arg->action = (clap_action_t)999;
+    arg->action_handler = NULL;
+    clap_namespace_t *ns = clap_namespace_new();
+    clap_error_t error = {0};
+
+    bool result = clap_apply_argument_action(parser, arg, ns, "value", &error);
+    TEST_ASSERT_FALSE(result);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+void test_apply_argument_action_append_const_missing_const(void) {
+    clap_parser_t *parser = clap_parser_new("test", NULL, NULL);
+    clap_argument_t *arg = clap_add_argument(parser, "--add");
+    clap_argument_action(arg, CLAP_ACTION_APPEND_CONST);
+    clap_namespace_t *ns = clap_namespace_new();
+    clap_error_t error = {0};
+
+    bool result = clap_apply_argument_action(parser, arg, ns, NULL, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_INVALID_ARGUMENT, error.code);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
 void run_test_action_executor(void) {
     RUN_TEST(test_apply_argument_action_store_with_value);
     RUN_TEST(test_apply_argument_action_store_without_value);
@@ -257,6 +321,13 @@ void run_test_action_executor(void) {
     RUN_TEST(test_apply_argument_action_count);
     RUN_TEST(test_apply_argument_action_custom);
     RUN_TEST(test_apply_argument_action_validates_choices);
+
+    /* Edge case tests */
+    RUN_TEST(test_apply_argument_action_null_parser);
+    RUN_TEST(test_apply_argument_action_null_arg);
+    RUN_TEST(test_apply_argument_action_null_namespace);
+    RUN_TEST(test_apply_argument_action_invalid_action);
+    RUN_TEST(test_apply_argument_action_append_const_missing_const);
 }
 
 #ifdef STANDALONE_TEST
