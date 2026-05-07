@@ -613,6 +613,213 @@ void test_scenario_negative_number_as_value(void) {
 }
 
 /* ============================================================================
+ * Scenario 16: Positional remainder captures all trailing values
+ * ============================================================================ */
+
+void test_scenario_positional_remainder_capture(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *command = clap_add_argument(parser, "command");
+    clap_argument_type(command, "string");
+
+    clap_argument_t *args = clap_add_argument(parser, "args");
+    clap_argument_nargs(args, CLAP_NARGS_REMAINDER);
+
+    char *argv[] = {"prog", "run", "file1.txt", "file2.txt", "--literal-flag"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 5, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+
+    const char *command_val = NULL;
+    TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "command", &command_val));
+    TEST_ASSERT_EQUAL_STRING("run", command_val);
+
+    const char **arg_list = NULL;
+    size_t arg_count = 0;
+    TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "args", &arg_list, &arg_count));
+    TEST_ASSERT_EQUAL(3, arg_count);
+    TEST_ASSERT_EQUAL_STRING("file1.txt", arg_list[0]);
+    TEST_ASSERT_EQUAL_STRING("file2.txt", arg_list[1]);
+    TEST_ASSERT_EQUAL_STRING("--literal-flag", arg_list[2]);
+
+    clap_namespace_free(ns);
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 17: ZERO_OR_ONE positional accepts zero or one value
+ * ============================================================================ */
+
+void test_scenario_positional_zero_or_one_constant(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *input = clap_add_argument(parser, "input");
+    clap_argument_nargs(input, CLAP_NARGS_ZERO_OR_ONE);
+
+    {
+        char *argv[] = {"prog"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_FALSE(clap_namespace_has(ns, "input"));
+
+        clap_namespace_free(ns);
+    }
+
+    {
+        char *argv[] = {"prog", "input.txt"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+        const char *input_val = NULL;
+
+        clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "input", &input_val));
+        TEST_ASSERT_EQUAL_STRING("input.txt", input_val);
+
+        clap_namespace_free(ns);
+    }
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 18: ZERO_OR_MORE positional collects all trailing values
+ * ============================================================================ */
+
+void test_scenario_positional_zero_or_more_constant(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *files = clap_add_argument(parser, "files");
+    clap_argument_nargs(files, CLAP_NARGS_ZERO_OR_MORE);
+
+    {
+        char *argv[] = {"prog"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_FALSE(clap_namespace_has(ns, "files"));
+
+        clap_namespace_free(ns);
+    }
+
+    {
+        char *argv[] = {"prog", "a.txt", "b.txt", "c.txt"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+        const char **file_list = NULL;
+        size_t file_count = 0;
+
+        clap_parse_result_t result = clap_parse_args(parser, 4, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "files", &file_list, &file_count));
+        TEST_ASSERT_EQUAL(3, file_count);
+        TEST_ASSERT_EQUAL_STRING("a.txt", file_list[0]);
+        TEST_ASSERT_EQUAL_STRING("b.txt", file_list[1]);
+        TEST_ASSERT_EQUAL_STRING("c.txt", file_list[2]);
+
+        clap_namespace_free(ns);
+    }
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 19: ONE_OR_MORE positional requires at least one value
+ * ============================================================================ */
+
+void test_scenario_positional_one_or_more_constant(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *files = clap_add_argument(parser, "files");
+    clap_argument_nargs(files, CLAP_NARGS_ONE_OR_MORE);
+
+    {
+        char *argv[] = {"prog"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+
+        clap_parse_result_t result = clap_parse_args(parser, 1, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+        TEST_ASSERT_NULL(ns);
+    }
+
+    {
+        char *argv[] = {"prog", "a.txt", "b.txt"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+        const char **file_list = NULL;
+        size_t file_count = 0;
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_TRUE(clap_namespace_get_string_array(ns, "files", &file_list, &file_count));
+        TEST_ASSERT_EQUAL(2, file_count);
+        TEST_ASSERT_EQUAL_STRING("a.txt", file_list[0]);
+        TEST_ASSERT_EQUAL_STRING("b.txt", file_list[1]);
+
+        clap_namespace_free(ns);
+    }
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
+ * Scenario 20: OPTIONAL alias behaves like ZERO_OR_ONE for options
+ * ============================================================================ */
+
+void test_scenario_optional_alias_constant(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_argument_t *output = clap_add_argument(parser, "--output/-o");
+    clap_argument_type(output, "string");
+    clap_argument_nargs(output, CLAP_NARGS_OPTIONAL);
+    clap_argument_default(output, "stdout.txt");
+
+    clap_argument_t *verbose = clap_add_argument(parser, "--verbose/-v");
+    clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+
+    {
+        char *argv[] = {"prog", "--output", "report.txt"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+        const char *output_val = NULL;
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output_val));
+        TEST_ASSERT_EQUAL_STRING("report.txt", output_val);
+
+        clap_namespace_free(ns);
+    }
+
+    {
+        char *argv[] = {"prog", "--output", "--verbose"};
+        clap_namespace_t *ns = NULL;
+        clap_error_t error = {0};
+        const char *output_val = NULL;
+        bool verbose_val = false;
+
+        clap_parse_result_t result = clap_parse_args(parser, 3, argv, &ns, &error);
+        TEST_ASSERT_EQUAL(CLAP_PARSE_SUCCESS, result);
+        TEST_ASSERT_TRUE(clap_namespace_get_string(ns, "output", &output_val));
+        TEST_ASSERT_EQUAL_STRING("stdout.txt", output_val);
+        TEST_ASSERT_TRUE(clap_namespace_get_bool(ns, "verbose", &verbose_val));
+        TEST_ASSERT_TRUE(verbose_val);
+
+        clap_namespace_free(ns);
+    }
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * ============================================================================ */
 
 int main(void) {
@@ -633,6 +840,11 @@ int main(void) {
     RUN_TEST(test_scenario_custom_type_registry_not_used);
     RUN_TEST(test_scenario_typed_defaults);
     RUN_TEST(test_scenario_negative_number_as_value);
+    RUN_TEST(test_scenario_positional_remainder_capture);
+    RUN_TEST(test_scenario_positional_zero_or_one_constant);
+    RUN_TEST(test_scenario_positional_zero_or_more_constant);
+    RUN_TEST(test_scenario_positional_one_or_more_constant);
+    RUN_TEST(test_scenario_optional_alias_constant);
 
     return UNITY_END();
 }
