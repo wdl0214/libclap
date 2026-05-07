@@ -5,10 +5,6 @@
 
 #include <clap/clap.h>
 
-#define CLAP_VERSION_MAJOR 1
-#define CLAP_VERSION_MINOR 0
-#define CLAP_VERSION_PATCH 0
-
 const char* clap_version(void) {
     static char version[32];
     snprintf(version, sizeof(version), "%d.%d.%d",
