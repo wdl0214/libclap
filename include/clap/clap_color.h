@@ -22,43 +22,111 @@
 extern "C" {
 #endif
 
-/* -------------------------------------------------------------------------
- * ANSI style constants
- * ------------------------------------------------------------------------- */
-
+/**
+ * @def CLAP_ANSI_RESET
+ * @brief ANSI escape code: reset all attributes.
+ */
 #define CLAP_ANSI_RESET   "\033[0m"
+/**
+ * @def CLAP_ANSI_BOLD
+ * @brief ANSI escape code: bold / increased intensity.
+ */
 #define CLAP_ANSI_BOLD    "\033[1m"
+/**
+ * @def CLAP_ANSI_DIM
+ * @brief ANSI escape code: dim / decreased intensity.
+ */
 #define CLAP_ANSI_DIM     "\033[2m"
+/**
+ * @def CLAP_ANSI_RED
+ * @brief ANSI escape code: red foreground.
+ */
 #define CLAP_ANSI_RED     "\033[31m"
+/**
+ * @def CLAP_ANSI_GREEN
+ * @brief ANSI escape code: green foreground.
+ */
 #define CLAP_ANSI_GREEN   "\033[32m"
+/**
+ * @def CLAP_ANSI_YELLOW
+ * @brief ANSI escape code: yellow foreground.
+ */
 #define CLAP_ANSI_YELLOW  "\033[33m"
+/**
+ * @def CLAP_ANSI_CYAN
+ * @brief ANSI escape code: cyan foreground.
+ */
 #define CLAP_ANSI_CYAN    "\033[36m"
 
-/* -------------------------------------------------------------------------
- * Semantic color keys (matching Python 3.14 argparse theme sections)
- * ------------------------------------------------------------------------- */
-
+/**
+ * @enum clap_color_key_t
+ * @brief Semantic color keys identifying which element to color.
+ *
+ * Each key maps to an ANSI escape sequence in clap_color_theme_t::codes.
+ * The default assignments follow Python 3.14 argparse:
+ *
+ * | Key                      | Default style | Applied to                          |
+ * |--------------------------|---------------|-------------------------------------|
+ * | CLAP_COLOR_USAGE_PROG    | bold          | Program name in usage line          |
+ * | CLAP_COLOR_HEADING       | bold          | Section headers                     |
+ * | CLAP_COLOR_OPTION_SHORT  | green         | Short options (-h, -v)              |
+ * | CLAP_COLOR_OPTION_LONG   | cyan          | Long options (--help, --verbose)    |
+ * | CLAP_COLOR_METAVAR       | yellow        | Metavar placeholders (FILE)         |
+ * | CLAP_COLOR_CHOICES       | yellow        | Choices ({red,green,blue})          |
+ * | CLAP_COLOR_DEFAULT       | dim           | Default value text (default: 5)     |
+ * | CLAP_COLOR_SUBCOMMAND    | cyan          | Subcommand names (commit, push)     |
+ * | CLAP_COLOR_ERROR         | red           | Error messages                      |
+ * | CLAP_COLOR_WARNING       | yellow        | Deprecation warnings                |
+ */
 typedef enum {
-    CLAP_COLOR_USAGE_PROG,    /* program name in usage line      → bold     */
-    CLAP_COLOR_HEADING,       /* section headers                 → bold     */
-    CLAP_COLOR_OPTION_SHORT,  /* short options (-h, -v)          → green    */
-    CLAP_COLOR_OPTION_LONG,   /* long options (--help, --version)→ cyan     */
-    CLAP_COLOR_METAVAR,       /* metavar placeholders (FILE)     → yellow   */
-    CLAP_COLOR_CHOICES,       /* choices ({a,b,c})               → yellow   */
-    CLAP_COLOR_DEFAULT,       /* (default: ...) text             → dim      */
-    CLAP_COLOR_SUBCOMMAND,    /* subcommand names                → cyan     */
-    CLAP_COLOR_ERROR,         /* error messages                  → red      */
-    CLAP_COLOR_WARNING,       /* deprecation warnings            → yellow   */
-    CLAP_COLOR_COUNT
+    CLAP_COLOR_USAGE_PROG,    /**< Program name in usage line. */
+    CLAP_COLOR_HEADING,       /**< Section heading text. */
+    CLAP_COLOR_OPTION_SHORT,  /**< Short option flags (-h, -v). */
+    CLAP_COLOR_OPTION_LONG,   /**< Long option flags (--help, --verbose). */
+    CLAP_COLOR_METAVAR,       /**< Metavar placeholders (FILE, DIR). */
+    CLAP_COLOR_CHOICES,       /**< Choice values ({a,b,c}). */
+    CLAP_COLOR_DEFAULT,       /**< Default value text in help. */
+    CLAP_COLOR_SUBCOMMAND,    /**< Subcommand names. */
+    CLAP_COLOR_ERROR,         /**< Error messages. */
+    CLAP_COLOR_WARNING,       /**< Deprecation warning messages. */
+    CLAP_COLOR_COUNT          /**< Number of color keys (internal). */
 } clap_color_key_t;
 
-/* -------------------------------------------------------------------------
- * Color theme
- * ------------------------------------------------------------------------- */
-
+/**
+ * @struct clap_color_theme_s
+ * @brief Storage for ANSI color codes and enable state.
+ *
+ * A theme maps each clap_color_key_t to an ANSI escape sequence.
+ * When @p enabled is false, all clap_buffer_cat_colored() calls
+ * emit plain text regardless of the stored codes.
+ *
+ * Initialize with clap_color_theme_init(), then optionally override
+ * individual @p codes entries with custom ANSI sequences before
+ * assigning to a parser via clap_parser_set_color().
+ *
+ * @see clap_color_theme_init(), clap_color_theme_detect()
+ */
 typedef struct clap_color_theme_s {
+    /**
+     * @brief ANSI escape sequences for each semantic color key.
+     *
+     * Index by clap_color_key_t.  Must not be NULL — use empty
+     * string ("") to suppress coloring for a specific key.
+     */
     const char *codes[CLAP_COLOR_COUNT];
+    /**
+     * @brief ANSI reset sequence appended after every colored span.
+     *
+     * Defaults to CLAP_ANSI_RESET.  Change this if your terminal
+     * uses a different reset convention.
+     */
     const char *reset;
+    /**
+     * @brief Whether color output is active.
+     *
+     * Set by clap_color_theme_detect() or clap_parser_set_color().
+     * When false, all coloring helpers emit plain text.
+     */
     bool enabled;
 } clap_color_theme_t;
 
