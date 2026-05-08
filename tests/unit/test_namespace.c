@@ -243,22 +243,13 @@ void test_namespace_get_bool_wrong_type(void) {
 
 void test_namespace_set_get_float(void) {
     clap_namespace_t *ns = clap_namespace_new();
-    
-    /* Float support may not be fully implemented - this tests the API */
-    /* The function exists but may not store correctly */
-    
-    /* Create a float value manually for testing */
-    clap_value_t *val = clap_calloc(1, sizeof(clap_value_t));
-    val->name = clap_strdup("pi");
-    val->type = CLAP_VAL_FLOAT;
-    val->data.float_val = 3.14159;
-    ns->values[0] = val;
-    ns->value_count = 1;
-    
+
+    TEST_ASSERT_TRUE(clap_namespace_set_float(ns, "pi", 3.14159));
+
     double value;
     TEST_ASSERT_TRUE(clap_namespace_get_float(ns, "pi", &value));
     TEST_ASSERT_TRUE(value > 3.14 && value < 3.15);
-    
+
     clap_namespace_free(ns);
 }
 

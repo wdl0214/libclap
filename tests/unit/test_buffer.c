@@ -280,6 +280,21 @@ void test_buffer_copy_empty(void) {
     clap_buffer_free(buf);
 }
 
+void test_buffer_copy_edge_cases(void) {
+    /* Test copy to a freshly created buffer */
+    clap_buffer_t *buf = clap_buffer_empty();
+
+    /* Copy should work on empty buffer */
+    TEST_ASSERT_TRUE(clap_buffer_copy(&buf, "new content"));
+    TEST_ASSERT_EQUAL_STRING("new content", clap_buffer_cstr(buf));
+
+    /* Copy should replace existing content */
+    TEST_ASSERT_TRUE(clap_buffer_copy(&buf, "replaced"));
+    TEST_ASSERT_EQUAL_STRING("replaced", clap_buffer_cstr(buf));
+
+    clap_buffer_free(buf);
+}
+
 /* ============================================================================
  * Buffer Accessor Tests
  * ============================================================================ */
@@ -546,6 +561,9 @@ void run_test_buffer(void) {
     RUN_TEST(test_buffer_large_string);
     RUN_TEST(test_buffer_mixed_operations);
     RUN_TEST(test_buffer_repeated_growth);
+
+    /* copy edge cases */
+    RUN_TEST(test_buffer_copy_edge_cases);
 }
 
 #ifdef STANDALONE_TEST

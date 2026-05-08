@@ -36,11 +36,11 @@ void clap_error_vset(clap_error_t *error, int code, const char *format, va_list 
 }
 
 int clap_error_code(const clap_error_t *error) {
-    return error->code;
+    return error ? error->code : CLAP_ERR_NONE;
 }
 
 const char* clap_error_message(const clap_error_t *error) {
-    return error->message;
+    return error ? error->message : "";
 }
 
 const char* clap_strerror(int code) {

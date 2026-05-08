@@ -538,6 +538,30 @@ void test_apply_defaults_float(void) {
     TEST_ASSERT_TRUE(value > 3.13 && value < 3.15);
 }
 
+void test_apply_defaults_int_invalid_value(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--count");
+    clap_argument_type(arg, "int");
+    clap_argument_default(arg, "abc");  /* invalid int */
+    clap_argument_dest(arg, "count");
+
+    clap_error_t error = {0};
+    bool result = clap_apply_defaults(g_parser, g_ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TYPE_CONVERSION, error.code);
+}
+
+void test_apply_defaults_float_invalid_value(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--ratio");
+    clap_argument_type(arg, "float");
+    clap_argument_default(arg, "not_a_number");
+    clap_argument_dest(arg, "ratio");
+
+    clap_error_t error = {0};
+    bool result = clap_apply_defaults(g_parser, g_ns, &error);
+    TEST_ASSERT_FALSE(result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_TYPE_CONVERSION, error.code);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
@@ -594,6 +618,8 @@ void run_test_convert(void) {
     RUN_TEST(test_apply_defaults_int);
     RUN_TEST(test_apply_defaults_bool);
     RUN_TEST(test_apply_defaults_float);
+    RUN_TEST(test_apply_defaults_int_invalid_value);
+    RUN_TEST(test_apply_defaults_float_invalid_value);
 }
 
 #ifdef STANDALONE_TEST

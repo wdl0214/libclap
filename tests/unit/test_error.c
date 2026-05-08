@@ -334,6 +334,14 @@ void test_error_flow_invalid_choice(void) {
     clap_parser_free(parser);
 }
 
+void test_error_code_null_safe(void) {
+    TEST_ASSERT_EQUAL(CLAP_ERR_NONE, clap_error_code(NULL));
+}
+
+void test_error_message_null_safe(void) {
+    TEST_ASSERT_EQUAL_STRING("", clap_error_message(NULL));
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
@@ -374,6 +382,8 @@ void run_test_error(void) {
     /* Integration Tests */
     RUN_TEST(test_error_flow_parse_failure);
     RUN_TEST(test_error_flow_invalid_choice);
+    RUN_TEST(test_error_code_null_safe);
+    RUN_TEST(test_error_message_null_safe);
 }
 
 #ifdef STANDALONE_TEST

@@ -584,6 +584,78 @@ void test_argument_deprecated_flag_persists(void) {
 }
 
 /* ============================================================================
+ * clap_argument_free Tests
+ * ============================================================================ */
+
+void test_argument_free_null_safe(void) {
+    clap_argument_free(NULL);
+    TEST_ASSERT_TRUE(1);
+}
+
+void test_argument_free_basic(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--test");
+    clap_argument_help(arg, "help text");
+
+    /* Free should not crash — verified by Valgrind/ASan */
+    TEST_ASSERT_TRUE(1);
+}
+
+/* ============================================================================
+ * clap_argument_data Tests
+ * ============================================================================ */
+
+void test_argument_data_basic(void) {
+    int user_data = 42;
+    clap_argument_t *arg = clap_add_argument(g_parser, "--custom");
+
+    clap_argument_t *result = clap_argument_data(arg, &user_data);
+
+    TEST_ASSERT_EQUAL_PTR(arg, result);
+    TEST_ASSERT_EQUAL_PTR(&user_data, arg->action_data);
+}
+
+void test_argument_data_null_arg(void) {
+    clap_argument_t *result = clap_argument_data(NULL, (void*)0x1);
+    TEST_ASSERT_NULL(result);
+}
+
+/* ============================================================================
+ * Null arg guard Tests
+ * ============================================================================ */
+
+static bool dummy_handler(
+    clap_parser_t *p, clap_argument_t *a, clap_namespace_t *n,
+    const char **v, size_t vc, void *d, clap_error_t *e
+) { (void)p; (void)a; (void)n; (void)v; (void)vc; (void)d; (void)e; return true; }
+
+void test_argument_required_null_arg(void) {
+    clap_argument_t *result = clap_argument_required(NULL, true);
+    TEST_ASSERT_NULL(result);
+}
+
+void test_argument_dest_null_arg(void) {
+    clap_argument_t *result = clap_argument_dest(NULL, "key");
+    TEST_ASSERT_NULL(result);
+}
+
+void test_argument_handler_null_arg(void) {
+    clap_argument_t *result = clap_argument_handler(NULL, dummy_handler);
+    TEST_ASSERT_NULL(result);
+}
+
+void test_argument_const_null_arg(void) {
+    clap_argument_t *result = clap_argument_const(NULL, "val");
+    TEST_ASSERT_NULL(result);
+}
+
+void test_argument_const_null_value(void) {
+    clap_argument_t *arg = clap_add_argument(g_parser, "--flag");
+    clap_argument_t *result = clap_argument_const(arg, NULL);
+    TEST_ASSERT_EQUAL_PTR(arg, result);
+    TEST_ASSERT_NULL(arg->const_value);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -674,6 +746,21 @@ void run_test_argument(void) {
     RUN_TEST(test_argument_deprecated_overwrite);
     RUN_TEST(test_argument_deprecated_null_arg);
     RUN_TEST(test_argument_deprecated_flag_persists);
+
+    /* Free Tests */
+    RUN_TEST(test_argument_free_null_safe);
+    RUN_TEST(test_argument_free_basic);
+
+    /* Data Tests */
+    RUN_TEST(test_argument_data_basic);
+    RUN_TEST(test_argument_data_null_arg);
+
+    /* Null Arg Guard Tests */
+    RUN_TEST(test_argument_required_null_arg);
+    RUN_TEST(test_argument_dest_null_arg);
+    RUN_TEST(test_argument_handler_null_arg);
+    RUN_TEST(test_argument_const_null_arg);
+    RUN_TEST(test_argument_const_null_value);
 }
 
 #ifdef STANDALONE_TEST

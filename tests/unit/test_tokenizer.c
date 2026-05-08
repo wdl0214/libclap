@@ -684,6 +684,31 @@ void test_parse_args_stop_parsing(void) {
     clap_parser_free(parser);
 }
 
+void test_tokenize_arg_empty_string(void) {
+    clap_token_t token = clap_tokenize_arg("");
+    TEST_ASSERT_EQUAL(TOKEN_POSITIONAL, token.type);
+    TEST_ASSERT_EQUAL_STRING("", token.raw);
+}
+
+void test_check_required_option_count(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_add_argument(parser, "--verbose");
+    clap_argument_t *arg = clap_add_argument(parser, "--count");
+    clap_argument_action(arg, CLAP_ACTION_COUNT);
+    clap_argument_dest(arg, "count");
+    clap_argument_required(arg, true);
+
+    char *argv[] = {"prog", "--verbose"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_REQUIRED_MISSING, error.code);
+
+    clap_parser_free(parser);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */

@@ -373,6 +373,57 @@ void test_parser_with_maximum_arguments(void) {
     TEST_ASSERT_TRUE(1);
 }
 
+void test_parser_set_color_enable(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_parser_set_color(parser, true);
+    /* color.enabled depends on terminal detection; at minimum, no crash */
+    TEST_ASSERT_TRUE(1);
+    clap_parser_free(parser);
+}
+
+void test_parser_set_color_disable(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_parser_set_color(parser, false);
+    TEST_ASSERT_FALSE(parser->color_theme.enabled);
+    clap_parser_free(parser);
+}
+
+void test_parser_set_color_null_safe(void) {
+    clap_parser_set_color(NULL, true);
+    TEST_ASSERT_TRUE(1);
+}
+
+void test_parser_set_allow_abbrev_null_safe(void) {
+    clap_parser_set_allow_abbrev(NULL, true);
+    TEST_ASSERT_TRUE(1);
+}
+
+void test_parser_set_add_help_readd(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    TEST_ASSERT_EQUAL(1, parser->arg_count);
+
+    clap_parser_set_add_help(parser, false);
+    TEST_ASSERT_EQUAL(0, parser->arg_count);
+
+    clap_parser_set_add_help(parser, true);
+    TEST_ASSERT_EQUAL(1, parser->arg_count);
+    TEST_ASSERT_EQUAL(CLAP_ACTION_HELP, parser->arguments[0]->action);
+
+    clap_parser_free(parser);
+}
+
+void test_parser_set_add_help_noop(void) {
+    /* Calling set_add_help(false) when no help exists is a no-op */
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_parser_set_add_help(parser, false);
+    TEST_ASSERT_EQUAL(0, parser->arg_count);
+
+    clap_parser_set_add_help(parser, false);  /* second call */
+    TEST_ASSERT_EQUAL(0, parser->arg_count);
+
+    clap_parser_free(parser);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
@@ -385,13 +436,13 @@ void run_test_parser(void) {
     RUN_TEST(test_parser_new_allocates_arguments_array);
     RUN_TEST(test_parser_new_adds_default_help_option);
     RUN_TEST(test_parser_new_registers_builtin_types);
-    
+
     /* Parser Free Tests */
     RUN_TEST(test_parser_free_null_safe);
     RUN_TEST(test_parser_free_with_arguments);
     RUN_TEST(test_parser_free_with_mutex_groups);
     RUN_TEST(test_parser_free_with_subparsers);
-    
+
     /* Parser Settings Tests */
     RUN_TEST(test_parser_set_help_width_valid);
     RUN_TEST(test_parser_set_help_width_invalid);
@@ -399,6 +450,12 @@ void run_test_parser(void) {
     RUN_TEST(test_parser_set_version);
     RUN_TEST(test_parser_set_version_null_safe);
     RUN_TEST(test_parser_set_add_help_false);
+    RUN_TEST(test_parser_set_add_help_readd);
+    RUN_TEST(test_parser_set_add_help_noop);
+    RUN_TEST(test_parser_set_color_enable);
+    RUN_TEST(test_parser_set_color_disable);
+    RUN_TEST(test_parser_set_color_null_safe);
+    RUN_TEST(test_parser_set_allow_abbrev_null_safe);
     RUN_TEST(test_parser_set_usage_basic);
     RUN_TEST(test_parser_set_usage_null);
     RUN_TEST(test_parser_set_usage_empty);

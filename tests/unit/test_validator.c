@@ -541,11 +541,20 @@ void test_validate_choice_large_set(void) {
     free_test_arg(arg);
 }
 
+void test_validate_nargs_invalid_value(void) {
+    clap_argument_t *arg = create_test_arg();
+    clap_error_t error = {0};
+    arg->nargs = 0;
+    /* nargs=0 is not a special constant — falls through to true at line 55 */
+    TEST_ASSERT_TRUE(clap_validate_nargs(arg, 1, &error));
+    free_test_arg(arg);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
-void run_test_validator(void) { 
+void run_test_validator(void) {
     /* Choice Validation Tests */
     RUN_TEST(test_validate_choice_no_choices);
     RUN_TEST(test_validate_choice_valid);
@@ -600,6 +609,7 @@ void run_test_validator(void) {
     
     /* Edge Cases */
     RUN_TEST(test_validate_nargs_zero_arguments_for_required);
+    RUN_TEST(test_validate_nargs_invalid_value);
     RUN_TEST(test_validate_choice_large_set);
 }
 
