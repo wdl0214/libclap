@@ -17,6 +17,7 @@
 #include <clap/clap_types.h>
 #include <clap/clap_action.h>
 #include <clap/clap_allocator.h>
+#include <clap/clap_color.h>
 #include <clap/clap_export.h>
 
 #ifdef __cplusplus
@@ -84,6 +85,23 @@ CLAP_EXPORT void clap_parser_set_allow_abbrev(clap_parser_t *parser, bool allow)
  * @param version Version string to display.  May be NULL to clear.
  */
 CLAP_EXPORT void clap_parser_set_version(clap_parser_t *parser, const char *version);
+/**
+ * @brief Enable or disable ANSI color in help and error output.
+ *
+ * When @p enable is true, the library auto-detects terminal support
+ * (NO_COLOR, FORCE_COLOR, CLICOLOR, isatty).  Colors are applied to
+ * option flags, metavars, headings, errors, and warnings.
+ *
+ * When @p enable is false, all output is plain text regardless of
+ * terminal capabilities.
+ *
+ * Default: disabled (no color).  Call with true to opt in.
+ *
+ * @param parser  Target parser.
+ * @param enable  true to enable color (with auto-detection),
+ *                false to force plain text.
+ */
+CLAP_EXPORT void clap_parser_set_color(clap_parser_t *parser, bool enable);
 
 /* ============================================================================
  * Argument API

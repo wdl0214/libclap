@@ -19,6 +19,9 @@ clap_parser_t* clap_add_subparsers(clap_parser_t *parser,
     
     /* Inherit help width from parent */
     subparsers->help_width = parser->help_width;
+
+    /* Inherit color theme from parent */
+    subparsers->color_theme = parser->color_theme;
     
     /* Inherit program name from parent */
     clap_buffer_free(subparsers->prog_name);
@@ -40,7 +43,10 @@ clap_parser_t* clap_subparser_add(clap_parser_t *subparsers,
     
     /* Inherit help width from parent */
     cmd_parser->help_width = subparsers->help_width;
-    
+
+    /* Inherit color theme from parent */
+    cmd_parser->color_theme = subparsers->color_theme;
+
     /* Build full program name: parent + " " + name */
     if (subparsers->prog_name && clap_buffer_len(subparsers->prog_name) > 0) {
         clap_buffer_t *full_name = clap_buffer_empty();
@@ -106,9 +112,20 @@ bool clap_print_subcommand_help(clap_parser_t *parser, const char *command_name,
 void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, FILE *stream) {
     if (!parser || !error || !stream) return;
 
-    fprintf(stream, "%s: error: %s\n\n",
-            clap_buffer_cstr(parser->prog_name),
-            clap_error_message(error));
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    if (theme->enabled) {
+        fprintf(stream, "%s: %serror%s: %s%s%s\n\n",
+                clap_buffer_cstr(parser->prog_name),
+                theme->codes[CLAP_COLOR_ERROR], theme->reset,
+                theme->codes[CLAP_COLOR_ERROR],
+                clap_error_message(error),
+                theme->reset);
+    } else {
+        fprintf(stream, "%s: error: %s\n\n",
+                clap_buffer_cstr(parser->prog_name),
+                clap_error_message(error));
+    }
 
     if (error->subcommand_name) {
         clap_print_subcommand_help(parser, error->subcommand_name, stream);

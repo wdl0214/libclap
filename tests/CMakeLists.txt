@@ -68,6 +68,7 @@ set(UNIT_TESTS
     test_subparser
     test_find
     test_formatter
+    test_color
     test_tokenizer
 )
 

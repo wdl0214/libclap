@@ -4,6 +4,34 @@
  */
 
 #include "clap_parser_internal.h"
+#include <clap/clap_color.h>
+
+/* Emit a deprecation warning to stderr, with color if enabled */
+static void warn_deprecated(const clap_parser_t *parser,
+                            const char *arg_name, const char *reason) {
+    const clap_color_theme_t *t = &parser->color_theme;
+    if (t->enabled) {
+        if (reason && *reason) {
+            fprintf(stderr, "%s: %swarning%s: argument %s is deprecated: %s\n",
+                    clap_buffer_cstr(parser->prog_name),
+                    t->codes[CLAP_COLOR_WARNING], t->reset,
+                    arg_name, reason);
+        } else {
+            fprintf(stderr, "%s: %swarning%s: argument %s is deprecated\n",
+                    clap_buffer_cstr(parser->prog_name),
+                    t->codes[CLAP_COLOR_WARNING], t->reset,
+                    arg_name);
+        }
+    } else {
+        if (reason && *reason) {
+            fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
+                    clap_buffer_cstr(parser->prog_name), arg_name, reason);
+        } else {
+            fprintf(stderr, "%s: warning: argument %s is deprecated\n",
+                    clap_buffer_cstr(parser->prog_name), arg_name);
+        }
+    }
+}
 
 /* Check if a string looks like a negative number (e.g. "-1", "-3.14").
  * Python argparse treats these as values rather than short options when
@@ -104,13 +132,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
         const char *opt_str = token->raw ? token->raw : token->option_name;
         const char *reason = arg->deprecated_msg
             ? clap_buffer_cstr(arg->deprecated_msg) : "";
-        if (*reason) {
-            fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
-                    clap_buffer_cstr(parser->prog_name), opt_str, reason);
-        } else {
-            fprintf(stderr, "%s: warning: argument %s is deprecated\n",
-                    clap_buffer_cstr(parser->prog_name), opt_str);
-        }
+        warn_deprecated(parser, opt_str, reason);
     }
 
     if (!clap_apply_argument_action(parser, arg, ns, value, error)) {
@@ -349,15 +371,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
             if (pos_arg->flags & CLAP_ARG_DEPRECATED) {
                 const char *reason = pos_arg->deprecated_msg
                     ? clap_buffer_cstr(pos_arg->deprecated_msg) : "";
-                if (*reason) {
-                    fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
-                            clap_buffer_cstr(parser->prog_name),
-                            clap_buffer_cstr(pos_arg->display_name), reason);
-                } else {
-                    fprintf(stderr, "%s: warning: argument %s is deprecated\n",
-                            clap_buffer_cstr(parser->prog_name),
-                            clap_buffer_cstr(pos_arg->display_name));
-                }
+                warn_deprecated(parser, clap_buffer_cstr(pos_arg->display_name), reason);
             }
             for (size_t i = pos; i < pattern->pattern_len; i++) {
                 clap_token_t *remaining = &tokens[i];
@@ -397,15 +411,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
             if (pos_arg->flags & CLAP_ARG_DEPRECATED) {
                 const char *reason = pos_arg->deprecated_msg
                     ? clap_buffer_cstr(pos_arg->deprecated_msg) : "";
-                if (*reason) {
-                    fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
-                            clap_buffer_cstr(parser->prog_name),
-                            clap_buffer_cstr(pos_arg->display_name), reason);
-                } else {
-                    fprintf(stderr, "%s: warning: argument %s is deprecated\n",
-                            clap_buffer_cstr(parser->prog_name),
-                            clap_buffer_cstr(pos_arg->display_name));
-                }
+                warn_deprecated(parser, clap_buffer_cstr(pos_arg->display_name), reason);
             }
             if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), token->raw)) {
                 clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store positional values");
@@ -418,15 +424,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
         if (pos_arg->flags & CLAP_ARG_DEPRECATED) {
             const char *reason = pos_arg->deprecated_msg
                 ? clap_buffer_cstr(pos_arg->deprecated_msg) : "";
-            if (*reason) {
-                fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
-                        clap_buffer_cstr(parser->prog_name),
-                        clap_buffer_cstr(pos_arg->display_name), reason);
-            } else {
-                fprintf(stderr, "%s: warning: argument %s is deprecated\n",
-                        clap_buffer_cstr(parser->prog_name),
-                        clap_buffer_cstr(pos_arg->display_name));
-            }
+            warn_deprecated(parser, clap_buffer_cstr(pos_arg->display_name), reason);
         }
 
         if (!clap_apply_argument_action(parser, pos_arg, ns, token->raw, error)) {

@@ -18,6 +18,7 @@ libclap is a modern, secure, and extensible command-line argument parsing librar
 - **Type Conversion** – Built-in support for `int`, `float`, `string`, and `bool`, plus user‑defined converters.
 - **Automatic Help Generation** – Beautifully formatted usage and help messages with smart line‑wrapping and alignment.
 - **Subcommands** – Full support for git‑style sub‑parsers with flat namespace merging.
+- **ANSI Color Support** – Terminal‑aware colored help and error output. Auto‑detects TTY, respects `NO_COLOR`/`FORCE_COLOR`. 
 - **Memory Safe** – Bounds‑checked string buffers, input validation, and comprehensive leak testing (Valgrind/ASan clean).
 - **Cross‑Platform** – Windows, Linux, macOS, and BSD. Works with GCC, Clang, and MSVC.
 - **Zero Dependencies** – Only requires a C99 standard library.
@@ -103,6 +104,7 @@ int main(int argc, char *argv[]) {
     clap_namespace_t *ns = NULL;
     clap_argument_t *arg;
     clap_parser_t *parser = clap_parser_new("my_program", "A simple example", NULL);
+    clap_parser_set_color(parser, true);
     
     arg = clap_add_argument(parser, "input");
     clap_argument_help(arg, "Input file");
@@ -169,6 +171,7 @@ Optional arguments:
 clap_parser_t *parser = clap_parser_new("prog", "Description", "Epilog");
 clap_parser_set_help_width(parser, 100);
 clap_parser_set_version(parser, "1.0.0");
+clap_parser_set_color(parser, true);
 
 clap_namespace_t *ns = NULL;
 clap_error_t error = {0};
@@ -285,6 +288,59 @@ clap_argument_conflicts(verbose, quiet, "Can't use --verbose and --quiet togethe
 The third parameter (`error_msg`) is optional — pass `NULL` to get a default
 error message.
 
+### ANSI Color Output
+
+libclap supports colored help and error output, matching the Python 3.14 argparse
+color scheme.  Enable it with a single call:
+
+```c
+clap_parser_set_color(parser, true);   // auto-detect terminal support
+clap_parser_set_color(parser, false);  // force plain text
+```
+
+When enabled, elements are colored as follows:
+
+| Element | Style | Example |
+|---------|-------|---------|
+| Program name in usage | Bold | **my_program** |
+| Section headings | Bold | **Positional arguments:** |
+| Short options | Green | `-h`, `-v`, `-o` |
+| Long options | Cyan | `--help`, `--verbose` |
+| Metavar placeholders | Yellow | `FILE`, `OUTPUT` |
+| Choices | Yellow | `red`, `green`, `blue` |
+| Subcommand names | Cyan | `commit`, `push` |
+| Default values | Dim | `(default: stdout)` |
+| Error messages | Red | `error: unrecognized argument` |
+| Deprecation warnings | Yellow | `warning: argument --old is deprecated` |
+
+**Terminal detection** follows the [no-color.org](https://no-color.org) convention:
+
+1. `NO_COLOR` set → disabled
+2. `FORCE_COLOR` set → enabled
+3. `CLICOLOR=0` → disabled
+4. `CLICOLOR_FORCE` != `0` → enabled
+5. `isatty()` check → enabled if TTY
+
+On Windows 10+, `ENABLE_VIRTUAL_TERMINAL_PROCESSING` is requested automatically.
+
+**Example** — colored help output:
+
+```
+Usage: my_program [-h] [--output FILE] input
+
+Test description
+
+Positional arguments:
+  input                    Input file
+
+Optional arguments:
+  -h, --help               Show this help message and exit
+  -o, --output FILE        Output file (default: stdout)
+  -v, --verbose            Increase verbosity
+```
+
+In a terminal with color enabled, `-h`, `--help` are green, `--output`, `--verbose` are cyan, `FILE` is yellow, `(default: stdout)` is dim, and section headings are bold.
+
 ### Argument Groups
 
 Organize related arguments into named sections in the help output:
@@ -381,6 +437,15 @@ with spaces (e.g. `"myprog nested sub"`) will only show `"sub"`.
 Use `clap_argument_nargs(arg, '?')` (zero or one), `'*'` (zero or
 more), or set `CLAP_NARGS_REMAINDER`.  By default, positional
 arguments are required.
+
+### How do I disable color output?
+
+Call `clap_parser_set_color(parser, false)` to force plain text
+output, or set the `NO_COLOR` environment variable.  When color
+is enabled via `clap_parser_set_color(parser, true)`, the library
+auto-detects terminal support and respects `NO_COLOR`/`FORCE_COLOR`.
+In a pipe or redirect, color is automatically disabled unless
+`FORCE_COLOR` is set.
 
 ## Testing
 

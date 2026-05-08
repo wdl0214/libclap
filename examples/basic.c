@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
         "Basic example of libclap",
         "Report bugs to: dev@example.com"
     );
+    clap_parser_set_color(parser, true);
 
     /* Positional argument */
     arg = clap_add_argument(parser, "input");

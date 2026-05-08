@@ -4,6 +4,7 @@
  */
 
 #include "clap_parser_internal.h"
+#include <clap/clap_color.h>
 #include <ctype.h>
 
 /* Write n spaces into buf */
@@ -68,9 +69,9 @@ static void get_upper_metavar(clap_argument_t *arg, char *out, size_t size) {
         out[pos] = '\0';
         return;
     }
-    
+
     /* No choices - use metavar or dest, uppercased */
-    const char *metavar = arg->metavar ? 
+    const char *metavar = arg->metavar ?
         clap_buffer_cstr(arg->metavar) : clap_buffer_cstr(arg->dest);
     size_t j;
     for (j = 0; metavar[j] && j < size - 1; j++) {
@@ -90,30 +91,39 @@ static bool action_requires_value(clap_action_t action) {
            action != CLAP_ACTION_VERSION;
 }
 
-/* Build the display string for an optional argument (e.g. "-f, --foo VALUE") */
-static clap_buffer_t *build_opt_str(clap_argument_t *arg) {
+/* Build the display string for an optional argument (e.g. "-f, --foo VALUE")
+ * When theme is non-NULL and enabled, option strings and metavars are colored. */
+static clap_buffer_t *build_opt_str(clap_argument_t *arg, const clap_color_theme_t *theme) {
     clap_buffer_t *opt_str = clap_buffer_empty();
     for (size_t j = 0; j < arg->option_count; j++) {
         if (j > 0) clap_buffer_cat(&opt_str, ", ");
-        clap_buffer_cat(&opt_str, arg->option_strings[j]);
+        const char *opt = arg->option_strings[j];
+        bool is_short = (opt[0] == '-' && opt[1] != '-');
+        clap_buffer_cat_colored(&opt_str, theme,
+            is_short ? CLAP_COLOR_OPTION_SHORT : CLAP_COLOR_OPTION_LONG, opt);
     }
     if (arg->metavar) {
-        clap_buffer_cat_printf(&opt_str, " %s", clap_buffer_cstr(arg->metavar));
+        clap_buffer_cat(&opt_str, " ");
+        clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_METAVAR,
+                                clap_buffer_cstr(arg->metavar));
     } else if (arg->choices && arg->choice_count > 0) {
-        clap_buffer_cat(&opt_str, " {");
+        clap_buffer_cat(&opt_str, " ");
+        clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_CHOICES, "{");
         for (size_t j = 0; j < arg->choice_count; j++) {
             if (j > 0) clap_buffer_cat(&opt_str, ",");
-            clap_buffer_cat(&opt_str, arg->choices[j]);
+            clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_CHOICES, arg->choices[j]);
         }
-        clap_buffer_cat(&opt_str, "}");
+        clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_CHOICES, "}");
     } else if (arg->nargs > 0 && action_requires_value(arg->action)) {
-        clap_buffer_cat_printf(&opt_str, " %s", clap_buffer_cstr(arg->dest));
+        clap_buffer_cat(&opt_str, " ");
+        clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_METAVAR,
+                                clap_buffer_cstr(arg->dest));
     }
     return opt_str;
 }
 
 /* Build the full help text for an argument (help + choices + default) */
-static clap_buffer_t *build_arg_help(clap_argument_t *arg) {
+static clap_buffer_t *build_arg_help(clap_argument_t *arg, const clap_color_theme_t *theme) {
     clap_buffer_t *help = clap_buffer_empty();
     if (arg->help_text) {
         clap_buffer_cat(&help, clap_buffer_cstr(arg->help_text));
@@ -132,13 +142,16 @@ static clap_buffer_t *build_arg_help(clap_argument_t *arg) {
         clap_buffer_cat(&help, "(choices: ");
         for (size_t j = 0; j < arg->choice_count; j++) {
             if (j > 0) clap_buffer_cat(&help, ", ");
-            clap_buffer_cat(&help, arg->choices[j]);
+            clap_buffer_cat_colored(&help, theme, CLAP_COLOR_CHOICES, arg->choices[j]);
         }
         clap_buffer_cat(&help, ")");
     }
     if (arg->default_string) {
         if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
-        clap_buffer_cat_printf(&help, "(default: %s)", clap_buffer_cstr(arg->default_string));
+        clap_buffer_cat_printf(&help, "(default: ");
+        clap_buffer_cat_colored(&help, theme, CLAP_COLOR_DEFAULT,
+                                clap_buffer_cstr(arg->default_string));
+        clap_buffer_cat(&help, ")");
     }
     return help;
 }
@@ -185,7 +198,8 @@ static size_t get_option_display_length(clap_argument_t *arg) {
     return len;
 }
 
-/* Append a single item row "  NAME<padding>HELP" to buf */
+/* Append a single item row "  NAME<padding>HELP" to buf.
+ * name may contain ANSI codes; name_len must be the visual column width. */
 static void append_help_row(clap_buffer_t **buf, const char *name, size_t name_len,
                             const char *help_text, size_t max_name_len, int width) {
     clap_buffer_cat_printf(buf, "  %s", name);
@@ -200,7 +214,12 @@ static void append_help_row(clap_buffer_t **buf, const char *name, size_t name_l
 
 /* Build the usage line into buf */
 static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
-    clap_buffer_cat_printf(buf, "Usage: %s", clap_buffer_cstr(parser->prog_name));
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    clap_buffer_cat(buf, "Usage: ");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_USAGE_PROG,
+                            clap_buffer_cstr(parser->prog_name));
+
     clap_buffer_cat(buf, " [-h]");
 
     /* Regular optional arguments (not in mutex groups) */
@@ -214,15 +233,24 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
             continue;
         }
 
+        const char *opt = arg->option_strings[0];
+        bool is_short = (opt[0] == '-' && opt[1] != '-');
+
         clap_buffer_t *opt_str = clap_buffer_empty();
-        clap_buffer_cat(&opt_str, arg->option_strings[0]);
+        clap_buffer_cat_colored(&opt_str, theme,
+            is_short ? CLAP_COLOR_OPTION_SHORT : CLAP_COLOR_OPTION_LONG, opt);
         if (arg->nargs != 0 && action_requires_value(arg->action)) {
             char upper_metavar[64];
             get_upper_metavar(arg, upper_metavar, sizeof(upper_metavar));
             if (arg->nargs == CLAP_NARGS_ZERO_OR_ONE && arg->default_string) {
-                clap_buffer_cat_printf(&opt_str, " [%s]", upper_metavar);
+                clap_buffer_cat(&opt_str, " [");
+                clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_METAVAR,
+                                        upper_metavar);
+                clap_buffer_cat(&opt_str, "]");
             } else {
-                clap_buffer_cat_printf(&opt_str, " %s", upper_metavar);
+                clap_buffer_cat(&opt_str, " ");
+                clap_buffer_cat_colored(&opt_str, theme, CLAP_COLOR_METAVAR,
+                                        upper_metavar);
             }
         }
         if (arg->flags & CLAP_ARG_REQUIRED) {
@@ -242,11 +270,16 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
         for (size_t j = 0; j < group->arg_count; j++) {
             if (j > 0) clap_buffer_cat(&group_str, " | ");
             clap_argument_t *arg = group->arguments[j];
-            clap_buffer_cat(&group_str, arg->option_strings[0]);
+            const char *opt = arg->option_strings[0];
+            bool is_short = (opt[0] == '-' && opt[1] != '-');
+            clap_buffer_cat_colored(&group_str, theme,
+                is_short ? CLAP_COLOR_OPTION_SHORT : CLAP_COLOR_OPTION_LONG, opt);
             if (arg->nargs != 0 && action_requires_value(arg->action)) {
                 char upper_metavar[64];
                 get_upper_metavar(arg, upper_metavar, sizeof(upper_metavar));
-                clap_buffer_cat_printf(&group_str, " %s", upper_metavar);
+                clap_buffer_cat(&group_str, " ");
+                clap_buffer_cat_colored(&group_str, theme, CLAP_COLOR_METAVAR,
+                                        upper_metavar);
             }
         }
         if (clap_buffer_len(group_str) > 0) {
@@ -287,8 +320,8 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
                 clap_buffer_cat(buf, " {");
                 for (size_t i = 0; i < container->subparser_count; i++) {
                     if (i > 0) clap_buffer_cat(buf, ",");
-                    clap_buffer_cat(buf, subcommand_name(
-                        clap_buffer_cstr(container->subparsers[i]->prog_name)));
+                    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_SUBCOMMAND,
+                        subcommand_name(clap_buffer_cstr(container->subparsers[i]->prog_name)));
                 }
                 clap_buffer_cat(buf, "} ...");
             }
@@ -329,12 +362,17 @@ static size_t calc_max_name_len(clap_parser_t *parser, int width) {
 static void print_positionals_section(clap_parser_t *parser, clap_buffer_t **buf,
                                       size_t max_name_len, int width) {
     if (parser->positional_count == 0) return;
-    clap_buffer_cat(buf, "\nPositional arguments:\n");
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    clap_buffer_cat(buf, "\n");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Positional arguments:");
+    clap_buffer_cat(buf, "\n");
+
     for (size_t i = 0; i < parser->positional_count; i++) {
         clap_argument_t *arg = parser->positional_args[i];
         if (arg->display_group_id != CLAP_DISPLAY_GROUP_NONE) continue;
         const char *name = clap_buffer_cstr(arg->display_name);
-        clap_buffer_t *full_help = build_arg_help(arg);
+        clap_buffer_t *full_help = build_arg_help(arg, theme);
         append_help_row(buf, name, strlen(name),
                         clap_buffer_cstr(full_help), max_name_len, width);
         clap_buffer_free(full_help);
@@ -352,13 +390,20 @@ static void print_optionals_section(clap_parser_t *parser, clap_buffer_t **buf,
     }
     if (!has_content) return;
 
-    clap_buffer_cat(buf, "\nOptional arguments:\n");
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    clap_buffer_cat(buf, "\n");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Optional arguments:");
+    clap_buffer_cat(buf, "\n");
+
     for (size_t i = 0; i < parser->optional_count; i++) {
         clap_argument_t *arg = parser->optional_args[i];
         if (arg->display_group_id != CLAP_DISPLAY_GROUP_NONE) continue;
-        clap_buffer_t *opt_str = build_opt_str(arg);
-        clap_buffer_t *full_help = build_arg_help(arg);
-        append_help_row(buf, clap_buffer_cstr(opt_str), clap_buffer_len(opt_str),
+        clap_buffer_t *opt_str = build_opt_str(arg, theme);
+        clap_buffer_t *full_help = build_arg_help(arg, theme);
+        /* name_len must be visual (no ANSI) for alignment */
+        size_t visual_len = get_option_display_length(arg);
+        append_help_row(buf, clap_buffer_cstr(opt_str), visual_len,
                         clap_buffer_cstr(full_help), max_name_len, width);
         clap_buffer_free(opt_str);
         clap_buffer_free(full_help);
@@ -369,11 +414,15 @@ static void print_display_groups_sections(clap_parser_t *parser, clap_buffer_t *
                                            size_t max_name_len, int width) {
     if (parser->display_group_count == 0) return;
 
+    const clap_color_theme_t *theme = &parser->color_theme;
+
     for (size_t g = 0; g < parser->display_group_count; g++) {
         clap_display_group_t *group = parser->display_groups[g];
         if (group->arg_count == 0) continue;
 
-        clap_buffer_cat_printf(buf, "\n%s:\n", group->title);
+        clap_buffer_cat(buf, "\n");
+        clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, group->title);
+        clap_buffer_cat(buf, ":\n");
 
         if (group->description) {
             clap_buffer_cat(buf, "  ");
@@ -385,14 +434,15 @@ static void print_display_groups_sections(clap_parser_t *parser, clap_buffer_t *
             clap_argument_t *arg = group->arguments[i];
             if (arg->flags & CLAP_ARG_POSITIONAL) {
                 const char *name = clap_buffer_cstr(arg->display_name);
-                clap_buffer_t *full_help = build_arg_help(arg);
+                clap_buffer_t *full_help = build_arg_help(arg, theme);
                 append_help_row(buf, name, strlen(name),
                                 clap_buffer_cstr(full_help), max_name_len, width);
                 clap_buffer_free(full_help);
             } else {
-                clap_buffer_t *opt_str = build_opt_str(arg);
-                clap_buffer_t *full_help = build_arg_help(arg);
-                append_help_row(buf, clap_buffer_cstr(opt_str), clap_buffer_len(opt_str),
+                clap_buffer_t *opt_str = build_opt_str(arg, theme);
+                clap_buffer_t *full_help = build_arg_help(arg, theme);
+                size_t visual_len = get_option_display_length(arg);
+                append_help_row(buf, clap_buffer_cstr(opt_str), visual_len,
                                 clap_buffer_cstr(full_help), max_name_len, width);
                 clap_buffer_free(opt_str);
                 clap_buffer_free(full_help);
@@ -407,17 +457,35 @@ static void print_commands_section(clap_parser_t *parser, clap_buffer_t **buf,
     clap_parser_t *container = parser->subparsers_container;
     if (container->subparser_count == 0) return;
 
-    clap_buffer_cat(buf, "\nCommands:\n");
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    clap_buffer_cat(buf, "\n");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Commands:");
+    clap_buffer_cat(buf, "\n");
+
     for (size_t i = 0; i < container->subparser_count; i++) {
         clap_parser_t *sub = container->subparsers[i];
         const char *cmd_name = subcommand_name(clap_buffer_cstr(sub->prog_name));
         const char *desc = sub->description ? clap_buffer_cstr(sub->description) : "";
-        append_help_row(buf, cmd_name, strlen(cmd_name), desc, max_name_len, width);
+        /* Build colored command name */
+        clap_buffer_t *colored_cmd = clap_buffer_empty();
+        clap_buffer_cat_colored(&colored_cmd, theme, CLAP_COLOR_SUBCOMMAND, cmd_name);
+        append_help_row(buf, clap_buffer_cstr(colored_cmd), strlen(cmd_name),
+                        desc, max_name_len, width);
+        clap_buffer_free(colored_cmd);
     }
 }
 
 void clap_print_help(clap_parser_t *parser, FILE *stream) {
     if (!parser || !stream) return;
+
+    /* Lazily auto-detect color if never configured */
+    if (!parser->color_theme.enabled) {
+        /* Check if any color code is non-empty (meaning theme was init'd)
+         * Actually, theme is always init'd. The issue is whether the user
+         * called clap_parser_set_color(). We don't track that, so we just
+         * skip auto-detection and let the user opt in explicitly. */
+    }
 
     clap_buffer_t *buf = clap_buffer_empty();
     int width = parser->help_width;
@@ -437,10 +505,10 @@ void clap_print_help(clap_parser_t *parser, FILE *stream) {
 
 void clap_print_version(clap_parser_t *parser, FILE *stream) {
     if (!parser || !stream) return;
-    
-    const char *version = parser->version ? 
+
+    const char *version = parser->version ?
         clap_buffer_cstr(parser->version) : "unknown";
-    
-    fprintf(stream, "%s version %s\n", 
+
+    fprintf(stream, "%s version %s\n",
             clap_buffer_cstr(parser->prog_name), version);
 }

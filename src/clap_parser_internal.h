@@ -8,6 +8,7 @@
 #define CLAP_PARSER_INTERNAL_H
 
 #include <clap/clap.h>
+#include <clap/clap_color.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -237,6 +238,7 @@ struct clap_parser_s {
     int help_width;
     bool add_help_option;
     bool allow_abbrev;
+    clap_color_theme_t color_theme;
 
     /* Error */
     clap_error_t last_error;
@@ -439,6 +441,8 @@ const char* clap_buffer_cstr(const clap_buffer_t *buf);
 size_t clap_buffer_len(const clap_buffer_t *buf);
 void clap_buffer_truncate(clap_buffer_t *buf, size_t len);
 void clap_buffer_sanitize(clap_buffer_t *buf);
+bool clap_buffer_cat_colored(clap_buffer_t **buf, const clap_color_theme_t *theme,
+                             clap_color_key_t key, const char *text);
 
 /* Validation */
 bool clap_argument_validate(clap_argument_t *arg, clap_error_t *error);

@@ -25,6 +25,7 @@ clap_parser_t* clap_parser_new(const char *prog_name,
     parser->help_width = 100;
     parser->add_help_option = true;
     parser->allow_abbrev = false;
+    clap_color_theme_init(&parser->color_theme);
     parser->next_mutex_group_id = 0;
     parser->subparsers_container = NULL;
 
@@ -142,6 +143,16 @@ void clap_parser_set_version(clap_parser_t *parser, const char *version) {
     if (parser) {
         clap_buffer_free(parser->version);
         parser->version = version ? clap_buffer_new(version) : NULL;
+    }
+}
+
+void clap_parser_set_color(clap_parser_t *parser, bool enable) {
+    if (!parser) return;
+    if (enable) {
+        /* Auto-detect based on NO_COLOR, FORCE_COLOR, isatty, etc. */
+        clap_color_theme_detect(&parser->color_theme, stdout);
+    } else {
+        parser->color_theme.enabled = false;
     }
 }
 
