@@ -328,3 +328,31 @@ clap_argument_t* clap_argument_deprecated(clap_argument_t *arg, const char *msg)
     }
     return arg;
 }
+
+void clap_argument_free(clap_argument_t *arg) {
+    if (!arg) return;
+    clap_buffer_free(arg->display_name);
+    clap_buffer_free(arg->dest);
+    clap_buffer_free(arg->help_text);
+    clap_buffer_free(arg->deprecated_msg);
+    clap_buffer_free(arg->metavar);
+    clap_buffer_free(arg->const_value);
+    clap_buffer_free(arg->type_name);
+    clap_buffer_free(arg->default_string);
+    for (size_t j = 0; j < arg->option_count; j++) {
+        clap_free(arg->option_strings[j]);
+    }
+    clap_free(arg->option_strings);
+    for (size_t j = 0; j < arg->choice_count; j++) {
+        clap_free(arg->choices[j]);
+    }
+    clap_free(arg->choices);
+    clap_free(arg->default_value);
+    for (size_t j = 0; j < arg->dependency_count; j++) {
+        clap_free(arg->dependencies[j]->error_message);
+        clap_free(arg->dependencies[j]->targets);
+        clap_free(arg->dependencies[j]);
+    }
+    clap_free(arg->dependencies);
+    clap_free(arg);
+}

@@ -103,6 +103,29 @@ CLAP_EXPORT void clap_parser_set_version(clap_parser_t *parser, const char *vers
  */
 CLAP_EXPORT void clap_parser_set_color(clap_parser_t *parser, bool enable);
 
+/**
+ * @brief Disable the automatic --help / -h option.
+ *
+ * By default every parser adds a -h/--help option.  Call this function
+ * immediately after clap_parser_new() to suppress it.  After the parser
+ * is created, calling this has no effect.
+ *
+ * @param parser    Target parser.
+ * @param add_help  true (default) to auto-add --help, false to suppress.
+ */
+CLAP_EXPORT void clap_parser_set_add_help(clap_parser_t *parser, bool add_help);
+
+/**
+ * @brief Override the auto-generated usage line.
+ *
+ * When set, @p usage replaces the normal `Usage: prog [options] ...` line
+ * in help output.  Pass NULL or empty string to restore auto-generation.
+ *
+ * @param parser  Target parser.
+ * @param usage   Custom usage string, or NULL to auto-generate.
+ */
+CLAP_EXPORT void clap_parser_set_usage(clap_parser_t *parser, const char *usage);
+
 /* ============================================================================
  * Argument API
  * ============================================================================ */

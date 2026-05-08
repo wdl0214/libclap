@@ -52,39 +52,11 @@ void clap_parser_free(clap_parser_t *parser) {
     clap_buffer_free(parser->version);
     clap_buffer_free(parser->subparser_dest);
     clap_buffer_free(parser->subparser_metavar);
+    clap_buffer_free(parser->usage);
 
     /* Free arguments */
     for (size_t i = 0; i < parser->arg_count; i++) {
-        clap_argument_t *arg = parser->arguments[i];
-        clap_buffer_free(arg->display_name);
-        clap_buffer_free(arg->dest);
-        clap_buffer_free(arg->help_text);
-        clap_buffer_free(arg->deprecated_msg);
-        clap_buffer_free(arg->metavar);
-        clap_buffer_free(arg->const_value);
-        clap_buffer_free(arg->type_name);
-        clap_buffer_free(arg->default_string);
-
-        for (size_t j = 0; j < arg->option_count; j++) {
-            clap_free(arg->option_strings[j]);
-        }
-        clap_free(arg->option_strings);
-
-        for (size_t j = 0; j < arg->choice_count; j++) {
-            clap_free(arg->choices[j]);
-        }
-        clap_free(arg->choices);
-        clap_free(arg->default_value);
-
-        /* Free dependencies */
-        for (size_t j = 0; j < arg->dependency_count; j++) {
-            clap_free(arg->dependencies[j]->error_message);
-            clap_free(arg->dependencies[j]->targets);
-            clap_free(arg->dependencies[j]);
-        }
-        clap_free(arg->dependencies);
-
-        clap_free(arg);
+        clap_argument_free(parser->arguments[i]);
     }
     clap_free(parser->arguments);
     clap_free(parser->positional_args);
@@ -153,6 +125,57 @@ void clap_parser_set_color(clap_parser_t *parser, bool enable) {
         clap_color_theme_detect(&parser->color_theme, stdout);
     } else {
         parser->color_theme.enabled = false;
+    }
+}
+
+void clap_parser_set_add_help(clap_parser_t *parser, bool add_help) {
+    if (!parser) return;
+
+    parser->add_help_option = add_help;
+
+    /* Find existing help argument in parser->arguments */
+    clap_argument_t *help_arg = NULL;
+    size_t help_idx = (size_t)-1;
+    for (size_t i = 0; i < parser->arg_count; i++) {
+        if (parser->arguments[i]->action == CLAP_ACTION_HELP) {
+            help_arg = parser->arguments[i];
+            help_idx = i;
+            break;
+        }
+    }
+
+    if (add_help && !help_arg) {
+        /* Add if not present */
+        clap_argument_t *h = clap_add_argument(parser, "--help/-h");
+        if (h) {
+            clap_argument_help(h, "Show this help message and exit");
+            clap_argument_action(h, CLAP_ACTION_HELP);
+        }
+    } else if (!add_help && help_arg) {
+        /* Remove from parser->arguments */
+        memmove(&parser->arguments[help_idx], &parser->arguments[help_idx + 1],
+                (parser->arg_count - help_idx - 1) * sizeof(clap_argument_t*));
+        parser->arg_count--;
+
+        /* Remove from parser->optional_args */
+        for (size_t i = 0; i < parser->optional_count; i++) {
+            if (parser->optional_args[i] == help_arg) {
+                memmove(&parser->optional_args[i], &parser->optional_args[i + 1],
+                        (parser->optional_count - i - 1) * sizeof(clap_argument_t*));
+                parser->optional_count--;
+                break;
+            }
+        }
+
+        /* Free the argument */
+        clap_argument_free(help_arg);
+    }
+}
+
+void clap_parser_set_usage(clap_parser_t *parser, const char *usage) {
+    if (parser) {
+        clap_buffer_free(parser->usage);
+        parser->usage = (usage && *usage) ? clap_buffer_new(usage) : NULL;
     }
 }
 

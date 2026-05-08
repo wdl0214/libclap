@@ -216,11 +216,18 @@ static void append_help_row(clap_buffer_t **buf, const char *name, size_t name_l
 static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
     const clap_color_theme_t *theme = &parser->color_theme;
 
+    if (parser->usage) {
+        clap_buffer_cat(buf, clap_buffer_cstr(parser->usage));
+        clap_buffer_cat(buf, "\n");
+        return;
+    }
+
     clap_buffer_cat(buf, "Usage: ");
     clap_buffer_cat_colored(buf, theme, CLAP_COLOR_USAGE_PROG,
                             clap_buffer_cstr(parser->prog_name));
 
-    clap_buffer_cat(buf, " [-h]");
+    if (parser->add_help_option)
+        clap_buffer_cat(buf, " [-h]");
 
     /* Regular optional arguments (not in mutex groups) */
     for (size_t i = 0; i < parser->optional_count; i++) {

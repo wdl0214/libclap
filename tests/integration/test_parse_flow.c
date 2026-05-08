@@ -996,6 +996,25 @@ void test_parse_flow_deprecated_no_message(void) {
     clap_parser_free(parser);
 }
 
+void test_parse_flow_add_help_disabled(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_parser_set_add_help(parser, false);
+
+    TEST_ASSERT_FALSE(parser->add_help_option);
+    TEST_ASSERT_EQUAL(0, parser->arg_count);  /* no help auto-added */
+
+    char *argv[] = {"prog", "--help"};
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+
+    clap_parse_result_t result = clap_parse_args(parser, 2, argv, &ns, &error);
+
+    TEST_ASSERT_EQUAL(CLAP_PARSE_ERROR, result);
+    TEST_ASSERT_EQUAL(CLAP_ERR_UNRECOGNIZED, error.code);
+
+    clap_parser_free(parser);
+}
+
 /* ============================================================================
  * Main Test Runner
  * ============================================================================ */
@@ -1051,6 +1070,7 @@ int main(void) {
 
     RUN_TEST(test_parse_flow_deprecated_warning);
     RUN_TEST(test_parse_flow_deprecated_no_message);
+    RUN_TEST(test_parse_flow_add_help_disabled);
 
     return UNITY_END();
 }

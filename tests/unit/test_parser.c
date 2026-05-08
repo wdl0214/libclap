@@ -219,6 +219,52 @@ void test_parser_set_version_null_safe(void) {
     TEST_ASSERT_TRUE(1);  /* Should not crash */
 }
 
+void test_parser_set_add_help_false(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    TEST_ASSERT_EQUAL(1, parser->arg_count);  /* help is auto-added */
+
+    clap_parser_set_add_help(parser, false);
+    TEST_ASSERT_FALSE(parser->add_help_option);
+
+    clap_parser_free(parser);
+}
+
+void test_parser_set_usage_basic(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_parser_set_usage(parser, "mytool INPUT [--opt]");
+    TEST_ASSERT_NOT_NULL(parser->usage);
+    TEST_ASSERT_EQUAL_STRING("mytool INPUT [--opt]", clap_buffer_cstr(parser->usage));
+
+    clap_parser_free(parser);
+}
+
+void test_parser_set_usage_null(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_parser_set_usage(parser, "custom");
+    TEST_ASSERT_NOT_NULL(parser->usage);
+
+    clap_parser_set_usage(parser, NULL);
+    TEST_ASSERT_NULL(parser->usage);
+
+    clap_parser_free(parser);
+}
+
+void test_parser_set_usage_empty(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_parser_set_usage(parser, "");
+    TEST_ASSERT_NULL(parser->usage);
+
+    clap_parser_free(parser);
+}
+
+void test_parser_set_usage_null_safe(void) {
+    clap_parser_set_usage(NULL, "custom");
+    TEST_ASSERT_TRUE(1);
+}
+
 /* ============================================================================
  * Type Registration Tests
  * ============================================================================ */
@@ -352,7 +398,12 @@ void run_test_parser(void) {
     RUN_TEST(test_parser_set_help_width_null_safe);
     RUN_TEST(test_parser_set_version);
     RUN_TEST(test_parser_set_version_null_safe);
-    
+    RUN_TEST(test_parser_set_add_help_false);
+    RUN_TEST(test_parser_set_usage_basic);
+    RUN_TEST(test_parser_set_usage_null);
+    RUN_TEST(test_parser_set_usage_empty);
+    RUN_TEST(test_parser_set_usage_null_safe);
+
     /* Type Registration Tests */
     RUN_TEST(test_register_type_success);
     RUN_TEST(test_register_type_duplicate);

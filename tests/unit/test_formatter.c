@@ -530,6 +530,21 @@ void test_print_help_shows_deprecated_no_message(void) {
     clap_parser_free(parser);
 }
 
+void test_print_help_custom_usage(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+    clap_parser_set_usage(parser, "mytool INPUT [--opt]");
+
+    clap_print_help(parser, stdout);
+    fflush(stdout);
+    capture_stop();
+
+    const char *output = get_captured();
+    TEST_ASSERT_NOT_NULL(strstr(output, "mytool INPUT [--opt]"));
+    TEST_ASSERT_NULL(strstr(output, "Usage: prog"));
+
+    clap_parser_free(parser);
+}
+
 void test_print_help_has_commands_section(void) {
     clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
     clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
@@ -649,6 +664,7 @@ void run_test_formatter(void) {
     RUN_TEST(test_print_help_shows_choices);
     RUN_TEST(test_print_help_shows_deprecated_with_message);
     RUN_TEST(test_print_help_shows_deprecated_no_message);
+    RUN_TEST(test_print_help_custom_usage);
     RUN_TEST(test_print_help_has_commands_section);
     RUN_TEST(test_print_help_null_parser);
     RUN_TEST(test_print_help_null_stream);
