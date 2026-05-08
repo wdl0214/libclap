@@ -62,9 +62,7 @@ extern "C" {
  * @enum clap_color_key_t
  * @brief Semantic color keys identifying which element to color.
  *
- * Each key maps to an ANSI escape sequence in clap_color_theme_t::codes.
- * The default assignments follow Python 3.14 argparse:
- *
+ * @par Default Color Mapping
  * | Key                      | Default style | Applied to                          |
  * |--------------------------|---------------|-------------------------------------|
  * | CLAP_COLOR_USAGE_PROG    | bold          | Program name in usage line          |
@@ -77,6 +75,9 @@ extern "C" {
  * | CLAP_COLOR_SUBCOMMAND    | cyan          | Subcommand names (commit, push)     |
  * | CLAP_COLOR_ERROR         | red           | Error messages                      |
  * | CLAP_COLOR_WARNING       | yellow        | Deprecation warnings                |
+ *
+ * Each key maps to an ANSI escape sequence in clap_color_theme_t::codes.
+ * The default assignments follow Python 3.14 argparse:
  */
 typedef enum {
     CLAP_COLOR_USAGE_PROG,    /**< Program name in usage line. */
