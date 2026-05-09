@@ -133,7 +133,7 @@ install(
 # ============================================================================
 # pkg-config file
 # ============================================================================
-if(UNIX)
+if(UNIX OR MINGW)
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/libclap.pc.in"
         "${CMAKE_CURRENT_BINARY_DIR}/libclap.pc"
@@ -155,6 +155,8 @@ if(CLAP_ENABLE_COVERAGE)
         add_custom_target(coverage
             COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
                     --html --html-details -o coverage.html
+            COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
+                    --xml -o coverage.xml
             COMMAND ${GCOVR} -r ${CMAKE_SOURCE_DIR}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating coverage report with gcovr"
