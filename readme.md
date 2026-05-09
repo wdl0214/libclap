@@ -33,9 +33,12 @@ git clone https://github.com/wdl0214/libclap.git
 cd libclap
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
-make
-sudo make install
+cmake --build .
+sudo cmake --install .
 ```
+
+On Windows with MinGW, add `-G "MinGW Makefiles"` to the cmake command
+and use `mingw32-make` instead of `cmake --build .`.
 
 ### CMake Options
 
@@ -454,7 +457,7 @@ libclap includes a comprehensive test suite built with Unity.
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
-make
+cmake --build .
 ctest                          # Run all tests
 ctest -R usage                 # Run only usage compliance tests
 ctest --output-on-failure      # Show output for failed tests
@@ -465,7 +468,7 @@ Memory safety is verified with deterministic runtime checks and sanitizers:
 
 ```bash
 valgrind --leak-check=full ./tests/test_usage
-cmake .. -DCLAP_ENABLE_ASAN=ON && make && ctest
+cmake .. -DCLAP_ENABLE_ASAN=ON && cmake --build . && ctest
 ```
 
 The Valgrind command above runs the `test_usage` executable under a leak checker.
@@ -476,8 +479,8 @@ Code coverage requires `gcovr` to be installed:
 ```bash
 pip install gcovr
 cmake .. -DCLAP_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=Debug
-make && ctest
-make coverage
+cmake --build . && ctest
+cmake --build . --target coverage
 ```
 
 Fuzz testing is available with Clang builds:
@@ -485,7 +488,7 @@ Fuzz testing is available with Clang builds:
 ```bash
 mkdir build && cd build
 cmake .. -DCLAP_BUILD_FUZZ=ON -DCMAKE_C_COMPILER=clang
-make fuzz_clap
+cmake --build . --target fuzz_clap
 ./tests/fuzz_clap -max_len=4096 -runs=100000 corpus/
 ```
 
