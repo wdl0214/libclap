@@ -510,6 +510,15 @@ void clap_print_help(clap_parser_t *parser, FILE *stream) {
     clap_buffer_free(buf);
 }
 
+void clap_print_usage(clap_parser_t *parser, FILE *stream) {
+    if (!parser || !stream) return;
+
+    clap_buffer_t *buf = clap_buffer_empty();
+    build_usage_line(parser, &buf);
+    fputs(clap_buffer_cstr(buf), stream);
+    clap_buffer_free(buf);
+}
+
 void clap_print_version(clap_parser_t *parser, FILE *stream) {
     if (!parser || !stream) return;
 
@@ -518,4 +527,29 @@ void clap_print_version(clap_parser_t *parser, FILE *stream) {
 
     fprintf(stream, "%s %s\n",
             clap_buffer_cstr(parser->prog_name), version);
+}
+
+void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, FILE *stream) {
+    if (!parser || !error || !stream) return;
+
+    const clap_color_theme_t *theme = &parser->color_theme;
+
+    if (error->subcommand_name) {
+        clap_print_subcommand_usage(parser, error->subcommand_name, stream);
+    } else {
+        clap_print_usage(parser, stream);
+    }
+
+    if (theme->enabled) {
+        fprintf(stream, "\n%s: %serror%s: %s%s%s\n",
+                clap_buffer_cstr(parser->prog_name),
+                theme->codes[CLAP_COLOR_ERROR], theme->reset,
+                theme->codes[CLAP_COLOR_ERROR],
+                clap_error_message(error),
+                theme->reset);
+    } else {
+        fprintf(stream, "\n%s: error: %s\n",
+                clap_buffer_cstr(parser->prog_name),
+                clap_error_message(error));
+    }
 }

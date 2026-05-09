@@ -616,6 +616,48 @@ void test_print_version_null_stream(void) {
 }
 
 /* ============================================================================
+ * clap_print_help_on_error Tests
+ * ============================================================================ */
+
+void test_print_help_on_error_with_subcommand(void) {
+    clap_parser_t *parser = clap_parser_new("git", NULL, NULL);
+    clap_parser_t *subparsers = clap_add_subparsers(parser, "cmd", NULL);
+    clap_subparser_add(subparsers, "commit", "Commit message");
+
+    clap_error_t error;
+    clap_error_init(&error);
+    error.code = CLAP_ERR_REQUIRED_MISSING;
+    error.subcommand_name = "commit";
+
+    clap_print_help_on_error(parser, &error, stdout);
+
+    clap_parser_free(parser);
+}
+
+void test_print_help_on_error_without_subcommand(void) {
+    clap_parser_t *parser = clap_parser_new("prog", "Test program", NULL);
+    clap_add_argument(parser, "--output");
+
+    clap_error_t error;
+    clap_error_init(&error);
+    error.code = CLAP_ERR_INVALID_ARGUMENT;
+
+    clap_print_help_on_error(parser, &error, stdout);
+
+    clap_parser_free(parser);
+}
+
+void test_print_help_on_error_null_params(void) {
+    clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
+
+    clap_print_help_on_error(NULL, NULL, NULL);
+    clap_print_help_on_error(parser, NULL, NULL);
+    clap_print_help_on_error(NULL, NULL, stdout);
+
+    clap_parser_free(parser);
+}
+
+/* ============================================================================
  * Main Test Runner
  * ============================================================================ */
 
@@ -674,6 +716,11 @@ void run_test_formatter(void) {
     RUN_TEST(test_print_version_without_set_version);
     RUN_TEST(test_print_version_null_parser);
     RUN_TEST(test_print_version_null_stream);
+
+    /* clap_print_help_on_error Tests */
+    RUN_TEST(test_print_help_on_error_with_subcommand);
+    RUN_TEST(test_print_help_on_error_without_subcommand);
+    RUN_TEST(test_print_help_on_error_null_params);
 }
 
 #ifdef STANDALONE_TEST

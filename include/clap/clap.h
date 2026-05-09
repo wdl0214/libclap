@@ -438,6 +438,19 @@ CLAP_EXPORT void clap_subparsers_metavar(clap_parser_t *parser, const char *meta
 CLAP_EXPORT bool clap_print_subcommand_help(clap_parser_t *parser, const char *command_name, FILE *stream);
 
 /**
+ * @brief Print only the usage line for a subcommand.
+ *
+ * Like clap_print_subcommand_help() but prints only the "Usage:" line
+ * without the description, argument list, or epilog.
+ *
+ * @param parser        Target parser that owns the subparsers.
+ * @param command_name  Subcommand name to look up.
+ * @param stream        Output stream (e.g. stdout, stderr).
+ * @return true on success, false if @p command_name is not found.
+ */
+CLAP_EXPORT bool clap_print_subcommand_usage(clap_parser_t *parser, const char *command_name, FILE *stream);
+
+/**
  * @brief Print "<prog>: error: <message>" and contextual help.
  *
  * Prints a one-line error prefix (using the parser's program name and
@@ -612,7 +625,18 @@ CLAP_EXPORT bool clap_namespace_has(clap_namespace_t *ns, const char *name);
  */
 CLAP_EXPORT void clap_print_help(clap_parser_t *parser, FILE *stream);
 /**
- * @brief Print "progname version X.Y.Z" to a stream.
+ * @brief Print the usage line to a stream.
+ *
+ * Outputs "Usage: prog [options] ..." without the description,
+ * argument list, or epilog.  Useful when the user makes a mistake
+ * and you want to show only the invocation syntax.
+ *
+ * @param parser Target parser.
+ * @param stream Output stream (e.g. stdout, stderr).
+ */
+CLAP_EXPORT void clap_print_usage(clap_parser_t *parser, FILE *stream);
+/**
+ * @brief Print "progname X.Y.Z" to a stream.
  *
  * The version string is the one set by clap_parser_set_version().
  * Falls back to "unknown" if no version was set.

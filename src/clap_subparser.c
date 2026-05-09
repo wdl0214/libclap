@@ -105,31 +105,37 @@ bool clap_print_subcommand_help(clap_parser_t *parser, const char *command_name,
             return true;
         }
     }
-    
+
     return false;
 }
 
-void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, FILE *stream) {
-    if (!parser || !error || !stream) return;
+bool clap_print_subcommand_usage(clap_parser_t *parser, const char *command_name, FILE *stream) {
+    if (!parser || !command_name || !stream) return false;
 
-    const clap_color_theme_t *theme = &parser->color_theme;
-
-    if (theme->enabled) {
-        fprintf(stream, "%s: %serror%s: %s%s%s\n\n",
-                clap_buffer_cstr(parser->prog_name),
-                theme->codes[CLAP_COLOR_ERROR], theme->reset,
-                theme->codes[CLAP_COLOR_ERROR],
-                clap_error_message(error),
-                theme->reset);
-    } else {
-        fprintf(stream, "%s: error: %s\n\n",
-                clap_buffer_cstr(parser->prog_name),
-                clap_error_message(error));
+    if (!parser->has_subparsers || !parser->subparsers_container) {
+        return false;
     }
 
-    if (error->subcommand_name) {
-        clap_print_subcommand_help(parser, error->subcommand_name, stream);
-    } else {
-        clap_print_help(parser, stream);
+    clap_parser_t *container = parser->subparsers_container;
+
+    for (size_t i = 0; i < container->subparser_count; i++) {
+        clap_parser_t *sub = container->subparsers[i];
+
+        const char *full_name = clap_buffer_cstr(sub->prog_name);
+        const char *cmd_name = strrchr(full_name, ' ');
+        if (cmd_name) {
+            cmd_name++;
+        } else {
+            cmd_name = full_name;
+        }
+
+        if (strcmp(cmd_name, command_name) == 0) {
+            clap_print_usage(sub, stream);
+            return true;
+        }
     }
+
+    return false;
 }
+
+
