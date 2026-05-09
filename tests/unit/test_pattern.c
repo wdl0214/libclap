@@ -408,7 +408,9 @@ void test_parse_with_pattern_basic_positional(void) {
 
 void test_parse_with_pattern_store_true(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
-    clap_add_argument(parser, "-v/--verbose")->action = CLAP_ACTION_STORE_TRUE;
+
+    clap_argument_t *arg = clap_add_argument(parser, "-v/--verbose");
+    clap_argument_action(arg, CLAP_ACTION_STORE_TRUE);
 
     char *argv[] = {"prog", "-v"};
     size_t token_count = 0;
@@ -433,7 +435,7 @@ void test_parse_with_pattern_store_true(void) {
 void test_parse_with_pattern_help_action(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
     clap_argument_t *arg = clap_add_argument(parser, "--help");
-    arg->action = CLAP_ACTION_HELP;
+    clap_argument_action(arg, CLAP_ACTION_HELP);
 
     char *argv[] = {"prog", "--help"};
     size_t token_count = 0;
@@ -455,7 +457,7 @@ void test_parse_with_pattern_version_action(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
     clap_parser_set_version(parser, "1.0.0");
     clap_argument_t *arg = clap_add_argument(parser, "--version");
-    arg->action = CLAP_ACTION_VERSION;
+    clap_argument_action(arg, CLAP_ACTION_VERSION);
 
     char *argv[] = {"prog", "--version"};
     size_t token_count = 0;
@@ -516,7 +518,7 @@ void test_parse_with_pattern_option_with_value(void) {
 void test_parse_with_pattern_count_increment(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
     clap_argument_t *arg = clap_add_argument(parser, "-v/--verbose");
-    arg->action = CLAP_ACTION_COUNT;
+    clap_argument_action(arg, CLAP_ACTION_COUNT);
 
     char *argv[] = {"prog", "-v", "-v", "-v"};
     size_t token_count = 0;
@@ -562,9 +564,10 @@ void test_parse_with_pattern_too_many_positionals(void) {
 void test_parse_with_pattern_short_bundle(void) {
     clap_parser_t *parser = clap_parser_new("prog", NULL, NULL);
     clap_argument_t *arg_v = clap_add_argument(parser, "-v");
-    arg_v->action = CLAP_ACTION_STORE_TRUE;
+    clap_argument_action(arg_v, CLAP_ACTION_STORE_TRUE);
+
     clap_argument_t *arg_f = clap_add_argument(parser, "-f");
-    arg_f->action = CLAP_ACTION_STORE_TRUE;
+    clap_argument_action(arg_f, CLAP_ACTION_STORE_TRUE);
 
     char *argv[] = {"prog", "-vf"};
     size_t token_count = 0;

@@ -24,8 +24,6 @@ extern "C" {
  */
 CLAP_EXPORT const char* clap_version(void);
 
-/* clap_version_components was removed (declared but never implemented) */
-
 #ifdef __cplusplus
 }
 #endif
