@@ -15,8 +15,6 @@
 #include <clap/clap_version.h>
 #include <clap/clap_error.h>
 #include <clap/clap_types.h>
-#include <clap/clap_action.h>
-#include <clap/clap_allocator.h>
 #include <clap/clap_color.h>
 #include <clap/clap_export.h>
 
@@ -33,6 +31,34 @@ extern "C" {
 #define CLAP_NARGS_ONE_OR_MORE   (-5)  /**< '+' - 1 or more arguments */
 #define CLAP_NARGS_OPTIONAL      CLAP_NARGS_ZERO_OR_ONE
 #define CLAP_NARGS_REMAINDER     (-1)  /**< Consume all remaining arguments */
+/* ============================================================================
+ * Memory Allocator (call before clap_parser_new)
+ * ============================================================================ */
+
+/**
+ * @brief Set custom memory allocator functions.
+ *
+ * All subsequent allocations (internal buffers, namespace
+ * entries, etc.) use these callbacks.  Must be called before any other
+ * libclap function — once parsing begins the allocator is locked in.
+ *
+ * @param malloc_fn  Allocation callback, must match malloc() semantics.
+ *                   Must not be NULL.
+ * @param free_fn    Deallocation callback, must match free() semantics.
+ *                   Must not be NULL.
+ * @param realloc_fn Reallocation callback, must match realloc() semantics.
+ *                   Pass NULL if not needed (libclap falls back to
+ *                   malloc+copy+free internally).
+ *
+ * @note This function must be called before any parser is created.
+ *       Calling it after clap_parser_new() has undefined behavior.
+ */
+CLAP_EXPORT void clap_set_allocator(
+    void *(*malloc_fn)(size_t),
+    void (*free_fn)(void*),
+    void *(*realloc_fn)(void*, size_t)
+);
+
 /* ============================================================================
  * Parser API
  * ============================================================================ */

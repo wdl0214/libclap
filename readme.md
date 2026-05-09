@@ -190,104 +190,6 @@ clap_namespace_free(ns);
 clap_parser_free(parser);
 ```
 
-### Adding Arguments
-
-```c
-clap_argument_t *arg = clap_add_argument(parser, "--output/-o");
-clap_argument_help(arg, "Output file path");
-clap_argument_default(arg, "-");
-clap_argument_required(arg, true);
-clap_argument_type(arg, "string");
-clap_argument_metavar(arg, "FILE");
-```
-
-### Actions
-
-| Action | Description |
-|--------|-------------|
-| `CLAP_ACTION_STORE` | Store the value (default) |
-| `CLAP_ACTION_STORE_TRUE` | Store `true` when flag is present |
-| `CLAP_ACTION_STORE_FALSE` | Store `false` when flag is present |
-| `CLAP_ACTION_STORE_CONST` | Store a constant value |
-| `CLAP_ACTION_APPEND` | Append value to a list |
-| `CLAP_ACTION_APPEND_CONST` | Append constant to a list |
-| `CLAP_ACTION_COUNT` | Count occurrences of the option |
-| `CLAP_ACTION_HELP` | Print help and exit |
-| `CLAP_ACTION_VERSION` | Print version and exit |
-| `CLAP_ACTION_CUSTOM` | User‑defined handler |
-
-### nargs Specifiers
-
-| Specifier | Description |
-|-----------|-------------|
-| `1` (default) | Exactly one argument |
-| `?` (`CLAP_NARGS_ZERO_OR_ONE`) | Zero or one argument |
-| `*` (`CLAP_NARGS_ZERO_OR_MORE`) | Zero or more arguments |
-| `+` (`CLAP_NARGS_ONE_OR_MORE`) | One or more arguments |
-| `N` | Exactly N arguments |
-| `REMAINDER` (`CLAP_NARGS_REMAINDER`) | Consume all remaining arguments |
-
-### Subcommands
-
-```c
-clap_parser_t *subparsers = clap_add_subparsers(parser, "command", "Available commands");
-
-clap_parser_t *commit = clap_subparser_add(subparsers, "commit", "Record changes");
-clap_argument_t *msg_arg = clap_add_argument(commit, "-m");
-clap_argument_dest(msg_arg, "message");
-clap_argument_required(msg_arg, true);
-
-// Parse as usual
-const char *cmd;
-clap_namespace_get_string(ns, "command", &cmd);
-if (strcmp(cmd, "commit") == 0) {
-    const char *msg;
-    clap_namespace_get_string(ns, "message", &msg);
-}
-```
-
-### Mutually Exclusive Groups
-
-```c
-int group = clap_add_mutually_exclusive_group(parser, false);
-
-clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
-clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-clap_mutex_group_add_argument(parser, group, verbose);
-
-clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
-clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-clap_mutex_group_add_argument(parser, group, quiet);
-```
-
-### Argument Dependencies
-
-Declare that one argument requires or conflicts with another.  When a dependecy
-is violated during parsing, `CLAP_ERR_DEPENDENCY_VIOLATION` is returned.
-
-**Requires** — if `--input` is given, `--output` must also be provided:
-
-```c
-clap_argument_t *input = clap_add_argument(parser, "--input");
-clap_argument_t *output = clap_add_argument(parser, "--output");
-
-clap_argument_requires(input, output, "--input requires --output");
-```
-
-**Conflicts** — `--verbose` and `--quiet` may not be used together:
-
-```c
-clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
-clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
-clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
-clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
-
-clap_argument_conflicts(verbose, quiet, "Can't use --verbose and --quiet together");
-```
-
-The third parameter (`error_msg`) is optional — pass `NULL` to get a default
-error message.
-
 ### ANSI Color Output
 
 libclap supports colored help and error output, matching the Python 3.14 argparse
@@ -341,6 +243,85 @@ Optional arguments:
 
 In a terminal with color enabled, `-h`, `--help` are green, `--output`, `--verbose` are cyan, `FILE` is yellow, `(default: stdout)` is dim, and section headings are bold.
 
+### Adding Arguments
+
+```c
+clap_argument_t *arg = clap_add_argument(parser, "--output/-o");
+clap_argument_help(arg, "Output file path");
+clap_argument_default(arg, "-");
+clap_argument_required(arg, true);
+clap_argument_type(arg, "string");
+clap_argument_metavar(arg, "FILE");
+```
+
+### Actions
+
+| Action | Description |
+|--------|-------------|
+| `CLAP_ACTION_STORE` | Store the value (default) |
+| `CLAP_ACTION_STORE_TRUE` | Store `true` when flag is present |
+| `CLAP_ACTION_STORE_FALSE` | Store `false` when flag is present |
+| `CLAP_ACTION_STORE_CONST` | Store a constant value |
+| `CLAP_ACTION_APPEND` | Append value to a list |
+| `CLAP_ACTION_APPEND_CONST` | Append constant to a list |
+| `CLAP_ACTION_COUNT` | Count occurrences of the option |
+| `CLAP_ACTION_HELP` | Print help and exit |
+| `CLAP_ACTION_VERSION` | Print version and exit |
+| `CLAP_ACTION_CUSTOM` | User‑defined handler |
+
+### nargs Specifiers
+
+| Specifier | Description |
+|-----------|-------------|
+| `1` (default) | Exactly one argument |
+| `?` (`CLAP_NARGS_ZERO_OR_ONE`) | Zero or one argument |
+| `*` (`CLAP_NARGS_ZERO_OR_MORE`) | Zero or more arguments |
+| `+` (`CLAP_NARGS_ONE_OR_MORE`) | One or more arguments |
+| `N` | Exactly N arguments |
+| `REMAINDER` (`CLAP_NARGS_REMAINDER`) | Consume all remaining arguments |
+
+### Mutually Exclusive Groups
+
+```c
+int group = clap_add_mutually_exclusive_group(parser, false);
+
+clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+clap_mutex_group_add_argument(parser, group, verbose);
+
+clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
+clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
+clap_mutex_group_add_argument(parser, group, quiet);
+```
+
+### Argument Dependencies
+
+Declare that one argument requires or conflicts with another.  When a dependecy
+is violated during parsing, `CLAP_ERR_DEPENDENCY_VIOLATION` is returned.
+
+**Requires** — if `--input` is given, `--output` must also be provided:
+
+```c
+clap_argument_t *input = clap_add_argument(parser, "--input");
+clap_argument_t *output = clap_add_argument(parser, "--output");
+
+clap_argument_requires(input, output, "--input requires --output");
+```
+
+**Conflicts** — `--verbose` and `--quiet` may not be used together:
+
+```c
+clap_argument_t *verbose = clap_add_argument(parser, "--verbose");
+clap_argument_action(verbose, CLAP_ACTION_STORE_TRUE);
+clap_argument_t *quiet = clap_add_argument(parser, "--quiet");
+clap_argument_action(quiet, CLAP_ACTION_STORE_TRUE);
+
+clap_argument_conflicts(verbose, quiet, "Can't use --verbose and --quiet together");
+```
+
+The third parameter (`error_msg`) is optional — pass `NULL` to get a default
+error message.
+
 ### Argument Groups
 
 Organize related arguments into named sections in the help output:
@@ -374,6 +355,25 @@ Network:
 ```
 
 Arguments in a display group are excluded from the default "Optional arguments" and "Positional arguments" sections, appearing only in their group section.
+
+### Subcommands
+
+```c
+clap_parser_t *subparsers = clap_add_subparsers(parser, "command", "Available commands");
+
+clap_parser_t *commit = clap_subparser_add(subparsers, "commit", "Record changes");
+clap_argument_t *msg_arg = clap_add_argument(commit, "-m");
+clap_argument_dest(msg_arg, "message");
+clap_argument_required(msg_arg, true);
+
+// Parse as usual
+const char *cmd;
+clap_namespace_get_string(ns, "command", &cmd);
+if (strcmp(cmd, "commit") == 0) {
+    const char *msg;
+    clap_namespace_get_string(ns, "message", &msg);
+}
+```
 
 ### Custom Memory Allocator
 
