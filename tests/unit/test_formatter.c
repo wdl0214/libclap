@@ -586,7 +586,7 @@ void test_print_version_with_set_version(void) {
     fflush(stdout);
     capture_stop();
 
-    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "prog version 1.0.0"));
+    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "prog 1.0.0"));
 
     clap_parser_free(parser);
 }
@@ -598,7 +598,7 @@ void test_print_version_without_set_version(void) {
     fflush(stdout);
     capture_stop();
 
-    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "prog version unknown"));
+    TEST_ASSERT_NOT_NULL(strstr(get_captured(), "prog unknown"));
 
     clap_parser_free(parser);
 }

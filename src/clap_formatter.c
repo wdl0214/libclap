@@ -516,6 +516,6 @@ void clap_print_version(clap_parser_t *parser, FILE *stream) {
     const char *version = parser->version ?
         clap_buffer_cstr(parser->version) : "unknown";
 
-    fprintf(stream, "%s version %s\n",
+    fprintf(stream, "%s %s\n",
             clap_buffer_cstr(parser->prog_name), version);
 }
