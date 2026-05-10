@@ -61,7 +61,7 @@ bool clap_validate_dependencies(clap_parser_t *parser,
                                    "%s", dep->error_message);
                 } else {
                     clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
-                                   "argument '%s' requires '%s'",
+                                   CLAP_TR("argument '%s' requires '%s'"),
                                    clap_buffer_cstr(arg->display_name),
                                    clap_buffer_cstr(dep->targets[0]->display_name));
                 }
@@ -74,7 +74,7 @@ bool clap_validate_dependencies(clap_parser_t *parser,
                                    "%s", dep->error_message);
                 } else {
                     clap_error_set(error, CLAP_ERR_DEPENDENCY_VIOLATION,
-                                   "argument '%s' conflicts with '%s'",
+                                   CLAP_TR("argument '%s' conflicts with '%s'"),
                                    clap_buffer_cstr(arg->display_name),
                                    clap_buffer_cstr(dep->targets[0]->display_name));
                 }

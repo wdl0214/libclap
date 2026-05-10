@@ -23,6 +23,7 @@ set(CLAP_SOURCES
     clap_buffer.c
     clap_color.c
     clap_allocator.c
+    clap_i18n.c
 )
 
 # ============================================================================

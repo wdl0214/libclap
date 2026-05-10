@@ -131,15 +131,15 @@ static clap_buffer_t *build_arg_help(clap_argument_t *arg, const clap_color_them
     if (arg->flags & CLAP_ARG_DEPRECATED) {
         if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
         if (arg->deprecated_msg) {
-            clap_buffer_cat_printf(&help, "(deprecated: %s)",
+            clap_buffer_cat_printf(&help, CLAP_TR("(deprecated: %s)"),
                                    clap_buffer_cstr(arg->deprecated_msg));
         } else {
-            clap_buffer_cat(&help, "(deprecated)");
+            clap_buffer_cat(&help, CLAP_TR("(deprecated)"));
         }
     }
     if (arg->choices && arg->choice_count > 0) {
         if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
-        clap_buffer_cat(&help, "(choices: ");
+        clap_buffer_cat(&help, CLAP_TR("(choices: "));
         for (size_t j = 0; j < arg->choice_count; j++) {
             if (j > 0) clap_buffer_cat(&help, ", ");
             clap_buffer_cat_colored(&help, theme, CLAP_COLOR_CHOICES, arg->choices[j]);
@@ -148,7 +148,7 @@ static clap_buffer_t *build_arg_help(clap_argument_t *arg, const clap_color_them
     }
     if (arg->default_string) {
         if (clap_buffer_len(help) > 0) clap_buffer_cat(&help, " ");
-        clap_buffer_cat_printf(&help, "(default: ");
+        clap_buffer_cat_printf(&help, CLAP_TR("(default: "));
         clap_buffer_cat_colored(&help, theme, CLAP_COLOR_DEFAULT,
                                 clap_buffer_cstr(arg->default_string));
         clap_buffer_cat(&help, ")");
@@ -222,12 +222,12 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
         return;
     }
 
-    clap_buffer_cat(buf, "Usage: ");
+    clap_buffer_cat(buf, CLAP_TR("Usage: "));
     clap_buffer_cat_colored(buf, theme, CLAP_COLOR_USAGE_PROG,
                             clap_buffer_cstr(parser->prog_name));
 
     if (parser->add_help_option)
-        clap_buffer_cat(buf, " [-h]");
+        clap_buffer_cat(buf, CLAP_TR(" [-h]"));
 
     /* Regular optional arguments (not in mutex groups) */
     for (size_t i = 0; i < parser->optional_count; i++) {
@@ -236,7 +236,7 @@ static void build_usage_line(clap_parser_t *parser, clap_buffer_t **buf) {
         if (arg->mutex_group_id != CLAP_MUTEX_GROUP_NONE) continue;
 
         if (arg->action == CLAP_ACTION_VERSION) {
-            clap_buffer_cat(buf, " [--version]");
+            clap_buffer_cat(buf, CLAP_TR(" [--version]"));
             continue;
         }
 
@@ -372,7 +372,7 @@ static void print_positionals_section(clap_parser_t *parser, clap_buffer_t **buf
     const clap_color_theme_t *theme = &parser->color_theme;
 
     clap_buffer_cat(buf, "\n");
-    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Positional arguments:");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, CLAP_TR("Positional arguments:"));
     clap_buffer_cat(buf, "\n");
 
     for (size_t i = 0; i < parser->positional_count; i++) {
@@ -400,7 +400,7 @@ static void print_optionals_section(clap_parser_t *parser, clap_buffer_t **buf,
     const clap_color_theme_t *theme = &parser->color_theme;
 
     clap_buffer_cat(buf, "\n");
-    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Optional arguments:");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, CLAP_TR("Optional arguments:"));
     clap_buffer_cat(buf, "\n");
 
     for (size_t i = 0; i < parser->optional_count; i++) {
@@ -467,7 +467,7 @@ static void print_commands_section(clap_parser_t *parser, clap_buffer_t **buf,
     const clap_color_theme_t *theme = &parser->color_theme;
 
     clap_buffer_cat(buf, "\n");
-    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, "Commands:");
+    clap_buffer_cat_colored(buf, theme, CLAP_COLOR_HEADING, CLAP_TR("Commands:"));
     clap_buffer_cat(buf, "\n");
 
     for (size_t i = 0; i < container->subparser_count; i++) {
@@ -523,7 +523,7 @@ void clap_print_version(clap_parser_t *parser, FILE *stream) {
     if (!parser || !stream) return;
 
     const char *version = parser->version ?
-        clap_buffer_cstr(parser->version) : "unknown";
+        clap_buffer_cstr(parser->version) : CLAP_TR("unknown");
 
     fprintf(stream, "%s %s\n",
             clap_buffer_cstr(parser->prog_name), version);
@@ -541,14 +541,14 @@ void clap_print_help_on_error(clap_parser_t *parser, const clap_error_t *error, 
     }
 
     if (theme->enabled) {
-        fprintf(stream, "\n%s: %serror%s: %s%s%s\n",
+        fprintf(stream, CLAP_TR("\n%s: %serror%s: %s%s%s\n"),
                 clap_buffer_cstr(parser->prog_name),
                 theme->codes[CLAP_COLOR_ERROR], theme->reset,
                 theme->codes[CLAP_COLOR_ERROR],
                 clap_error_message(error),
                 theme->reset);
     } else {
-        fprintf(stream, "\n%s: error: %s\n",
+        fprintf(stream, CLAP_TR("\n%s: error: %s\n"),
                 clap_buffer_cstr(parser->prog_name),
                 clap_error_message(error));
     }

@@ -17,6 +17,7 @@
 #include <clap/clap_types.h>
 #include <clap/clap_color.h>
 #include <clap/clap_export.h>
+#include <clap/clap_i18n.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -13,7 +13,7 @@ bool clap_apply_argument_action(clap_parser_t *parser,
     if (!arg || !ns) {
         if (error) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                           "Invalid action application parameters");
+                           CLAP_TR("Invalid action application parameters"));
         }
         return false;
     }
@@ -35,8 +35,8 @@ bool clap_apply_argument_action(clap_parser_t *parser,
     if (!handler) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
                        arg->action == CLAP_ACTION_CUSTOM
-                           ? "CUSTOM action requires action_handler"
-                           : "Unknown action type");
+                           ? CLAP_TR("CUSTOM action requires action_handler")
+                           : CLAP_TR("Unknown action type"));
         return false;
     }
 

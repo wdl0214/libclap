@@ -15,7 +15,7 @@ static clap_parse_result_t resolve_type_handler(clap_parser_t *parser,
     if (arg->type_handler) return CLAP_PARSE_SUCCESS;
     if (!parser) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                       "No parser available for type resolution");
+                       CLAP_TR("No parser available for type resolution"));
         return CLAP_PARSE_ERROR;
     }
 
@@ -29,7 +29,7 @@ static clap_parse_result_t resolve_type_handler(clap_parser_t *parser,
     }
 
     clap_error_set(error, CLAP_ERR_TYPE_CONVERSION,
-                   "Unknown type: '%s'", type_name);
+                   CLAP_TR("Unknown type: '%s'"), type_name);
     return CLAP_PARSE_ERROR;
 }
 
@@ -89,7 +89,7 @@ static bool convert_and_store(clap_parser_t *parser,
         void *scratch = clap_malloc(arg->type_size);
         if (!scratch) {
             clap_error_set(error, CLAP_ERR_MEMORY,
-                           "Failed to allocate memory for type validation");
+                           CLAP_TR("Failed to allocate memory for type validation"));
             return false;
         }
         bool ok = arg->type_handler(value, scratch, arg->type_size, error);
@@ -128,7 +128,7 @@ bool clap_action_store_const(clap_parser_t *parser,
 
     if (!arg->const_value) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                       "STORE_CONST action requires const value");
+                       CLAP_TR("STORE_CONST action requires const value"));
         return false;
     }
 
@@ -205,7 +205,7 @@ bool clap_action_append_const(clap_parser_t *parser,
     
     if (!arg->const_value) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                       "APPEND_CONST action requires const value");
+                       CLAP_TR("APPEND_CONST action requires const value"));
         return false;
     }
     
@@ -242,7 +242,7 @@ bool clap_action_custom(clap_parser_t *parser,
                          clap_error_t *error) {
     if (!arg->action_handler) {
         clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                       "CUSTOM action requires action_handler");
+                       CLAP_TR("CUSTOM action requires action_handler"));
         return false;
     }
     

@@ -70,6 +70,7 @@ set(UNIT_TESTS
     test_formatter
     test_color
     test_tokenizer
+    test_i18n
 )
 
 foreach(test ${UNIT_TESTS})

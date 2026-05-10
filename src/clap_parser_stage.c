@@ -12,22 +12,22 @@ static void warn_deprecated(const clap_parser_t *parser,
     const clap_color_theme_t *t = &parser->color_theme;
     if (t->enabled) {
         if (reason && *reason) {
-            fprintf(stderr, "%s: %swarning%s: argument %s is deprecated: %s\n",
+            fprintf(stderr, CLAP_TR("%s: %swarning%s: argument %s is deprecated: %s\n"),
                     clap_buffer_cstr(parser->prog_name),
                     t->codes[CLAP_COLOR_WARNING], t->reset,
                     arg_name, reason);
         } else {
-            fprintf(stderr, "%s: %swarning%s: argument %s is deprecated\n",
+            fprintf(stderr, CLAP_TR("%s: %swarning%s: argument %s is deprecated\n"),
                     clap_buffer_cstr(parser->prog_name),
                     t->codes[CLAP_COLOR_WARNING], t->reset,
                     arg_name);
         }
     } else {
         if (reason && *reason) {
-            fprintf(stderr, "%s: warning: argument %s is deprecated: %s\n",
+            fprintf(stderr, CLAP_TR("%s: warning: argument %s is deprecated: %s\n"),
                     clap_buffer_cstr(parser->prog_name), arg_name, reason);
         } else {
-            fprintf(stderr, "%s: warning: argument %s is deprecated\n",
+            fprintf(stderr, CLAP_TR("%s: warning: argument %s is deprecated\n"),
                     clap_buffer_cstr(parser->prog_name), arg_name);
         }
     }
@@ -65,7 +65,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
                                 clap_error_t *error) {
     if (!token || !parser || !ns || !consumed) {
         if (error) {
-            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid option parse parameters");
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, CLAP_TR("Invalid option parse parameters"));
         }
         return CLAP_PARSE_ERROR;
     }
@@ -75,13 +75,13 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
     clap_argument_t *arg = clap_find_option_best_match(parser, token->option_name, is_long, &ambiguous);
     if (ambiguous) {
         clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
-                       "Ambiguous option '%s'", token->raw ? token->raw : token->option_name);
+                       CLAP_TR("Ambiguous option '%s'"), token->raw ? token->raw : token->option_name);
         return CLAP_PARSE_ERROR;
     }
 
     if (!arg) {
         clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
-                       "Unrecognized option '%s'", token->raw ? token->raw : token->option_name);
+                       CLAP_TR("Unrecognized option '%s'"), token->raw ? token->raw : token->option_name);
         return CLAP_PARSE_ERROR;
     }
 
@@ -106,7 +106,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
     } else if (is_action_value_required(arg) && remaining > 1) {
         if (next_token == NULL) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                           "Missing required argument for option '%s'",
+                           CLAP_TR("Missing required argument for option '%s'"),
                            token->raw ? token->raw : token->option_name);
             return CLAP_PARSE_ERROR;
         }
@@ -120,7 +120,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
             *consumed = 2;
         } else if (arg->nargs != CLAP_NARGS_ZERO_OR_ONE) {
             clap_error_set(error, CLAP_ERR_MISSING_VALUE,
-                           "argument %s: expected a value, got '%s'",
+                           CLAP_TR("argument %s: expected a value, got '%s'"),
                            token->raw ? token->raw : token->option_name,
                            next_token->raw ? next_token->raw : "");
             return CLAP_PARSE_ERROR;
@@ -147,7 +147,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
 
         if (next_token == NULL) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                           "argument '%s': token sequence ended unexpectedly",
+                           CLAP_TR("argument '%s': token sequence ended unexpectedly"),
                            token->raw ? token->raw : token->option_name);
             return CLAP_PARSE_ERROR;
         }
@@ -155,7 +155,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
         for (size_t i = 1; i < nargs_needed; i++) {
             if (*consumed + 1 > remaining) {
                 clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
-                               "argument '%s': expected %d argument(s), got %zu",
+                               CLAP_TR("argument '%s': expected %d argument(s), got %zu"),
                                token->raw ? token->raw : token->option_name,
                                arg->nargs, values_collected);
                 return CLAP_PARSE_ERROR;
@@ -164,7 +164,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
             token_t *val_token = &next_token[i];
             if (val_token->type == TOKEN_STOP) {
                 clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
-                               "argument '%s': expected %d argument(s), got %zu",
+                               CLAP_TR("argument '%s': expected %d argument(s), got %zu"),
                                token->raw ? token->raw : token->option_name,
                                arg->nargs, values_collected);
                 return CLAP_PARSE_ERROR;
@@ -182,7 +182,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
     if (arg->nargs == CLAP_NARGS_REMAINDER && remaining > *consumed) {
         if (next_token == NULL) {
             clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT,
-                           "Cannot process remainder arguments: next_token is NULL");
+                           CLAP_TR("Cannot process remainder arguments: next_token is NULL"));
             return CLAP_PARSE_ERROR;
         }
         for (size_t i = *consumed; i < remaining; i++) {
@@ -191,7 +191,7 @@ static clap_parse_result_t parse_single_option(clap_parser_t *parser,
                 continue;
             }
             if (!clap_namespace_append_string(ns, clap_buffer_cstr(arg->dest), remaining_token->raw)) {
-                clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store remainder values");
+                clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to store remainder values"));
                 return CLAP_PARSE_ERROR;
             }
         }
@@ -213,7 +213,7 @@ static clap_parse_result_t parse_short_bundle(clap_parser_t *parser,
     size_t bundle_count = 0;
     char **expanded = clap_expand_short_bundle(token->option_name, &bundle_count);
     if (!expanded) {
-        clap_error_set(error, CLAP_ERR_MEMORY, "Failed to expand option bundle");
+        clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to expand option bundle"));
         return CLAP_PARSE_ERROR;
     }
 
@@ -255,7 +255,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                              clap_error_t *error) {
     if (!parser || !pattern || !ns || (pattern->pattern_len > 0 && !tokens)) {
         if (error) {
-            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid parser stage parameters");
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, CLAP_TR("Invalid parser stage parameters"));
         }
         return CLAP_PARSE_ERROR;
     }
@@ -325,7 +325,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                 size_t remaining = pattern->pattern_len - pos;
                 char **sub_argv = clap_calloc(remaining > 0 ? remaining : 1, sizeof(char*));
                 if (!sub_argv) {
-                    clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate subcommand argv");
+                    clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate subcommand argv"));
                     return CLAP_PARSE_ERROR;
                 }
 
@@ -354,7 +354,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
 
         if (positional_index >= parser->positional_count) {
             clap_error_set(error, CLAP_ERR_TOO_MANY_ARGS,
-                           "Unexpected argument '%s'", token->raw);
+                           CLAP_TR("Unexpected argument '%s'"), token->raw);
             return CLAP_PARSE_ERROR;
         }
 
@@ -379,7 +379,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                     continue;
                 }
                 if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), remaining->raw)) {
-                    clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store remainder values");
+                    clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to store remainder values"));
                     return CLAP_PARSE_ERROR;
                 }
             }
@@ -390,7 +390,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
             nargs_needed != CLAP_NARGS_ONE_OR_MORE && nargs_needed != CLAP_NARGS_ZERO_OR_ONE) {
             if (pos + (size_t)nargs_needed > pattern->pattern_len) {
                 clap_error_set(error, CLAP_ERR_TOO_FEW_ARGS,
-                               "argument %s: expected %d argument(s), got %zu",
+                               CLAP_TR("argument %s: expected %d argument(s), got %zu"),
                                clap_buffer_cstr(pos_arg->display_name), nargs_needed,
                                pattern->pattern_len - pos);
                 return CLAP_PARSE_ERROR;
@@ -398,7 +398,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
             for (size_t i = 0; i < (size_t)nargs_needed; i++) {
                 clap_token_t *value_token = &tokens[pos + i];
                 if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), value_token->raw)) {
-                    clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store positional values");
+                    clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to store positional values"));
                     return CLAP_PARSE_ERROR;
                 }
             }
@@ -414,7 +414,7 @@ clap_parse_result_t clap_parse_with_pattern(clap_parser_t *parser,
                 warn_deprecated(parser, clap_buffer_cstr(pos_arg->display_name), reason);
             }
             if (!clap_namespace_append_string(ns, clap_buffer_cstr(pos_arg->dest), token->raw)) {
-                clap_error_set(error, CLAP_ERR_MEMORY, "Failed to store positional values");
+                clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to store positional values"));
                 return CLAP_PARSE_ERROR;
             }
             pos++;

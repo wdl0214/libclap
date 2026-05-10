@@ -34,14 +34,14 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
                                      clap_error_t *error) {
     if (!parser || (token_count > 0 && !tokens)) {
         if (error) {
-            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid pattern analysis parameters");
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, CLAP_TR("Invalid pattern analysis parameters"));
         }
         return NULL;
     }
 
     clap_pattern_t *pattern = clap_calloc(1, sizeof(clap_pattern_t));
     if (!pattern) {
-        clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate pattern");
+        clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate pattern"));
         return NULL;
     }
 
@@ -55,7 +55,7 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
     if (!pattern->pattern ||
         (token_count > 0 && (!pattern->option_indices || !pattern->option_matches || !pattern->option_match_counts))) {
         free_pattern_partial(pattern, 0);
-        clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate pattern buffers");
+        clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate pattern buffers"));
         return NULL;
     }
 
@@ -114,14 +114,14 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
 
             if (ambiguous) {
                 clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
-                               "Ambiguous option '%s'", token->raw ? token->raw : token->option_name);
+                               CLAP_TR("Ambiguous option '%s'"), token->raw ? token->raw : token->option_name);
                 free_pattern_partial(pattern, option_index);
                 return NULL;
             }
 
             if (!match) {
                 clap_error_set(error, CLAP_ERR_UNRECOGNIZED,
-                               "Unrecognized option '%s'", token->raw ? token->raw : token->option_name);
+                               CLAP_TR("Unrecognized option '%s'"), token->raw ? token->raw : token->option_name);
                 free_pattern_partial(pattern, option_index);
                 return NULL;
             }
@@ -129,7 +129,7 @@ clap_pattern_t* clap_analyze_pattern(clap_parser_t *parser,
             pattern->option_matches[option_index] = clap_calloc(1, sizeof(clap_argument_t*));
             if (!pattern->option_matches[option_index]) {
                 free_pattern_partial(pattern, option_index);
-                clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate option match storage");
+                clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate option match storage"));
                 return NULL;
             }
             pattern->option_matches[option_index][0] = match;

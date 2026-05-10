@@ -9,7 +9,7 @@
 bool clap_type_string_handler(const char *input, void *output,
                                size_t output_size, clap_error_t *error) {
     if (output_size != sizeof(char**)) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid output size");
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid output size"));
         return false;
     }
     *(const char**)output = input;
@@ -19,7 +19,7 @@ bool clap_type_string_handler(const char *input, void *output,
 bool clap_type_int_handler(const char *input, void *output,
                             size_t output_size, clap_error_t *error) {
     if (output_size != sizeof(int)) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid output size");
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid output size"));
         return false;
     }
 
@@ -28,12 +28,12 @@ bool clap_type_int_handler(const char *input, void *output,
     long val = strtol(input, &endptr, 0);
 
     if (errno == ERANGE || val > INT_MAX || val < INT_MIN) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Integer out of range: '%s'", input);
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Integer out of range: '%s'"), input);
         return false;
     }
 
     if (endptr == input || *endptr != '\0') {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid integer: '%s'", input);
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid integer: '%s'"), input);
         return false;
     }
 
@@ -44,7 +44,7 @@ bool clap_type_int_handler(const char *input, void *output,
 bool clap_type_float_handler(const char *input, void *output,
                               size_t output_size, clap_error_t *error) {
     if (output_size != sizeof(double)) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid output size");
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid output size"));
         return false;
     }
 
@@ -53,17 +53,17 @@ bool clap_type_float_handler(const char *input, void *output,
     double val = strtod(input, &endptr);
 
     if (errno == ERANGE) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Float out of range: '%s'", input);
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Float out of range: '%s'"), input);
         return false;
     }
 
     if (endptr == input || *endptr != '\0') {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid float: '%s'", input);
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid float: '%s'"), input);
         return false;
     }
 
     if (!clap_isfinite(val)) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Float cannot be NaN or Infinity");
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Float cannot be NaN or Infinity"));
         return false;
     }
 
@@ -74,7 +74,7 @@ bool clap_type_float_handler(const char *input, void *output,
 bool clap_type_bool_handler(const char *input, void *output,
                              size_t output_size, clap_error_t *error) {
     if (output_size != sizeof(bool)) {
-        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, "Invalid output size");
+        clap_error_set(error, CLAP_ERR_TYPE_CONVERSION, CLAP_TR("Invalid output size"));
         return false;
     }
 
@@ -91,7 +91,7 @@ bool clap_type_bool_handler(const char *input, void *output,
     }
 
     clap_error_set(error, CLAP_ERR_TYPE_CONVERSION,
-                   "Invalid boolean: '%s' (use true/false, yes/no, 1/0)", input);
+                   CLAP_TR("Invalid boolean: '%s' (use true/false, yes/no, 1/0)"), input);
     return false;
 }
 

@@ -101,6 +101,15 @@ install(
 )
 
 # ============================================================================
+# i18n: install .pot template so package users can find translatable strings
+# ============================================================================
+install(
+    FILES po/libclap.pot
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/libclap
+    OPTIONAL
+)
+
+# ============================================================================
 # CMake package configuration
 # ============================================================================
 include(CMakePackageConfigHelpers)
@@ -183,4 +192,25 @@ if(DOXYGEN)
         COMMENT "Generating API documentation with Doxygen"
     )
     message(STATUS "Doxygen found: use 'make docs' to generate API docs")
+endif()
+
+# ============================================================================
+# i18n: po/libclap.pot generation (optional, requires xgettext)
+# ============================================================================
+find_program(XGETTEXT xgettext)
+if(XGETTEXT)
+    file(GLOB CLAP_I18N_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+    add_custom_target(pot
+        COMMAND ${XGETTEXT} -kCLAP_TR
+            --language=C
+            --from-code=UTF-8
+            --package-name=libclap
+            --package-version=${PROJECT_VERSION}
+            --msgid-bugs-address=https://github.com/wdl0214/libclap
+            --add-comments=TRANSLATORS:
+            -o ${CMAKE_CURRENT_SOURCE_DIR}/po/libclap.pot
+            ${CLAP_I18N_SOURCES}
+        COMMENT "Regenerating po/libclap.pot translation template"
+    )
+    message(STATUS "xgettext found: use 'make pot' to regenerate po/libclap.pot")
 endif()

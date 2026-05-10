@@ -61,7 +61,7 @@ clap_token_t clap_tokenize_arg(const char *arg) {
 clap_token_t* clap_tokenize(int argc, char *argv[], size_t *count, clap_error_t *error) {
     if (!argv || argc < 1 || !count) {
         if (error) {
-            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid tokenization parameters");
+            clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, CLAP_TR("Invalid tokenization parameters"));
         }
         return NULL;
     }
@@ -76,7 +76,7 @@ clap_token_t* clap_tokenize(int argc, char *argv[], size_t *count, clap_error_t 
     clap_token_t *tokens = clap_calloc(token_count, sizeof(clap_token_t));
     if (!tokens) {
         if (error) {
-            clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate tokens");
+            clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate tokens"));
         }
         return NULL;
     }
@@ -151,7 +151,7 @@ bool check_required_positional(clap_argument_t *arg, clap_namespace_t *ns, clap_
 
     if (!is_present) {
         clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
-                       "the following arguments are required: %s",
+                       CLAP_TR("the following arguments are required: %s"),
                        clap_buffer_cstr(arg->display_name));
         return false;
     }
@@ -192,7 +192,7 @@ bool check_required_option(clap_argument_t *arg, clap_namespace_t *ns, clap_erro
         }
 
         clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
-                       "the following arguments are required: %s",
+                       CLAP_TR("the following arguments are required: %s"),
                        clap_buffer_cstr(opt_name));
 
         clap_buffer_free(opt_name);
@@ -223,7 +223,7 @@ bool check_positional_nargs_constraint(clap_argument_t *arg, clap_namespace_t *n
         if (count != (size_t)arg->nargs) {
             clap_error_set(error,
                 count < (size_t)arg->nargs ? CLAP_ERR_TOO_FEW_ARGS : CLAP_ERR_TOO_MANY_ARGS,
-                "Expected %d argument(s), got %zu", arg->nargs, count);
+                CLAP_TR("Expected %d argument(s), got %zu"), arg->nargs, count);
             return false;
         }
     }
@@ -235,13 +235,13 @@ clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[
                      clap_namespace_t **out_ns,
                      clap_error_t *error) {
     if (!parser || !argv || !out_ns) {
-        clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, "Invalid parameters");
+        clap_error_set(error, CLAP_ERR_INVALID_ARGUMENT, CLAP_TR("Invalid parameters"));
         return CLAP_PARSE_ERROR;
     }
 
     clap_namespace_t *ns = clap_namespace_new();
     if (!ns) {
-        clap_error_set(error, CLAP_ERR_MEMORY, "Failed to create namespace");
+        clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to create namespace"));
         return CLAP_PARSE_ERROR;
     }
 
@@ -249,7 +249,7 @@ clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[
     if (parser->mutex_group_count > 0) {
         mutex_group_used = clap_calloc(parser->mutex_group_count, sizeof(bool));
         if (!mutex_group_used) {
-            clap_error_set(error, CLAP_ERR_MEMORY, "Failed to allocate mutex tracking");
+            clap_error_set(error, CLAP_ERR_MEMORY, CLAP_TR("Failed to allocate mutex tracking"));
             clap_namespace_free(ns);
             return CLAP_PARSE_ERROR;
         }
@@ -321,7 +321,7 @@ clap_parse_result_t clap_parse_args(clap_parser_t *parser, int argc, char *argv[
             }
 
             clap_error_set(error, CLAP_ERR_REQUIRED_MISSING,
-                           "one of the arguments %s is required",
+                           CLAP_TR("one of the arguments %s is required"),
                            clap_buffer_cstr(opts));
 
             clap_buffer_free(opts);

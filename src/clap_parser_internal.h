@@ -315,6 +315,28 @@ char* clap_strndup(const char *str, size_t n);
 bool looks_like_negative_number(const char *s);
 
 /* ============================================================================
+ * Internationalization (i18n)
+ * ============================================================================ */
+
+/**
+ * @brief Translate a message ID (or return it unchanged if no translator set).
+ *
+ * Internal helper used by the CLAP_TR() macro.  All user-facing string
+ * literals should be wrapped with CLAP_TR() so they pass through the
+ * translator when one is installed.
+ */
+const char* clap_i18n_translate(const char *msgid);
+
+/**
+ * @brief Wrap a string literal for translation.
+ *
+ * Expands to clap_i18n_translate(str).  When no translator is installed
+ * (the default), the original string is returned immediately — the
+ * overhead is a single NULL check.
+ */
+#define CLAP_TR(str) clap_i18n_translate(str)
+
+/* ============================================================================
  * Internal Function Declarations
  * ============================================================================ */
 

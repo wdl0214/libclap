@@ -378,6 +378,144 @@ if (strcmp(cmd, "commit") == 0) {
 }
 ```
 
+### Internationalization (i18n)
+
+libclap supports translating all user-facing strings (help text,
+error messages, usage output, deprecation warnings, and version strings) via a
+user-provided translation callback.  When no translator is set, all output
+remains in English with zero overhead.
+
+#### How it works
+
+Call `clap_set_translator()` once before parsing to install a translation
+function.  Every user-facing string passes through it before being emitted.
+
+```c
+#include <clap/clap.h>
+
+const char *my_translator(const char *msgid, void *user_data) {
+    (void)user_data;
+    // Return msgid untranslated — effectively a no-op translator
+    return msgid;
+}
+
+int main(int argc, char *argv[]) {
+    clap_set_translator(my_translator, NULL);
+
+    clap_parser_t *parser = clap_parser_new("prog", "A program", NULL);
+    // ... parse as usual, output passes through my_translator ...
+}
+```
+
+Like `clap_set_allocator()`, the translator can only be set **once** — subsequent
+calls are silently ignored.  Set it early, before any parsing begins.
+
+#### Example — translation table
+
+A simple lookup table for Chinese (simplified):
+
+```c
+#include <clap/clap.h>
+#include <string.h>
+
+const char *zh_translate(const char *msgid, void *user_data) {
+    (void)user_data;
+    static const struct { const char *en; const char *zh; } table[] = {
+        { "Usage: ",                        "用法: " },
+        { "Show this help message and exit", "显示帮助信息并退出" },
+        { "Positional arguments:",           "位置参数:" },
+        { "Optional arguments:",             "可选参数:" },
+        { "Commands:",                       "命令:" },
+        { "Success",                         "成功" },
+        { "Invalid argument",                "无效参数" },
+        { "Unrecognized argument",           "未识别的参数" },
+        { "error",                           "错误" },
+        { "warning",                         "警告" },
+    };
+    for (size_t i = 0; i < sizeof(table) / sizeof(table[0]); i++) {
+        if (strcmp(msgid, table[i].en) == 0) return table[i].zh;
+    }
+    return msgid;  // fallback to English
+}
+
+int main(int argc, char *argv[]) {
+    clap_set_translator(zh_translate, NULL);
+
+    clap_parser_t *parser = clap_parser_new("myapp", "示例程序", NULL);
+    clap_parser_set_color(parser, false);
+
+    clap_argument_t *arg = clap_add_argument(parser, "--name");
+    clap_argument_help(arg, "你的名字");
+
+    clap_namespace_t *ns = NULL;
+    clap_error_t error = {0};
+    clap_parse_args(parser, argc, argv, &ns, &error);
+    // ...
+}
+```
+
+With the translator above, `--help` output becomes:
+
+```
+用法: myapp [-h] [--name NAME]
+
+示例程序
+
+可选参数:
+  --help, -h    显示帮助信息并退出
+  --name NAME   你的名字
+```
+
+#### Example — gettext integration
+
+For full locale-based translation, integrate with GNU gettext:
+
+```c
+#include <clap/clap.h>
+#include <libintl.h>
+#include <locale.h>
+
+const char *my_gettext(const char *msgid, void *user_data) {
+    (void)user_data;
+    return dgettext("libclap", msgid);
+}
+
+int main(int argc, char *argv[]) {
+    setlocale(LC_ALL, "");
+    bindtextdomain("libclap", "/usr/share/locale");
+    textdomain("libclap");
+
+    clap_set_translator(my_gettext, NULL);
+    // ...
+}
+```
+
+#### Finding translatable strings
+
+A complete list of all translatable message IDs is available in the PO template:
+
+| Source | Path |
+|--------|------|
+| Build tree | `po/libclap.pot` (or `make pot` to regenerate) |
+| Installed | `$(prefix)/share/libclap/libclap.pot` |
+
+Create a translation file with:
+
+```bash
+msginit -l zh_CN.UTF-8 -o zh_CN.po -i /path/to/libclap.pot
+
+# edit zh_CN.po, then:
+msgfmt -o zh_CN.mo zh_CN.po
+```
+
+After building with CMake, the `.pot` template can be regenerated at any time:
+
+```bash
+cmake --build . --target pot
+```
+
+This runs `xgettext` over all library sources with the `CLAP_TR` keyword marker.
+
 ### Custom Memory Allocator
 
 ```c

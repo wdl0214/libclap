@@ -105,9 +105,9 @@ bool clap_mutex_check_conflict(clap_parser_t *parser,
         }
 
         clap_error_set(error, CLAP_ERR_MUTUALLY_EXCLUSIVE,
-                       "argument %s: not allowed with argument %s",
+                       CLAP_TR("argument %s: not allowed with argument %s"),
                        clap_buffer_cstr(current_opt),
-                       conflicting_opt ? conflicting_opt : "another option");
+                       conflicting_opt ? conflicting_opt : CLAP_TR("another option"));
 
         clap_buffer_free(current_opt);
         if (conflicting_opt) {

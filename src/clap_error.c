@@ -46,32 +46,32 @@ const char* clap_error_message(const clap_error_t *error) {
 const char* clap_strerror(int code) {
     switch (code) {
         case CLAP_ERR_NONE:
-            return "Success";
+            return CLAP_TR("Success");
         case CLAP_ERR_INVALID_ARGUMENT:
-            return "Invalid argument";
+            return CLAP_TR("Invalid argument");
         case CLAP_ERR_MISSING_VALUE:
-            return "Missing required value";
+            return CLAP_TR("Missing required value");
         case CLAP_ERR_TYPE_CONVERSION:
-            return "Type conversion failed";
+            return CLAP_TR("Type conversion failed");
         case CLAP_ERR_INVALID_CHOICE:
-            return "Invalid choice";
+            return CLAP_TR("Invalid choice");
         case CLAP_ERR_MUTUALLY_EXCLUSIVE:
-            return "Mutually exclusive arguments specified";
+            return CLAP_TR("Mutually exclusive arguments specified");
         case CLAP_ERR_REQUIRED_MISSING:
-            return "Required argument missing";
+            return CLAP_TR("Required argument missing");
         case CLAP_ERR_UNRECOGNIZED:
-            return "Unrecognized argument";
+            return CLAP_TR("Unrecognized argument");
         case CLAP_ERR_TOO_MANY_ARGS:
-            return "Too many arguments";
+            return CLAP_TR("Too many arguments");
         case CLAP_ERR_TOO_FEW_ARGS:
-            return "Too few arguments";
+            return CLAP_TR("Too few arguments");
         case CLAP_ERR_MEMORY:
-            return "Memory allocation failed";
+            return CLAP_TR("Memory allocation failed");
         case CLAP_ERR_SUBCOMMAND_FAILED:
-            return "Subcommand failed";
+            return CLAP_TR("Subcommand failed");
         case CLAP_ERR_DEPENDENCY_VIOLATION:
-            return "Dependency violation";
+            return CLAP_TR("Dependency violation");
         default:
-            return "Unknown error";
+            return CLAP_TR("Unknown error");
     }
 }

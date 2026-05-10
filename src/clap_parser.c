@@ -35,7 +35,7 @@ clap_parser_t* clap_parser_new(const char *prog_name,
     if (parser->add_help_option) {
         clap_argument_t *help = clap_add_argument(parser, "--help/-h");
         if (help) {
-            clap_argument_help(help, "Show this help message and exit");
+            clap_argument_help(help, CLAP_TR("Show this help message and exit"));
             clap_argument_action(help, CLAP_ACTION_HELP);
         }
     }
@@ -148,7 +148,7 @@ void clap_parser_set_add_help(clap_parser_t *parser, bool add_help) {
         /* Add if not present */
         clap_argument_t *h = clap_add_argument(parser, "--help/-h");
         if (h) {
-            clap_argument_help(h, "Show this help message and exit");
+            clap_argument_help(h, CLAP_TR("Show this help message and exit"));
             clap_argument_action(h, CLAP_ACTION_HELP);
         }
     } else if (!add_help && help_arg) {
