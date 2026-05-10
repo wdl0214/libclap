@@ -1,0 +1,29 @@
+name: Sanitizers
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: sanitizers-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+
+jobs:
+  sanitizers:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake with Sanitizers
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCLAP_BUILD_SHARED=OFF -DCLAP_ENABLE_ASAN=ON -DCLAP_ENABLE_UBSAN=ON
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Test
+      run: ctest --test-dir build --output-on-failure

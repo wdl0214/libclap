@@ -1,0 +1,89 @@
+name: Fuzz
+
+on:
+  push:
+    branches: [ main, develop ]
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 4
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache fuzz corpus
+      uses: actions/cache@v4
+      with:
+        path: fuzz_corpus
+        key: fuzz-corpus-${{ github.run_number }}
+        restore-keys: |
+          fuzz-corpus-
+
+    - name: Configure CMake with Fuzz
+      run: cmake -B build -DCLAP_BUILD_FUZZ=ON -DCMAKE_C_COMPILER=clang
+
+    - name: Build Fuzz Target
+      run: cmake --build build --target fuzz_clap
+
+    - name: Create corpus directory
+      run: |
+        mkdir -p fuzz_corpus
+        mkdir -p fuzz_artifacts
+
+    - name: Run Fuzz Test
+      run: |
+        set +e
+        set -o pipefail
+        timeout 240 ./build/tests/fuzz_clap \
+          -max_len=4096 \
+          -runs=50000 \
+          -timeout=5 \
+          -artifact_prefix=fuzz_artifacts/ \
+          fuzz_corpus/ 2>&1 | tee fuzz_output.log
+        FUZZ_EXIT=$?
+        set -e
+
+        # Check for crashes
+        if [ -d "fuzz_artifacts" ] && [ "$(ls -A fuzz_artifacts)" ]; then
+          echo "::error::Fuzz testing found crashes!"
+          exit 1
+        fi
+
+        if [ $FUZZ_EXIT -eq 124 ]; then
+          echo "::warning::Fuzz test hit timeout (expected for long fuzzing)"
+          exit 0
+        fi
+
+        exit $FUZZ_EXIT
+
+    - name: Upload fuzz output log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuzz-output-log
+        path: fuzz_output.log
+        retention-days: 7
+
+    - name: Upload fuzz artifacts (crashes)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuzz-crashes
+        path: fuzz_artifacts/
+        retention-days: 30
+
+    - name: Upload updated corpus
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: fuzz-corpus-update
+        path: fuzz_corpus/
+        retention-days: 7
