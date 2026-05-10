@@ -13,10 +13,10 @@ extern "C" {
 #endif
 
 #define CLAP_VERSION_MAJOR 1
-#define CLAP_VERSION_MINOR 0
+#define CLAP_VERSION_MINOR 1
 #define CLAP_VERSION_PATCH 0
 
-#define CLAP_VERSION_STRING "1.0.0"
+#define CLAP_VERSION_STRING "1.1.0"
 
 /**
  * @brief Get libclap version string

@@ -2,6 +2,43 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.0] - 2026-05-10
+
+### Added
+- Added callback-based i18n system: `clap_set_translator()` for translating all user-facing strings (help, errors, usage, warnings, version).
+- Added `CLAP_TR()` macro wrapping all user-facing strings across all source files.
+- Added `make pot` CMake target for regenerating `po/libclap.pot` via xgettext with `--from-code=UTF-8`.
+- Added `.pot` template installation to `${prefix}/share/libclap/libclap.pot`.
+- Added `clap_i18n.h` public header with Doxygen-compatible API documentation and usage examples.
+- Added `clap_print_usage()` and `clap_print_help_on_error()` for programmatic help output.
+- Added `clap_parser_set_help()` to disable auto-generated `--help` (`add_help=False`).
+- Added `clap_parser_set_usage()` for custom usage strings.
+- Added ANSI color support with `clap_parser_set_color()`, auto-detecting TTY and respecting `NO_COLOR`/`FORCE_COLOR`.
+- Added argument deprecation support with `clap_argument_deprecated()` and `clap_argument_deprecated_with_reason()`.
+
+### Changed
+- Refactored `clap_action_t` and `clap_set_allocator()` into core headers for better organization.
+- Removed duplicated version macro definitions.
+- Updated version output format to match argparse convention.
+
+### Fixed
+- Fixed pkg-config file generation and import library installation on MinGW.
+- Wired missing `clap_validate_dependencies()` and `clap_apply_defaults()` into parse pipeline.
+
+### Documentation
+- Added i18n how-to section to README with translation table and gettext integration examples.
+- Updated README to use `cmake --build` instead of bare `make`.
+- Added Doxygen documentation for color types and related APIs.
+
+### Testing
+- Added unit tests for i18n translation via strerror, help, usage, and version output.
+- Added null-guard, edge-case, and error-path coverage tests.
+- Added integration coverage for nargs constants.
+
+### Maintenance
+- Split CI workflow into separate per-concern workflows.
+- Removed obsolete test runner scripts.
+
 ## [1.0.0] - 2026-05-06
 
 First stable release of clap, consolidating all work completed since the project was created.
