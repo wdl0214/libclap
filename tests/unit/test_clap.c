@@ -33,15 +33,15 @@ void test_clap_version_format(void) {
     int parsed = sscanf(version, "%d.%d.%d", &major, &minor, &patch);
     
     TEST_ASSERT_EQUAL(3, parsed);
-    TEST_ASSERT_EQUAL(1, major);
-    TEST_ASSERT_EQUAL(0, minor);
-    TEST_ASSERT_EQUAL(0, patch);
+    TEST_ASSERT_EQUAL(CLAP_VERSION_MAJOR, major);
+    TEST_ASSERT_EQUAL(CLAP_VERSION_MINOR, minor);
+    TEST_ASSERT_EQUAL(CLAP_VERSION_PATCH, patch);
 }
 
 void test_clap_version_string_content(void) {
     const char *version = clap_version();
     
-    TEST_ASSERT_EQUAL_STRING("1.0.0", version);
+    TEST_ASSERT_EQUAL_STRING(CLAP_VERSION_STRING, version);
 }
 
 void test_clap_version_multiple_calls(void) {
@@ -52,18 +52,18 @@ void test_clap_version_multiple_calls(void) {
     
     TEST_ASSERT_EQUAL_PTR(v1, v2);
     TEST_ASSERT_EQUAL_PTR(v2, v3);
-    TEST_ASSERT_EQUAL_STRING("1.0.0", v1);
+    TEST_ASSERT_EQUAL_STRING(CLAP_VERSION_STRING, v1);
 }
 
 void test_clap_version_static_buffer_persistence(void) {
     const char *v1 = clap_version();
     
     /* The static buffer should persist */
-    TEST_ASSERT_EQUAL_STRING("1.0.0", v1);
+    TEST_ASSERT_EQUAL_STRING(CLAP_VERSION_STRING, v1);
     
     /* Call again and verify content unchanged */
     const char *v2 = clap_version();
-    TEST_ASSERT_EQUAL_STRING("1.0.0", v2);
+    TEST_ASSERT_EQUAL_STRING(CLAP_VERSION_STRING, v2);
 }
 
 void test_clap_version_buffer_size(void) {
@@ -82,7 +82,7 @@ void test_clap_version_major_is_positive(void) {
     int major;
     sscanf(version, "%d", &major);
     
-    TEST_ASSERT_GREATER_OR_EQUAL(1, major);
+    TEST_ASSERT_GREATER_OR_EQUAL(CLAP_VERSION_MAJOR, major);
 }
 
 void test_clap_version_minor_is_non_negative(void) {
@@ -90,7 +90,7 @@ void test_clap_version_minor_is_non_negative(void) {
     int major, minor;
     sscanf(version, "%d.%d", &major, &minor);
     
-    TEST_ASSERT_GREATER_OR_EQUAL(0, minor);
+    TEST_ASSERT_GREATER_OR_EQUAL(CLAP_VERSION_MINOR, minor);
 }
 
 void test_clap_version_patch_is_non_negative(void) {
@@ -98,7 +98,7 @@ void test_clap_version_patch_is_non_negative(void) {
     int major, minor, patch;
     sscanf(version, "%d.%d.%d", &major, &minor, &patch);
     
-    TEST_ASSERT_GREATER_OR_EQUAL(0, patch);
+    TEST_ASSERT_GREATER_OR_EQUAL(CLAP_VERSION_PATCH, patch);
 }
 
 /* ============================================================================
