@@ -19,6 +19,7 @@ libclap is a modern, secure, and extensible command-line argument parsing librar
 - **Automatic Help Generation** – Beautifully formatted usage and help messages with smart line‑wrapping and alignment.
 - **Subcommands** – Full support for git‑style sub‑parsers with flat namespace merging.
 - **ANSI Color Support** – Terminal‑aware colored help and error output. Auto‑detects TTY, respects `NO_COLOR`/`FORCE_COLOR`. 
+- **Internationalization** – Callback‑based i18n system for translating all help, error, and usage output. Works with gettext or custom translation tables.
 - **Memory Safe** – Bounds‑checked string buffers, input validation, and comprehensive leak testing (Valgrind/ASan clean).
 - **Cross‑Platform** – Windows, Linux, macOS, and BSD. Works with GCC, Clang, and MSVC.
 - **Zero Dependencies** – Only requires a C99 standard library.
